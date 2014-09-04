@@ -19,9 +19,7 @@ setup(
     long_description=long_description,
     license='BSD',
 
-    packages=[
-        'django_goodies'
-    ],
+    packages=find_packages(),
 
     url='https://github.com/oogles/django-goodies',
     author='Alex Church',
