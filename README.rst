@@ -19,6 +19,12 @@ Install the latest stable version from PyPI:
     pip install django-goodies
 
 
+Documentation
+-------------
+
+Full documentation can be found at: http://django-goodies.readthedocs.org.
+
+
 Thanks
 ------
 
