@@ -26,3 +26,9 @@ Thanks
 ------
 
 The project-independent test platform was inspired by https://github.com/dabapps/django-reusable-app
+
+
+License
+-------
+
+The project is licensed under the BSD license.
