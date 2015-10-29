@@ -1,10 +1,42 @@
 from django.db import models
 
-class Author(models.Model):
-    
-    name = models.CharField(max_length=64)
+from ..models import CommonInfoMixin, ArchivableMixin, VersioningMixin, StaticAbstract
 
-class Book(models.Model):
+class CommonInfoTest(CommonInfoMixin, models.Model):
+    """
+    This model simply provides a concrete model with the CommonInfoMixin,
+    purely for testing the mixin without introducing the variables of a real
+    subclass.
+    """
     
-    title = models.CharField(max_length=64)
-    author = models.ForeignKey(Author)
+    test = models.BooleanField(default=True)
+
+
+class ArchivableTest(ArchivableMixin, models.Model):
+    """
+    This model simply provides a concrete model with the ArchivableMixin,
+    purely for testing the mixin without introducing the variables of a real
+    subclass.
+    """
+    
+    test = models.BooleanField(default=True)
+
+
+class VersioningTest(VersioningMixin, models.Model):
+    """
+    This model simply provides a concrete model with the VersioningMixin,
+    purely for testing the mixin without introducing the variables of a real
+    subclass.
+    """
+    
+    test = models.BooleanField(default=True)
+
+
+class StaticTest(StaticAbstract):
+    """
+    This model simply provides a concrete version of the abstract StaticAbstract
+    model, purely for testing elements of StaticAbstract without introducing the
+    variables of a real subclass.
+    """
+    
+    pass

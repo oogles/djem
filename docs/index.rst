@@ -18,8 +18,12 @@ Goodies
 -------
 
 .. toctree::
+    :maxdepth: 2
     
-    verify-decorator
+    ref/models
+    ref/managers
+    ref/forms
+    ref/exceptions
 
 
 Thanks
