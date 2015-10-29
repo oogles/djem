@@ -7,8 +7,7 @@ Vagrant.configure(2) do |config|\
   config.vm.box = "ubuntu/trusty32"
 
   config.vm.provision "shell" do |s|
-    s.path = "bootstrap.sh"
-    s.args = ["django-goodies"]
+    s.path = "provision/bootstrap.sh"
   end
 
   # Create a forwarded port mapping which allows access to a specific port

@@ -2,7 +2,7 @@ echo " "
 echo " --- pip/virtualenv ---"
 
 PROJECT_NAME="$1"
-FULL_PROJECT="$2"
+REDISTRIBUTABLE="$2"
 
 # Download get-pip.py if it doesn't already exist, install pip
 if ! command -v pip; then
@@ -38,16 +38,19 @@ cd /vagrant
 EOF
 fi
 
-# Install Python dependencies
+# Install Python dependencies from requirements.txt (if any) if this environment
+# is beign provisioned for a full project. If it is for a redistributable app,
+# it will not have a requirements.txt file, but install some common development
+# aids.
 echo " "
-echo " --- Python dependencies ---"
-if [ -f /vagrant/requirements.txt ]; then
-	su - vagrant -c "$ACTIVATE_STR && pip install -r /vagrant/requirements.txt"
+if [ "$REDISTRIBUTABLE" -ne 1 ]; then
+    echo " --- Python dependencies ---"
+    if [ -f /vagrant/requirements.txt ]; then
+        su - vagrant -c "$ACTIVATE_STR && pip install -r /vagrant/requirements.txt"
+    else
+        echo "None found"
+    fi
 else
-	echo "None found"
-fi
-
-# If not a full project, install django-extensions to aid with dev
-if [ -z "$FULL_PROJECT" ]; then
-    su - vagrant -c "pip install django-extensions"
+    echo " --- Development aids ---"
+    su - vagrant -c "$ACTIVATE_STR && pip install Django django-extensions Werkzeug sphinx sphinx-autobuild"
 fi
