@@ -19,7 +19,7 @@ setup(
     long_description=long_description,
     license='BSD',
     
-    packages=find_packages(),
+    packages=find_packages(exclude=['docs']),
     
     install_requires=['Django>=1.6'],
     
