@@ -14,13 +14,15 @@ execfile('django_goodies/__init__.py')
 setup(
     name='django-goodies',
     version=__version__,
-
+    
     description='A collection of useful stuff for Django projects.',
     long_description=long_description,
     license='BSD',
-
-    packages=find_packages(),
-
+    
+    packages=find_packages(exclude=['docs']),
+    
+    install_requires=['Django>=1.6'],
+    
     url='https://github.com/oogles/django-goodies',
     author='Alex Church',
     author_email='alex@church.id.au'
