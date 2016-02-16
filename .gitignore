@@ -9,8 +9,8 @@ docs/_build/
 
 # Vagrant
 .vagrant/
-provision/config/.gitconfig
-provision/config/env.sh
+provision/env.sh
+provision/conf/.gitconfig
 
 # Environment settings
 env.py
