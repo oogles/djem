@@ -4,8 +4,8 @@ from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 from django.core.exceptions import ObjectDoesNotExist
 
-from .managers import CommonInfoManager, ArchivableManager, VersioningManager, StaticAbstractManager
-from .exceptions import ModelAmbiguousVersionError
+from django_goodies.models.managers import CommonInfoManager, ArchivableManager, VersioningManager, StaticAbstractManager
+from django_goodies.exceptions import ModelAmbiguousVersionError
 
 class CommonInfoMixin(models.Model):
     """

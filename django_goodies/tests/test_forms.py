@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from ..forms import CommonInfoForm
+from django_goodies.forms import CommonInfoForm
+
 from .models import StaticTest
 
 class CommonInfoTestForm(CommonInfoForm):
