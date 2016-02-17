@@ -1,5 +1,6 @@
 from django import forms
 
+
 class CommonInfoForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
@@ -25,6 +26,6 @@ class CommonInfoForm(forms.ModelForm):
         if commit:
             instance.save(self.user)
             self.save_m2m()
-            del self.save_m2m # pretend commit=False was never used
+            del self.save_m2m  # pretend commit=False was never used
         
         return instance

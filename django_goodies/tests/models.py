@@ -1,6 +1,9 @@
 from django.db import models
 
-from django_goodies.models import CommonInfoMixin, ArchivableMixin, VersioningMixin, StaticAbstract
+from django_goodies.models import (
+    ArchivableMixin, CommonInfoMixin, StaticAbstract, VersioningMixin
+)
+
 
 class CommonInfoTest(CommonInfoMixin, models.Model):
     """

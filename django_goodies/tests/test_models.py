@@ -1,14 +1,16 @@
 import datetime
 
-from django.test import TestCase, override_settings
-from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.utils import timezone
 
-from .models import CommonInfoTest, ArchivableTest, VersioningTest, StaticTest
+from .models import ArchivableTest, CommonInfoTest, StaticTest, VersioningTest
+
 
 def make_user(username):
     
     return get_user_model().objects.create_user(username, 'fakepassword')
+
 
 class CommonInfoTestCase(TestCase):
     """
@@ -440,10 +442,10 @@ class VersioningTestCase(TestCase):
         method on a model instance is called multiple times.
         """
         
-        obj = VersioningTest.objects.create() # version 1
+        obj = VersioningTest.objects.create()  # version 1
         
-        obj.save() # version 2
-        obj.save() # version 3
+        obj.save()  # version 2
+        obj.save()  # version 3
         
         # Test incremented value correctly saved to the database
         obj = VersioningTest.objects.get(pk=obj.pk)
@@ -465,7 +467,7 @@ class VersioningTestCase(TestCase):
         # New version cannot be known on the same instance - it has to be
         # requeried
         with self.assertRaises(VersioningTest.AmbiguousVersionError):
-            bool(obj.version) # bool() used purely to force evaluation of SimpleLazyObject
+            bool(obj.version)  # bool() used purely to force evaluation of SimpleLazyObject
         
         self.assertNumQueries(2)
     
