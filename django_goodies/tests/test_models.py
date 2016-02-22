@@ -4,7 +4,14 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import ArchivableTest, CommonInfoTest, StaticTest, VersioningTest
+import pytz
+
+from django_goodies.models import TimeZoneField
+from django_goodies.utils.dt import TimeZoneHelper
+
+from .models import (
+    ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
+)
 
 
 def make_user(username):
@@ -746,3 +753,156 @@ class StaticTestCase(TestCase):
         self.assertEquals(obj.user_modified_id, self.user1.pk)
         
         self.assertNumQueries(6)
+
+
+class TimeZoneFieldTest(TestCase):
+    
+    def test_init(self):
+        
+        f = TimeZoneField()
+        
+        self.assertEquals(f.choices, f.CHOICES)
+        self.assertEquals(f.max_length, f.MAX_LENGTH)
+    
+    def test_init__custom_kwargs(self):
+        
+        choices = (
+            ('Australia/Sydney', 'Australia/Sydney'),
+            ('Australia/Melbourne', 'Australia/Melbourne'),
+            ('Australia/Hobart', 'Australia/Hobart'),
+            ('Australia/Adelaide', 'Australia/Adelaide'),
+            ('Australia/Perth', 'Australia/Perth'),
+            ('Australia/Darwin', 'Australia/Darwin'),
+            ('Australia/Brisbane', 'Australia/Brisbane')
+        )
+        
+        f = TimeZoneField(choices=choices, max_length=32)
+        
+        self.assertEquals(f.choices, choices)
+        self.assertEquals(f.max_length, 32)
+    
+    def test_default(self):
+        
+        o = TimeZoneTest()
+        
+        self.assertIsInstance(o.timezone2, TimeZoneHelper)
+        self.assertEquals(o.timezone2.tz.zone, 'Australia/Sydney')
+    
+    def test_left_null(self):
+        
+        o = TimeZoneTest()
+        
+        self.assertIsNone(o.timezone3)
+    
+    def test_set__string(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone = 'Australia/Sydney'
+        
+        # Not becoming a TimeZoneHelper until read back from the database is
+        # consistent with the behaviour of fields like IntegerField,
+        # DecimalField, etc
+        self.assertEquals(o.timezone, 'Australia/Sydney')
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone, TimeZoneHelper)
+        self.assertEquals(o.timezone.tz.zone, 'Australia/Sydney')
+    
+    def test_set__UTC(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone = pytz.UTC
+        
+        # Not becoming a TimeZoneHelper until read back from the database is
+        # consistent with the behaviour of fields like IntegerField,
+        # DecimalField, etc
+        self.assertIs(o.timezone, pytz.UTC)
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone, TimeZoneHelper)
+        self.assertIs(o.timezone.tz.zone, 'UTC')
+    
+    def test_set__timezone(self):
+        
+        o = TimeZoneTest()
+        
+        tz = pytz.timezone('Australia/Sydney')
+        
+        o.timezone = tz
+        
+        # Not becoming a TimeZoneHelper until read back from the database is
+        # consistent with the behaviour of fields like IntegerField,
+        # DecimalField, etc
+        self.assertIs(o.timezone, tz)
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone, TimeZoneHelper)
+        self.assertEquals(o.timezone.tz.zone, 'Australia/Sydney')
+    
+    def test_set__helper(self):
+        
+        o = TimeZoneTest()
+        
+        tz = TimeZoneHelper('Australia/Sydney')
+        
+        o.timezone = tz
+        
+        self.assertIs(o.timezone, tz)
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone, TimeZoneHelper)
+        self.assertEquals(o.timezone.tz.zone, 'Australia/Sydney')
+    
+    def test_set__None(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone = pytz.UTC  # required field
+        o.timezone3 = pytz.UTC
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone, TimeZoneHelper)
+        self.assertIs(o.timezone.tz, pytz.UTC)
+        
+        o.timezone3 = None
+        o.save()
+        
+        self.assertIsNone(o.timezone3)
+        
+        o.refresh_from_db()
+        
+        self.assertIsNone(o.timezone3)
+    
+    def test_set__empty_string(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone = pytz.UTC  # required field
+        o.timezone3 = pytz.UTC
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone, TimeZoneHelper)
+        self.assertIs(o.timezone.tz, pytz.UTC)
+        
+        o.timezone3 = ''
+        o.save()
+        
+        self.assertEquals(o.timezone3, '')
+        
+        o.refresh_from_db()
+        
+        self.assertIsNone(o.timezone3)

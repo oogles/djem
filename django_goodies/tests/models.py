@@ -1,7 +1,8 @@
 from django.db import models
 
 from django_goodies.models import (
-    ArchivableMixin, CommonInfoMixin, StaticAbstract, VersioningMixin
+    ArchivableMixin, CommonInfoMixin, StaticAbstract, TimeZoneField,
+    VersioningMixin
 )
 
 
@@ -43,3 +44,13 @@ class StaticTest(StaticAbstract):
     """
     
     pass
+
+
+class TimeZoneTest(models.Model):
+    """
+    This model simply provides some TimeZoneFields for testing.
+    """
+    
+    timezone = TimeZoneField()
+    timezone2 = TimeZoneField(default='Australia/Sydney')
+    timezone3 = TimeZoneField(null=True)

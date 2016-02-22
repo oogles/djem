@@ -7,6 +7,9 @@ SECRET_KEY = 'abcde12345'
 # this file should live in the django_goodies app directory.
 ROOT_URLCONF = 'urls'
 
+# Required for TimeZoneHelper/TimeZoneField tests
+USE_TZ = True
+
 MIDDLEWARE_CLASSES = ()
 
 INSTALLED_APPS = (

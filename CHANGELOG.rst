@@ -5,6 +5,7 @@ Change Log
 0.3
 ===
 
+* Added TimeZoneField/TimeZoneHelper
 * Cleaned code as per isort and flake8
 
 Pre-0.3
