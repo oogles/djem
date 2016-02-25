@@ -1,9 +1,11 @@
+from django import forms
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from django_goodies.forms import CommonInfoForm
+from django_goodies.forms import CommonInfoForm, TimeZoneField
+from django_goodies.utils.dt import TIMEZONE_CHOICES, TimeZoneHelper
 
-from .models import StaticTest
+from .models import StaticTest, TimeZoneTest
 
 
 class CommonInfoTestForm(CommonInfoForm):
@@ -11,6 +13,25 @@ class CommonInfoTestForm(CommonInfoForm):
     class Meta:
         model = StaticTest
         fields = '__all__'
+
+
+class TimeZoneFieldTestForm1(forms.ModelForm):
+    
+    class Meta:
+        model = TimeZoneTest
+        fields = ['timezone']
+
+
+class TimeZoneFieldTestForm2(forms.Form):
+    
+    # Manually defined field
+    timezone = TimeZoneField()
+
+
+class TimeZoneFieldTestForm3(forms.Form):
+    
+    # Manually defined field with custom choices
+    timezone = TimeZoneField(choices=TIMEZONE_CHOICES[:10])
 
 
 class CommonInfoFormTestCase(TestCase):
@@ -105,3 +126,87 @@ class CommonInfoFormTestCase(TestCase):
         self.assertEquals(instance.user_modified_id, self.user.pk)
         
         self.assertNumQueries(0)
+
+
+class TimeZoneFieldFormTestCase(TestCase):
+    
+    def test_submit__modelform_valid(self):
+        """
+        Test a ModelForm based on a Model with a TimeZoneField correctly
+        accepts a valid submitted timezone string and cleans it to the correct
+        TimeZoneHelper.
+        """
+        
+        form = TimeZoneFieldTestForm1({'timezone': 'Australia/Sydney'})
+        
+        self.assertTrue(form.is_valid())
+        self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
+        self.assertEquals(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
+    
+    def test_submit__modelform_invalid(self):
+        """
+        Test a ModelForm based on a Model with a TimeZoneField correctly
+        accepts an invalid submitted timezone string and generates the
+        appropriate error.
+        """
+        
+        form = TimeZoneFieldTestForm1({'timezone': 'fail'})
+        
+        self.assertFalse(form.is_valid())
+        self.assertEquals(form.errors['timezone'], [
+            u'Select a valid choice. fail is not one of the available choices.'
+        ])
+    
+    def test_submit__form_valid(self):
+        """
+        Test a Form with a TimeZoneField correctly accepts a valid submitted
+        timezone string and cleans it to the correct TimeZoneHelper.
+        """
+        
+        form = TimeZoneFieldTestForm2({'timezone': 'Australia/Sydney'})
+        
+        self.assertTrue(form.is_valid())
+        self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
+        self.assertEquals(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
+    
+    def test_submit__form_invalid(self):
+        """
+        Test a Form with a TimeZoneField correctly accepts an invalid submitted
+        timezone string and generates the appropriate error.
+        """
+        
+        form = TimeZoneFieldTestForm2({'timezone': 'fail'})
+        
+        self.assertFalse(form.is_valid())
+        self.assertEquals(form.errors['timezone'], [
+            u'Select a valid choice. fail is not one of the available choices.'
+        ])
+    
+    def test_custom_choices__valid(self):
+        """
+        Test a Form with a TimeZoneField defined with a custom list of choices
+        correctly accepts a valid submitted timezone string and cleans it to
+        the correct TimeZoneHelper.
+        """
+        
+        tz = TIMEZONE_CHOICES[0][0]
+        
+        form = TimeZoneFieldTestForm3({'timezone': tz})
+        
+        self.assertTrue(form.is_valid())
+        self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
+        self.assertEquals(form.cleaned_data['timezone'].tz.zone, tz)
+    
+    def test_custom_choices__invalid(self):
+        """
+        Test a Form with a TimeZoneField defined with a custom list of choices
+        correctly accepts an invalid submitted timezone string and generates
+        the appropriate error.
+        """
+        
+        form = TimeZoneFieldTestForm3({'timezone': 'Australia/Sydney'})
+        
+        self.assertFalse(form.is_valid())
+        self.assertEquals(form.errors['timezone'], [
+            u'Select a valid choice. Australia/Sydney is not one of the available choices.'
+        ])

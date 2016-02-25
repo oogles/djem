@@ -1,30 +1,12 @@
-from django.core.exceptions import ValidationError
 from django.db import models
 
-from django_goodies.utils.dt import TimeZoneHelper
-
-# Allow the file to be imported without pytz installed, though it is required
-# to use TimeZoneField
-try:
-    import pytz
-except ImportError:
-    pytz = None
+from django_goodies.utils.dt import (
+    PYTZ_AVAILABLE, TIMEZONE_CHOICES, get_tz_helper
+)
 
 
-def _get_helper(tz):
-    
-    if tz in (None, ''):
-        return None
-    
-    if isinstance(tz, TimeZoneHelper):
-        return tz
-    
-    try:
-        return TimeZoneHelper(tz)
-    except pytz.UnknownTimeZoneError:
-        raise ValidationError('Invalid timezone "{0}".'.format(tz))
-
-
+# Based on django-timezone-field
+# https://github.com/mfogel/django-timezone-field
 class TimeZoneField(models.Field):
     """
     Stores a timezone and provides a helper object to access date/time-related
@@ -44,16 +26,12 @@ class TimeZoneField(models.Field):
     
     description = "A pytz timezone"
     
-    if pytz:
-        CHOICES = [(tz, tz) for tz in pytz.common_timezones]
-    else:
-        CHOICES = []
-    
+    CHOICES = TIMEZONE_CHOICES
     MAX_LENGTH = 63
     
     def __init__(self, **kwargs):
         
-        if not pytz:
+        if not PYTZ_AVAILABLE:
             raise RuntimeError('TimeZoneField requires pytz to be installed.')
         
         kwargs.setdefault('choices', self.CHOICES)
@@ -82,24 +60,33 @@ class TimeZoneField(models.Field):
         
         # Convert string default to TimeZoneHelper
         value = super(TimeZoneField, self).get_default()
-        return _get_helper(value)
+        return get_tz_helper(value)
     
     def from_db_value(self, value, expression, connection, context):
         
         # Convert to TimeZoneHelper
-        return _get_helper(value)
+        return get_tz_helper(value)
     
     def to_python(self, value):
         
         # Convert to TimeZoneHelper
-        return _get_helper(value)
+        return get_tz_helper(value)
     
     def get_prep_value(self, value):
         
         # Convert to timezone string, ensuring it is a valid timezone
-        helper = _get_helper(value)
+        helper = get_tz_helper(value)
         
         if helper is None:
             return ''
         
         return helper.tz.zone
+    
+    def validate(self, value, model_instance):
+        
+        # Ensure the value is a valid TimeZoneHelper for a valid timezone
+        value = get_tz_helper(value)
+        
+        # Only pass the helper's timezone name into the super call - it will
+        # be checked for its presence in self.choices
+        super(TimeZoneField, self).validate(value.tz.zone, model_instance)
