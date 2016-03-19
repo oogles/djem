@@ -9,12 +9,11 @@ class ModelAmbiguousVersionError(Exception):
         
         super(ModelAmbiguousVersionError, self).__init__(
             'This instance\'s version has been atomically incremented and '
-            + 'therefore its value, as associated with the current values of '
-            + 'other fields on the instance, cannot be accurately determined.'
+            'therefore its value, as associated with the current values of '
+            'other fields on the instance, cannot be accurately determined.'
         )
     
     @classmethod
     def _raise(cls):
         
         raise cls()
- 

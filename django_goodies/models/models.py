@@ -1,11 +1,15 @@
-from django.db import models
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
-from django.core.exceptions import ObjectDoesNotExist
 
-from .managers import CommonInfoManager, ArchivableManager, VersioningManager, StaticAbstractManager
-from .exceptions import ModelAmbiguousVersionError
+from django_goodies.exceptions import ModelAmbiguousVersionError
+from django_goodies.models.managers import (
+    ArchivableManager, CommonInfoManager, StaticAbstractManager,
+    VersioningManager
+)
+
 
 class CommonInfoMixin(models.Model):
     """
@@ -23,8 +27,18 @@ class CommonInfoMixin(models.Model):
     
     date_created = models.DateTimeField(editable=False, verbose_name='Date Created')
     date_modified = models.DateTimeField(editable=False, verbose_name='Date Last Modified')
-    user_created = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, verbose_name='User Created', related_name='+')
-    user_modified = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, verbose_name='User Last Modified', related_name='+')
+    user_created = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        editable=False,
+        verbose_name='User Created',
+        related_name='+'
+    )
+    user_modified = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        editable=False,
+        verbose_name='User Last Modified',
+        related_name='+'
+    )
     
     objects = CommonInfoManager()
     

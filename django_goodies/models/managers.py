@@ -5,6 +5,7 @@ from django.utils import timezone
 
 whitespace_regex = re.compile(r'\W+')
 
+
 class CommonInfoQuerySet(models.QuerySet):
     """
     Provides custom functionality pertaining to the fields provided by
@@ -57,6 +58,7 @@ class ArchivableQuerySet(models.QuerySet):
         """
         
         return self.update(is_archived=False)
+
 
 class ArchivableManager(models.Manager):
     """
@@ -127,6 +129,7 @@ class StaticAbstractQuerySet(CommonInfoQuerySet, ArchivableQuerySet, VersioningQ
         """
         
         self.update(user, is_archived=False)
+
 
 class StaticAbstractManager(ArchivableManager, CommonInfoManager, VersioningManager):
     """

@@ -1,0 +1,7 @@
+Django
+django-extensions
+Werkzeug
+sphinx
+sphinx_rtd_theme
+isort
+flake8

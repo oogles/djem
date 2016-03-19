@@ -21,7 +21,7 @@ setup(
     
     packages=find_packages(exclude=['docs']),
     
-    install_requires=['Django>=1.6'],
+    install_requires=['Django>=1.8'],
     
     url='https://github.com/oogles/django-goodies',
     author='Alex Church',

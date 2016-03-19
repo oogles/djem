@@ -1,22 +1,19 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 
 # Adapted from https://github.com/jackdb/pg-app-dev-vm
 
-PROJECT_NAME=$1
+PROJECT_NAME="$1"
 
 # Edit the following to change the name of the database user that will be created:
-APP_DB_USER=$PROJECT_NAME
-APP_DB_PASS=$2
+APP_DB_USER="$PROJECT_NAME"
+APP_DB_PASS="$2"
 
 # Edit the following to change the name of the database that is created (defaults to the user name)
-APP_DB_NAME=$APP_DB_USER
+APP_DB_NAME="$APP_DB_USER"
 
 # Edit the following to change the version of PostgreSQL that is installed
 PG_VERSION=9.4
 
-###########################################################
-# Changes below this line are probably not necessary
-###########################################################
 print_db_usage () {
 	echo " "
     echo "PostgreSQL database setup and accessible on your local machine on the forwarded port (default: 15432)"
@@ -28,7 +25,7 @@ print_db_usage () {
 }
 
 echo " "
-echo " --- PostgreSQL ---"
+echo " --- Install/configure PostgreSQL ---"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -38,8 +35,8 @@ if command -v psql; then
     exit
 fi
 
-apt-get -y install libpq-dev python-dev
-apt-get -y install "postgresql-$PG_VERSION" "postgresql-contrib-$PG_VERSION"
+apt-get -qq install libpq-dev python-dev
+apt-get -qq install "postgresql-$PG_VERSION" "postgresql-contrib-$PG_VERSION"
 
 echo " "
 echo "Configuring..."
@@ -56,7 +53,7 @@ echo "host    all             all             all                     md5" >> "$
 # Explicitly set default client_encoding
 echo "client_encoding = utf8" >> "$PG_CONF"
 
-# Restart so that all new config is loaded:
+# Restart so that all new config is loaded
 service postgresql restart
 
 echo " "
@@ -71,6 +68,10 @@ CREATE DATABASE $APP_DB_NAME WITH OWNER=$APP_DB_USER
                                   LC_CTYPE='en_US.utf8'
                                   ENCODING='UTF8'
                                   TEMPLATE=template0;
+
+-- Give the database user permission to create databases, so it can be used
+-- to create test databases
+ALTER USER $APP_DB_USER CREATEDB;
 EOF
 
 print_db_usage
