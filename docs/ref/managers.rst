@@ -2,7 +2,7 @@
 Model Managers and QuerySets
 ============================
 
-.. module:: django_goodies.managers
+.. module:: django_goodies.models.managers
 
 The following Managers and QuerySets support the :doc:`various mixins and base classes<models>` provided by Django Goodies.
 

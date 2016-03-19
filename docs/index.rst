@@ -22,8 +22,19 @@ Goodies
     
     ref/models
     ref/managers
+    ref/model_fields
     ref/forms
+    ref/form_fields
+    ref/dateutils
     ref/exceptions
+
+
+Dependencies
+------------
+
+.. currentmodule:: django_goodies
+
+* `pytz <http://pytz.sourceforge.net/>`_ is required to make use of :class:`models.TimeZoneField`, :class:`forms.TimeZoneField` and :class:`~utils.dt.TimeZoneHelper`.
 
 
 License
