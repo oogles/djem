@@ -42,6 +42,14 @@ class TimeZoneHelper(object):
         """
         
         return self.now().date()
+    
+    def __str__(self):
+        
+        return self.tz.zone
+    
+    def __repr__(self):
+        
+        return '<{0}: {1}>'.format(self.__class__.__name__, str(self))
 
 
 def get_tz_helper(value):

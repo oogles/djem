@@ -906,3 +906,14 @@ class TimeZoneFieldTest(TestCase):
         o.refresh_from_db()
         
         self.assertIsNone(o.timezone3)
+    
+    def test_filter(self):
+        
+        TimeZoneTest(timezone='Australia/Sydney').save()
+        TimeZoneTest(timezone='US/Eastern').save()
+        
+        queryset = TimeZoneTest.objects.all()
+        self.assertEquals(queryset.count(), 2)
+        
+        queryset = queryset.filter(timezone='Australia/Sydney')
+        self.assertEquals(queryset.count(), 1)

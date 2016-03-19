@@ -30,6 +30,12 @@ class TimeZoneFieldTestForm2(forms.Form):
 
 class TimeZoneFieldTestForm3(forms.Form):
     
+    # Manually defined field, not required
+    timezone = TimeZoneField(required=False)
+
+
+class TimeZoneFieldTestForm4(forms.Form):
+    
     # Manually defined field with custom choices
     timezone = TimeZoneField(choices=TIMEZONE_CHOICES[:10])
 
@@ -182,6 +188,78 @@ class TimeZoneFieldFormTestCase(TestCase):
             u'Select a valid choice. fail is not one of the available choices.'
         ])
     
+    def test_submit__form_empty_valid_no_input(self):
+        """
+        Test a Form with a non-required TimeZoneField correctly accepts no input
+        for the timezone value and cleans it to an empty string.
+        """
+        
+        form = TimeZoneFieldTestForm3({})
+        
+        self.assertTrue(form.is_valid())
+        self.assertEquals(form.cleaned_data['timezone'], '')
+    
+    def test_submit__form_empty_valid_blank_string(self):
+        """
+        Test a Form with a non-required TimeZoneField correctly accepts an empty
+        string as input for the timezone value and cleans it to an empty string.
+        """
+        
+        form = TimeZoneFieldTestForm3({'timezone': ''})
+        
+        self.assertTrue(form.is_valid())
+        self.assertEquals(form.cleaned_data['timezone'], '')
+    
+    def test_submit__form_empty_valid_none(self):
+        """
+        Test a Form with a non-required TimeZoneField correctly accepts None as
+        input for the timezone value and cleans it to an empty string.
+        """
+        
+        form = TimeZoneFieldTestForm3({'timezone': None})
+        
+        self.assertTrue(form.is_valid())
+        self.assertEquals(form.cleaned_data['timezone'], '')
+    
+    def test_submit__form_empty_invalid_no_input(self):
+        """
+        Test a Form with a required TimeZoneField does not accept no input for
+        the timezone value and generates the appropriate error.
+        """
+        
+        form = TimeZoneFieldTestForm2({})
+        
+        self.assertFalse(form.is_valid())
+        self.assertEquals(form.errors['timezone'], [
+            u'This field is required.'
+        ])
+    
+    def test_submit__form_empty_invalid_blank_string(self):
+        """
+        Test a Form with a required TimeZoneField does not accept an empty
+        string as input for the timezone value and generates the appropriate error.
+        """
+        
+        form = TimeZoneFieldTestForm2({'timezone': ''})
+        
+        self.assertFalse(form.is_valid())
+        self.assertEquals(form.errors['timezone'], [
+            u'This field is required.'
+        ])
+    
+    def test_submit__form_empty_invalid_none(self):
+        """
+        Test a Form with a required TimeZoneField does not accept None as input
+        for the timezone value and generates the appropriate error.
+        """
+        
+        form = TimeZoneFieldTestForm2({'timezone': None})
+        
+        self.assertFalse(form.is_valid())
+        self.assertEquals(form.errors['timezone'], [
+            u'This field is required.'
+        ])
+    
     def test_custom_choices__valid(self):
         """
         Test a Form with a TimeZoneField defined with a custom list of choices
@@ -191,7 +269,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         tz = TIMEZONE_CHOICES[0][0]
         
-        form = TimeZoneFieldTestForm3({'timezone': tz})
+        form = TimeZoneFieldTestForm4({'timezone': tz})
         
         self.assertTrue(form.is_valid())
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
@@ -204,7 +282,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         the appropriate error.
         """
         
-        form = TimeZoneFieldTestForm3({'timezone': 'Australia/Sydney'})
+        form = TimeZoneFieldTestForm4({'timezone': 'Australia/Sydney'})
         
         self.assertFalse(form.is_valid())
         self.assertEquals(form.errors['timezone'], [

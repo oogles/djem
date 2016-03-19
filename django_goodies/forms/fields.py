@@ -13,8 +13,7 @@ class TimeZoneField(forms.TypedChoiceField):
         
         defaults = {
             'coerce': get_tz_helper,
-            'choices': TIMEZONE_CHOICES,
-            'empty_value': None,
+            'choices': TIMEZONE_CHOICES
         }
         
         defaults.update(kwargs)
