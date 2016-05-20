@@ -33,23 +33,25 @@ Default values
 
 The ``date_created`` and ``date_modified`` fields will default to the datetime at the moment the instance is initially saved.
 
-The ``user_created`` and ``user_modified`` fields will require a ``User`` instance in order to populate their values. However, they do not need to be provided manually. The :meth:`~CommonInfoMixin.save` method of ``CommonInfoMixin`` is overridden to require a ``User`` argument. See :ref:`saving-commoninfomixin`.
+The ``user_created`` and ``user_modified`` fields will require a ``User`` instance in order to populate their values. However, they do not need to be populated manually. The :meth:`~CommonInfoMixin.save` method of ``CommonInfoMixin`` is overridden to accept a ``User`` argument. See :ref:`saving-commoninfomixin`.
 
 .. _saving-commoninfomixin:
 
 Saving
 ------
 
-To ensure the ``user_modified`` and ``date_modified`` fields are always kept current, ``CommonInfoMixin`` overrides the :meth:`~CommonInfoMixin.save` method and the :meth:`~django_goodies.managers.CommonInfoQuerySet.update` method of the custom manager/queryset.
-Both methods are modified to take a ``User`` instance as a required argument.
+To ensure the ``user_modified`` and ``date_modified`` fields are always kept current, ``CommonInfoMixin`` overrides the :meth:`~CommonInfoMixin.save` method and the :meth:`~django_goodies.models.managers.CommonInfoQuerySet.update` method of the custom manager/queryset.
+Both methods are modified to take a ``User`` instance as a required first argument.
 
 .. note::
     
-    These fields will be updated even if the ``save`` method is passed a sequence of ``update_fields`` that does not include it (see `Django documentation for update_fields <https://docs.djangoproject.com/en/stable/ref/models/instances/#specifying-which-fields-to-save>`_). They will simply be appended to the list.
+    These fields will be updated even if the :meth:`~CommonInfoMixin.save` method is passed a sequence of ``update_fields`` that does not include it (see `Django documentation for update_fields <https://docs.djangoproject.com/en/stable/ref/models/instances/#specifying-which-fields-to-save>`_). They will simply be appended to the list.
 
 .. warning::
     
-    Models incorporating this mixin are prevented from being involved in any process that automatically calls :meth:`~CommonInfoMixin.save` on the instance, or :meth:`~django_goodies.managers.CommonInfoQuerySet.update` on the manager/queryset, as it won't pass the required ``user`` argument. For example, the queryset methods ``create`` and ``get_or_create`` will fail, as will saves performed by ModelForms that aren't overridden to support the special syntax.
+    Third party code (e.g. Django, third party apps) will not pass a ``User`` to the :meth:`~CommonInfoMixin.save` or :meth:`~django_goodies.models.managers.CommonInfoQuerySet.update` methods. Django Goodies provides :class:`~django_goodies.forms.CommonInfoForm` to enable Django ``ModelForms`` to work but, for example, the queryset methods ``create`` and ``get_or_create`` will fail.
+    
+    If you make use of any such code, and it is not possible or feasible to write wrappers around it to update the method call, you may need to disable the "required" nature of the ``user`` argument. This can be done with the :ref:`setting-GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE` setting, but note the :ref:`warnings <require-user-on-save-warnings>`.
 
 .. _ownership-checking:
 
@@ -84,6 +86,9 @@ Methods
     
     :class:`~django_goodies.managers.CommonInfoQuerySet`
         The custom QuerySet exposed by ``CommonInfoManager``.
+    
+    :class:`~django_goodies.forms.CommonInfoForm`
+        A ``ModelForm`` subclass to act as a base for ``CommonInfoMixin`` model forms.
 
 
 ``ArchivableMixin``

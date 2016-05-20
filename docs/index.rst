@@ -26,6 +26,7 @@ Goodies
     ref/forms
     ref/form_fields
     ref/dateutils
+    ref/settings
     ref/exceptions
 
 

@@ -63,8 +63,8 @@ class CommonInfoMixin(models.Model):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
         are always updated. The ``user`` argument is required and must be passed
-        a ``User`` instance, unless ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
-        is ``False``.
+        a ``User`` instance, unless the ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        setting is ``False``.
         """
         
         require_user = getattr(settings, 'GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)

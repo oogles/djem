@@ -6,8 +6,8 @@ Form Base Classes
 
 .. currentmodule:: django_goodies.forms
 
-CommonInfoForm
-==============
+``CommonInfoForm``
+==================
 
 .. class:: CommonInfoForm(\*args, user=None, \*\*kwargs)
     
