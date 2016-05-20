@@ -59,32 +59,43 @@ class CommonInfoMixin(models.Model):
         
         return user_id == self.user_created_id
     
-    def save(self, user, *args, **kwargs):
+    def save(self, user=None, *args, **kwargs):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
-        are always updated. The required ``user`` argument must be passed a
-        ``User`` instance.
+        are always updated. The ``user`` argument is required and must be passed
+        a ``User`` instance, unless ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        is ``False``.
         """
         
+        require_user = getattr(settings, 'GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
+        if require_user and not user:
+            raise TypeError("save() requires the 'user' argument")
+        
         now = timezone.now()
+        update_fields = []
         
         self.date_modified = now
-        self.user_modified = user
+        update_fields.append('date_modified')
+        
+        if user:
+            self.user_modified = user
+            update_fields.append('user_modified')
         
         if self.pk is None:
             if self.date_created is None:
                 self.date_created = now
             
-            try:
-                self.user_created
-            except ObjectDoesNotExist:
-                self.user_created = user
+            if user:
+                try:
+                    self.user_created
+                except ObjectDoesNotExist:
+                    self.user_created = user
         
         if 'update_fields' in kwargs:
             # If only saving a subset of fields, make sure the fields altered
             # above are included. Not applicable when creating a new record,
             # so *_created fields can be ignored.
-            kwargs['update_fields'] = set(kwargs['update_fields']).union(('date_modified', 'user_modified'))
+            kwargs['update_fields'] = set(kwargs['update_fields']).union(update_fields)
         
         super(CommonInfoMixin, self).save(*args, **kwargs)
 

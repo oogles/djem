@@ -49,7 +49,7 @@ class CommonInfoFormTestCase(TestCase):
         # refresh_from_db in setUp
         cls.user = get_user_model().objects.create_user('test', 'fakepassword')
     
-    def test_bound_init_user(self):
+    def test_bound_init__user(self):
         """
         Test the form correctly stores the given user when instantiating it
         with data (a bound form).
@@ -59,7 +59,7 @@ class CommonInfoFormTestCase(TestCase):
         
         self.assertEquals(form.user, self.user)
     
-    def test_bound_init_no_user(self):
+    def test_bound_init__no_user(self):
         """
         Test the form correctly raises a TypeError if no user is given when
         instantiating it with data (a bound form).
@@ -68,7 +68,7 @@ class CommonInfoFormTestCase(TestCase):
         with self.assertRaises(TypeError):
             CommonInfoTestForm({'test': True})
     
-    def test_unbound_init_user(self):
+    def test_unbound_init__user(self):
         """
         Test the form correctly stores the given user when instantiating it
         without data (an unbound form), even though it is not required.
@@ -78,7 +78,7 @@ class CommonInfoFormTestCase(TestCase):
         
         self.assertEquals(form.user, self.user)
     
-    def test_unbound_init_no_user(self):
+    def test_unbound_init__no_user(self):
         """
         Test the form correctly stores ``None`` if no user is given when
         instantiating it without data (an unbound form).
@@ -88,7 +88,7 @@ class CommonInfoFormTestCase(TestCase):
         
         self.assertIsNone(form.user)
     
-    def test_save_commit_true(self):
+    def test_save_commit__true(self):
         """
         Test the form saves correctly when ``save`` is called with ``commit=True``
         (or no ``commit`` argument at all).
@@ -110,7 +110,7 @@ class CommonInfoFormTestCase(TestCase):
         
         self.assertNumQueries(1)
     
-    def test_save_commit_false(self):
+    def test_save_commit__false(self):
         """
         Test the form behaves correctly but does NOT save when ``save`` is
         called with ``commit=False``.
@@ -163,7 +163,7 @@ class TimeZoneFieldFormTestCase(TestCase):
             u'Select a valid choice. fail is not one of the available choices.'
         ])
     
-    def test_submit__form_valid(self):
+    def test_submit__form__valid(self):
         """
         Test a Form with a TimeZoneField correctly accepts a valid submitted
         timezone string and cleans it to the correct TimeZoneHelper.
@@ -175,7 +175,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
         self.assertEquals(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
     
-    def test_submit__form_invalid(self):
+    def test_submit__form__invalid(self):
         """
         Test a Form with a TimeZoneField correctly accepts an invalid submitted
         timezone string and generates the appropriate error.
@@ -188,7 +188,7 @@ class TimeZoneFieldFormTestCase(TestCase):
             u'Select a valid choice. fail is not one of the available choices.'
         ])
     
-    def test_submit__form_empty_valid_no_input(self):
+    def test_submit__form__empty_valid__no_input(self):
         """
         Test a Form with a non-required TimeZoneField correctly accepts no input
         for the timezone value and cleans it to an empty string.
@@ -199,7 +199,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEquals(form.cleaned_data['timezone'], '')
     
-    def test_submit__form_empty_valid_blank_string(self):
+    def test_submit__form__empty_valid__blank_string(self):
         """
         Test a Form with a non-required TimeZoneField correctly accepts an empty
         string as input for the timezone value and cleans it to an empty string.
@@ -210,7 +210,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEquals(form.cleaned_data['timezone'], '')
     
-    def test_submit__form_empty_valid_none(self):
+    def test_submit__form__empty_valid__none(self):
         """
         Test a Form with a non-required TimeZoneField correctly accepts None as
         input for the timezone value and cleans it to an empty string.
@@ -221,7 +221,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEquals(form.cleaned_data['timezone'], '')
     
-    def test_submit__form_empty_invalid_no_input(self):
+    def test_submit__form__empty_invalid__no_input(self):
         """
         Test a Form with a required TimeZoneField does not accept no input for
         the timezone value and generates the appropriate error.
@@ -234,7 +234,7 @@ class TimeZoneFieldFormTestCase(TestCase):
             u'This field is required.'
         ])
     
-    def test_submit__form_empty_invalid_blank_string(self):
+    def test_submit__form__empty_invalid__blank_string(self):
         """
         Test a Form with a required TimeZoneField does not accept an empty
         string as input for the timezone value and generates the appropriate error.
@@ -247,7 +247,7 @@ class TimeZoneFieldFormTestCase(TestCase):
             u'This field is required.'
         ])
     
-    def test_submit__form_empty_invalid_none(self):
+    def test_submit__form__empty_invalid__none(self):
         """
         Test a Form with a required TimeZoneField does not accept None as input
         for the timezone value and generates the appropriate error.
