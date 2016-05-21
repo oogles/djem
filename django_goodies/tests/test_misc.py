@@ -38,6 +38,15 @@ class AjaxResponseTestCase(TestCase):
         self.assertEquals(len(data), 1)
         self.assertEquals(data['test'], 'test')
     
+    def test_response__bad_data(self):
+        """
+        Test that a TypeError is raised when trying to instantiate AjaxResponse
+        with a non-dict "data" argument.
+        """
+        
+        with self.assertRaises(TypeError):
+            self.client.get(reverse('bad_data'))
+    
     def test_response__success__true(self):
         """
         Test that AjaxResponse correctly includes "success=True" in the response

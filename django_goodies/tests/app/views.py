@@ -18,6 +18,11 @@ def data(request):
     return AjaxResponse(request, {'test': 'test'})
 
 
+def bad_data(request):
+    
+    return AjaxResponse(request, ['test1', 'test2'])
+
+
 def success__true(request):
     
     return AjaxResponse(request, success=True)
