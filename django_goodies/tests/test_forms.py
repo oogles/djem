@@ -5,7 +5,7 @@ from django.test import TestCase
 from django_goodies.forms import CommonInfoForm, TimeZoneField
 from django_goodies.utils.dt import TIMEZONE_CHOICES, TimeZoneHelper
 
-from .models import StaticTest, TimeZoneTest
+from .app.models import StaticTest, TimeZoneTest
 
 
 class CommonInfoTestForm(CommonInfoForm):

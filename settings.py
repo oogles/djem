@@ -3,23 +3,28 @@
 
 SECRET_KEY = 'abcde12345'
 
-# Need to point at something. If django-goodies actually uses urls one day,
-# this file should live in the django_goodies app directory.
-ROOT_URLCONF = 'urls'
+# For testing. If django-goodies ever includes real views that also need testing,
+# this should point to that urlconf and the test app's urls should be tested
+# by overriding the setting.
+ROOT_URLCONF = 'django_goodies.tests.app.urls'
 
 # Required for TimeZoneHelper/TimeZoneField tests
 USE_TZ = True
 
-MIDDLEWARE_CLASSES = ()
+MIDDLEWARE_CLASSES = (
+    'django.contrib.sessions.middleware.SessionMiddleware',  # for AjaxResponse tests
+    'django.contrib.messages.middleware.MessageMiddleware'   # for AjaxResponse tests
+)
 
 INSTALLED_APPS = (
     'django.contrib.contenttypes',  # for django.contrib.auth
-    'django.contrib.auth',  # for RequestFactoryTestCase
+    'django.contrib.auth',          # for RequestFactoryTestCase
+    'django.contrib.messages',      # for AjaxResponse tests
     
     'django_extensions',  # for dev tools, e.g. shell_plus
     
     'django_goodies',
-    'django_goodies.tests',
+    'django_goodies.tests.app',
 )
 
 DATABASES = {

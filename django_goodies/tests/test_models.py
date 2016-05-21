@@ -10,7 +10,7 @@ import pytz
 from django_goodies.models import TimeZoneField
 from django_goodies.utils.dt import TimeZoneHelper
 
-from .models import (
+from .app.models import (
     ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
 )
 
