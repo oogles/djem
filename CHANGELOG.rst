@@ -5,7 +5,8 @@ Change Log
 0.4
 ===
 
-* Added AjaxResponse class
+* Added AjaxResponse
+* Added ObjectPermissionsBackend
 * Added GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE setting
 
 0.3

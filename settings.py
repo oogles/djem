@@ -8,7 +8,7 @@ SECRET_KEY = 'abcde12345'
 # by overriding the setting.
 ROOT_URLCONF = 'django_goodies.tests.app.urls'
 
-# Required for TimeZoneHelper/TimeZoneField tests
+# For TimeZoneHelper/TimeZoneField tests
 USE_TZ = True
 
 MIDDLEWARE_CLASSES = (
@@ -18,7 +18,7 @@ MIDDLEWARE_CLASSES = (
 
 INSTALLED_APPS = (
     'django.contrib.contenttypes',  # for django.contrib.auth
-    'django.contrib.auth',          # for RequestFactoryTestCase
+    'django.contrib.auth',          # for various tests
     'django.contrib.messages',      # for AjaxResponse tests
     
     'django_extensions',  # for dev tools, e.g. shell_plus
@@ -33,3 +33,9 @@ DATABASES = {
         'NAME': ':memory:',
     },
 }
+
+# For object-level permissions framework tests
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'django_goodies.auth.ObjectPermissionsBackend'
+]
