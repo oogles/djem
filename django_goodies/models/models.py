@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models.base import ModelBase
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
@@ -9,6 +10,33 @@ from django_goodies.models.managers import (
     ArchivableManager, CommonInfoManager, StaticAbstractManager,
     VersioningManager
 )
+
+
+class CommonInfoMixinBase(ModelBase):
+    """
+    Metaclass for adding appropriately named permission checking methods to
+    concrete subclasses of CommonInfoMixin.
+    As a reasonable default, "change" and "delete" permissions for such a
+    subclass can be mapped to the ``owned_by`` method, granting owners the
+    permissions and denying others.
+    The permissions themselves will contain the name of the subclass model, so
+    must be added dynamically once the name is known.
+    """
+    
+    def __init__(cls, *args, **kwargs):
+        
+        name = cls._meta.model_name
+        
+        if not cls._meta.abstract:
+            change_attr_name = '_user_can_change_{0}'.format(name)
+            if not hasattr(cls, change_attr_name):
+                setattr(cls, change_attr_name, lambda self, user: self.owned_by(user))
+            
+            delete_attr_name = '_user_can_delete_{0}'.format(name)
+            if not hasattr(cls, delete_attr_name):
+                setattr(cls, delete_attr_name, lambda self, user: self.owned_by(user))
+        
+        return super(CommonInfoMixinBase, cls).__init__(*args, **kwargs)
 
 
 class CommonInfoMixin(models.Model):
@@ -24,6 +52,8 @@ class CommonInfoMixin(models.Model):
     as will saves performed by ModelForms that aren't overridden to support the
     custom signature.
     """
+    
+    __metaclass__ = CommonInfoMixinBase
     
     date_created = models.DateTimeField(editable=False, verbose_name='Date Created')
     date_modified = models.DateTimeField(editable=False, verbose_name='Date Last Modified')
@@ -44,20 +74,6 @@ class CommonInfoMixin(models.Model):
     
     class Meta:
         abstract = True
-    
-    def owned_by(self, user):
-        """
-        Return ``True`` if ``user_created`` matches the given user, otherwise
-        return ``False``. The user can be given as an id or a ``User`` instance.
-        """
-        
-        try:
-            user_id = user.pk
-        except AttributeError:
-            # Assume an id was given
-            user_id = user
-        
-        return user_id == self.user_created_id
     
     def save(self, user=None, *args, **kwargs):
         """
@@ -98,6 +114,20 @@ class CommonInfoMixin(models.Model):
             kwargs['update_fields'] = set(kwargs['update_fields']).union(update_fields)
         
         super(CommonInfoMixin, self).save(*args, **kwargs)
+    
+    def owned_by(self, user):
+        """
+        Return ``True`` if ``user_created`` matches the given user, otherwise
+        return ``False``. The user can be given as an id or a ``User`` instance.
+        """
+        
+        try:
+            user_id = user.pk
+        except AttributeError:
+            # Assume an id was given
+            user_id = user
+        
+        return user_id == self.user_created_id
 
 
 class ArchivableMixin(models.Model):

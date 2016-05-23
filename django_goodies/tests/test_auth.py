@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from .app.models import ArchivableTest, OPTest
 
+
 class ObjectPermissionsTestCase(TestCase):
     
     def setUp(self):

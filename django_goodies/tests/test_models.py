@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
@@ -26,16 +27,10 @@ class CommonInfoTestCase(TestCase):
     model.
     """
     
-    @classmethod
-    def setUpTestData(cls):
-        
-        cls.user1 = make_user('test')
-        cls.user2 = make_user('test2')
-    
     def setUp(self):
         
-        self.user1.refresh_from_db()
-        self.user2.refresh_from_db()
+        self.user1 = make_user('test')
+        self.user2 = make_user('test2')
     
     def test_object_save__no_user__required(self):
         """
@@ -348,13 +343,13 @@ class CommonInfoTestCase(TestCase):
         obj2 = CommonInfoTest()
         obj2.save(self.user2)
         
-        self.assertTrue(obj1.owned_by(self.user1), True)
-        self.assertTrue(obj1.owned_by(self.user1.pk), True)
-        self.assertFalse(obj1.owned_by(self.user2), False)
+        self.assertTrue(obj1.owned_by(self.user1))
+        self.assertTrue(obj1.owned_by(self.user1.pk))
+        self.assertFalse(obj1.owned_by(self.user2))
         
-        self.assertTrue(obj2.owned_by(self.user2), True)
-        self.assertTrue(obj2.owned_by(self.user2.pk), True)
-        self.assertFalse(obj2.owned_by(self.user1), False)
+        self.assertTrue(obj2.owned_by(self.user2))
+        self.assertTrue(obj2.owned_by(self.user2.pk))
+        self.assertFalse(obj2.owned_by(self.user1))
         
         self.assertNumQueries(2)
     
@@ -397,6 +392,42 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(CommonInfoTest.objects.owned_by(self.user2.pk).count(), 1)
         
         self.assertNumQueries(7)
+    
+    def test_object_permissions__change(self):
+        """
+        Test the out-of-the-box implementation of object-level "change"
+        permissions using ``owned_by``.
+        """
+        
+        user = self.user1
+        
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        user.user_permissions.add(Permission.objects.get(codename='change_commoninfotest'))
+        
+        obj = CommonInfoTest()
+        obj.save(user)
+        
+        self.assertTrue(user.has_perm('app.change_commoninfotest', obj))
+        self.assertFalse(self.user2.has_perm('app.change_commoninfotest', obj))
+    
+    def test_object_permissions__delete(self):
+        """
+        Test the out-of-the-box implementation of object-level "delete"
+        permissions using ``owned_by``.
+        """
+        
+        user = self.user1
+        
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        user.user_permissions.add(Permission.objects.get(codename='delete_commoninfotest'))
+        
+        obj = CommonInfoTest()
+        obj.save(user)
+        
+        self.assertTrue(user.has_perm('app.delete_commoninfotest', obj))
+        self.assertFalse(self.user2.has_perm('app.delete_commoninfotest', obj))
 
 
 class ArchivableTestCase(TestCase):
@@ -405,16 +436,10 @@ class ArchivableTestCase(TestCase):
     model.
     """
     
-    @classmethod
-    def setUpTestData(cls):
-        
-        cls.obj1 = ArchivableTest.objects.create(is_archived=True)
-        cls.obj2 = ArchivableTest.objects.create(is_archived=False)
-    
     def setUp(self):
         
-        self.obj1.refresh_from_db()
-        self.obj2.refresh_from_db()
+        self.obj1 = ArchivableTest.objects.create(is_archived=True)
+        self.obj2 = ArchivableTest.objects.create(is_archived=False)
     
     def test_managers_archived_flag(self):
         """
@@ -701,18 +726,10 @@ class StaticTestCase(TestCase):
      - CommonInfoTestCase.test_object_create_with_user_created
     """
     
-    @classmethod
-    def setUpTestData(cls):
-        
-        cls.model = StaticTest
-        
-        cls.user1 = make_user('test')
-        cls.user2 = make_user('test2')
-    
     def setUp(self):
         
-        self.user1.refresh_from_db()
-        self.user2.refresh_from_db()
+        self.user1 = make_user('test')
+        self.user2 = make_user('test2')
     
     def get_object(self, **kwargs):
         """
@@ -738,7 +755,7 @@ class StaticTestCase(TestCase):
         
         # Test object created with correct user_created and user_modified,
         # and with the correct initial version
-        obj = self.model.objects.get(pk=obj.pk)
+        obj = StaticTest.objects.get(pk=obj.pk)
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_created_id, obj.user_modified_id)
         self.assertEquals(obj.version, 1)
@@ -747,7 +764,7 @@ class StaticTestCase(TestCase):
         
         # Test saving the object updates the user_modified and increments the
         # version
-        obj = self.model.objects.get(pk=obj.pk)
+        obj = StaticTest.objects.get(pk=obj.pk)
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_modified_id, self.user2.pk)
         self.assertEquals(obj.version, 2)
@@ -772,10 +789,10 @@ class StaticTestCase(TestCase):
         self.assertFalse(obj.owned_by(self.user2))
         
         # Test the manager's owned_by method
-        self.assertEquals(self.model.objects.owned_by(self.user1).count(), 1)
+        self.assertEquals(StaticTest.objects.owned_by(self.user1).count(), 1)
         
         # Test the queryset's owned_by method
-        self.assertEquals(self.model.objects.all().owned_by(self.user1).count(), 1)
+        self.assertEquals(StaticTest.objects.all().owned_by(self.user1).count(), 1)
         
         self.assertNumQueries(3)
     
@@ -796,7 +813,7 @@ class StaticTestCase(TestCase):
          - ArchivableTestCase.test_object_unarchive__args
         """
         
-        model = self.model
+        model = StaticTest
         
         obj = self.get_object(is_archived=False)
         obj.save(self.user1)
@@ -841,7 +858,7 @@ class StaticTestCase(TestCase):
          - ArchivableTestCase.test_queryset_unarchive
         """
         
-        model = self.model
+        model = StaticTest
         
         self.get_object(is_archived=True).save(self.user1)
         self.get_object(is_archived=False).save(self.user1)
@@ -894,7 +911,7 @@ class StaticTestCase(TestCase):
          - VersioningTestCase.test_queryset_update_version_increment
         """
         
-        model = self.model
+        model = StaticTest
         
         obj = self.get_object()
         obj.save(self.user1)
@@ -918,6 +935,75 @@ class StaticTestCase(TestCase):
         self.assertEquals(obj.user_modified_id, self.user1.pk)
         
         self.assertNumQueries(6)
+    
+    def test_object_permissions__change(self):
+        """
+        Test object-level "change" permission checking.
+        """
+        
+        user1 = self.user1
+        user2 = self.user2
+        
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        permission = Permission.objects.get(codename='change_statictest')
+        user1.user_permissions.add(permission)
+        user2.user_permissions.add(permission)
+        
+        obj = self.get_object()
+        obj.save(user1)
+        
+        # user1 should have access as it is the owner, even though "test" is
+        # False. user2 should not. See StaticTest._user_can_change_statictest.
+        obj.test = False
+        obj.save(user1)
+        self.assertTrue(user1.has_perm('app.change_statictest', obj))
+        self.assertFalse(user2.has_perm('app.change_statictest', obj))
+        
+        # user2 should get access when "test" is True, even though it is not
+        # the owner. See StaticTest._user_can_change_statictest.
+        obj.test = True
+        obj.save(user1)
+        
+        user2 = get_user_model().objects.get(pk=user2.pk)
+        self.assertTrue(user2.has_perm('app.change_statictest', obj))
+    
+    def test_object_permissions__delete(self):
+        """
+        Test object-level "delete" permission checking. Also test the group
+        permission side of things.
+        """
+        
+        user1 = self.user1
+        user2 = self.user2
+        
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        permission = Permission.objects.get(codename='delete_statictest')
+        user1.user_permissions.add(permission)
+        user2.user_permissions.add(permission)
+        
+        group = Group.objects.create(name='Test Group')
+        user2.groups.add(group)
+        
+        obj = self.get_object()
+        obj.save(user1)
+        
+        # user1 should have access as it is the owner, regardless of group
+        # permissions (from the default CommonInfoMixin ownership permissions).
+        # user2 should get access because of group permissions, even though it
+        # is not the owner. See StaticTest._group_can_delete_statictest.
+        obj.save(user1)
+        self.assertTrue(user1.has_perm('app.delete_statictest', obj))
+        self.assertTrue(user2.has_perm('app.delete_statictest', obj))
+        
+        # user2 should lose access when "test" is False, even though they have
+        # groups. See StaticTest._group_can_delete_statictest.
+        obj.test = False
+        obj.save(user1)
+        
+        user2 = get_user_model().objects.get(pk=user2.pk)
+        self.assertFalse(user2.has_perm('app.delete_statictest', obj))
 
 
 class TimeZoneFieldTest(TestCase):

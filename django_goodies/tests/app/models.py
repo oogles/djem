@@ -10,9 +10,8 @@ from django_goodies.models import (
 
 class CommonInfoTest(CommonInfoMixin, models.Model):
     """
-    This model simply provides a concrete model with the CommonInfoMixin,
-    purely for testing the mixin without introducing the variables of a real
-    subclass.
+    This model provides a concrete model with the CommonInfoMixin for testing
+    the mixin without introducing the variables of a real subclass.
     """
     
     test = models.BooleanField(default=True)
@@ -20,9 +19,8 @@ class CommonInfoTest(CommonInfoMixin, models.Model):
 
 class ArchivableTest(ArchivableMixin, models.Model):
     """
-    This model simply provides a concrete model with the ArchivableMixin,
-    purely for testing the mixin without introducing the variables of a real
-    subclass.
+    This model provides a concrete model with the ArchivableMixin for testing
+    the mixin without introducing the variables of a real subclass.
     """
     
     test = models.BooleanField(default=True)
@@ -30,9 +28,8 @@ class ArchivableTest(ArchivableMixin, models.Model):
 
 class VersioningTest(VersioningMixin, models.Model):
     """
-    This model simply provides a concrete model with the VersioningMixin,
-    purely for testing the mixin without introducing the variables of a real
-    subclass.
+    This model provides a concrete model with the VersioningMixin for testing
+    the mixin without introducing the variables of a real subclass.
     """
     
     test = models.BooleanField(default=True)
@@ -40,17 +37,28 @@ class VersioningTest(VersioningMixin, models.Model):
 
 class StaticTest(StaticAbstract):
     """
-    This model simply provides a concrete version of the abstract StaticAbstract
-    model, purely for testing elements of StaticAbstract without introducing the
+    This model provides a concrete version of the abstract StaticAbstract
+    model for testing elements of StaticAbstract without introducing the
     variables of a real subclass.
+    It also provides a test bed for object-level permissions, both using defaults
+    inherited from CommonInfoMixin and model-specific overrides.
     """
     
-    pass
+    test = models.BooleanField(default=True)
+    
+    # Customise permission access functions for testing
+    def _user_can_change_statictest(self, user):
+        
+        return self.owned_by(user) or self.test
+    
+    def _group_can_delete_statictest(self, groups):
+        
+        return groups.exists() and self.test
 
 
 class TimeZoneTest(models.Model):
     """
-    This model simply provides some TimeZoneFields for testing.
+    This model provides some TimeZoneFields for testing.
     """
     
     timezone = TimeZoneField()
@@ -60,8 +68,7 @@ class TimeZoneTest(models.Model):
 
 class OPTest(models.Model):
     """
-    This model simply provides some access functions for object-level
-    permissions testing.
+    This model provides some access functions for object-level permissions testing.
     """
     
     test = models.BooleanField(default=True)
@@ -96,4 +103,3 @@ class OPTest(models.Model):
         permissions = (
             ('view_optest', 'Can view an OPTest record.'),
         )
-    

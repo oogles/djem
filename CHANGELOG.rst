@@ -6,8 +6,9 @@ Change Log
 ===
 
 * Added AjaxResponse
-* Added ObjectPermissionsBackend
 * Added GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE setting
+* Added object-level permission support (ObjectPermissionsBackend)
+* Updated CommonInfoMixin to provide default object-level permissions for subclasses, based on ownership
 
 0.3
 ===
