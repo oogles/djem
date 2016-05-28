@@ -101,6 +101,6 @@ class ObjectPermissionsBackend(object):
             return False  # not dealing with non-object permissions
         
         return (
-            self._get_object_permission(perm, user_obj, obj, 'user')
-            or self._get_object_permission(perm, user_obj, obj, 'group')
+            self._get_object_permission(perm, user_obj, obj, 'user') or
+            self._get_object_permission(perm, user_obj, obj, 'group')
         )

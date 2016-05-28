@@ -12,12 +12,14 @@ ROOT_URLCONF = 'django_goodies.tests.app.urls'
 USE_TZ = True
 
 MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',  # for AjaxResponse tests
-    'django.contrib.messages.middleware.MessageMiddleware'   # for AjaxResponse tests
+    'django.contrib.sessions.middleware.SessionMiddleware',    # for AjaxResponse tests
+    'django.contrib.messages.middleware.MessageMiddleware',    # for AjaxResponse tests
+    'django.contrib.auth.middleware.AuthenticationMiddleware'  # add request.user
 )
 
 INSTALLED_APPS = (
     'django.contrib.contenttypes',  # for django.contrib.auth
+    'django.contrib.sessions',      # for django.contrib.auth, at least when actually logging in
     'django.contrib.auth',          # for various tests
     'django.contrib.messages',      # for AjaxResponse tests
     
@@ -39,3 +41,14 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'django_goodies.auth.ObjectPermissionsBackend'
 ]
+
+# For testing template tags
+TEMPLATES = [{
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'APP_DIRS': True,
+    'OPTIONS': {
+        'context_processors': [
+            'django.contrib.auth.context_processors.auth'
+        ],
+    },
+}]

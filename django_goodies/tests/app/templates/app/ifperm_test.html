@@ -1,0 +1,6 @@
+{% load goodies %}
+{% ifperm user "app.change_commoninfotest" obj %}
+   IF
+{% else %}
+   ELSE
+{% endifperm %}
