@@ -21,7 +21,7 @@ import os
 sys.path.insert(0, os.path.abspath('..'))
 
 import django
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'rtd_settings'
 django.setup()
 
 # -- General configuration ------------------------------------------------
