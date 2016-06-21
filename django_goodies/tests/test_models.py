@@ -1,6 +1,8 @@
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
+from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -9,7 +11,7 @@ import pytz
 from django_goodies.models import TimeZoneField
 from django_goodies.utils.dt import TimeZoneHelper
 
-from .models import (
+from .app.models import (
     ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
 )
 
@@ -25,21 +27,42 @@ class CommonInfoTestCase(TestCase):
     model.
     """
     
-    @classmethod
-    def setUpTestData(cls):
-        
-        cls.user1 = make_user('test')
-        cls.user2 = make_user('test2')
-    
     def setUp(self):
         
-        self.user1.refresh_from_db()
-        self.user2.refresh_from_db()
+        self.user1 = make_user('test')
+        self.user2 = make_user('test2')
     
-    def test_object_create(self):
+    def test_object_save__no_user__required(self):
         """
-        Test object creation, including the fields automatically set by the
-        overridden ``save`` method.
+        Test the overridden ``save`` method correctly raises TypeError when
+        the ``user`` argument is not provided and it is required (per
+        ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE`` setting).
+        """
+        
+        obj = CommonInfoTest()
+        
+        with self.assertRaises(TypeError):
+            obj.save()
+    
+    def test_object_save__no_user__not_required(self):
+        """
+        Test the overridden ``save`` method correctly accepts a null ``user``
+        argument when it is not required (per``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        setting). Instance creation should fail on missing fields as they are
+        not automatically populated by the given user.
+        """
+        
+        obj = CommonInfoTest()
+        
+        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            with self.assertRaises(IntegrityError):
+                obj.save()
+    
+    def test_object_create__user__required(self):
+        """
+        Test the overridden ``save`` method automatically sets the necessary
+        fields when creating a new instance, passing the ``user`` argument
+        when it is required.
         """
         
         obj = CommonInfoTest()
@@ -49,7 +72,7 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_created_id, obj.user_modified_id)
         
-        self.assertIsNotNone(obj.date_created, None)
+        self.assertIsNotNone(obj.date_created)
         self.assertEquals(obj.date_created, obj.date_modified)
         
         # Test the changes are correctly written to the database
@@ -58,15 +81,97 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_created_id, obj.user_modified_id)
         
-        self.assertIsNotNone(obj.date_created, None)
+        self.assertIsNotNone(obj.date_created)
         self.assertEquals(obj.date_created, obj.date_modified)
         
         self.assertNumQueries(2)
     
-    def test_object_update(self):
+    def test_object_create__user__not_required(self):
         """
-        Test object modification, including the fields automatically set by the
-        overridden ``save`` method.
+        Test the overridden ``save`` method automatically sets the necessary
+        fields when creating a new instance, passing the ``user`` argument
+        when it is not required. This should be identical to passing it when
+        it is required.
+        """
+        
+        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            self.test_object_create__user__required()
+    
+    def test_object_create__no_user(self):
+        """
+        Test the overridden ``save`` method automatically sets the necessary
+        fields when creating a new instance, not using the ``user`` argument.
+        """
+        
+        user = self.user1
+        obj = CommonInfoTest(user_created=user, user_modified=user)
+        
+        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            obj.save()
+        
+        # Test the object attributes are updated/not updated as necessary
+        self.assertEquals(obj.user_created_id, user.pk)
+        self.assertEquals(obj.user_created_id, obj.user_modified_id)
+        
+        self.assertIsNotNone(obj.date_created)
+        self.assertEquals(obj.date_created, obj.date_modified)
+        
+        # Test the changes are correctly written to the database
+        obj = CommonInfoTest.objects.get(pk=obj.pk)
+        
+        self.assertEquals(obj.user_created_id, user.pk)
+        self.assertEquals(obj.user_created_id, obj.user_modified_id)
+        
+        self.assertIsNotNone(obj.date_created)
+        self.assertEquals(obj.date_created, obj.date_modified)
+        
+        self.assertNumQueries(2)
+    
+    def test_object_create__existing_date_created(self):
+        """
+        Test the overridden ``save`` method maintains a ``date_created`` value if
+        one already exists when creating a new instance.
+        """
+        
+        d = timezone.now() - datetime.timedelta(days=5)
+        
+        obj = CommonInfoTest(date_created=d)
+        obj.save(self.user1)
+        
+        # Test the object attributes are updated
+        self.assertEquals(obj.date_created, d)
+        
+        # Test the changes are correctly written to the database
+        obj = CommonInfoTest.objects.get(pk=obj.pk)
+        self.assertEquals(obj.date_created, d)
+        
+        self.assertNumQueries(1)
+    
+    def test_object_create__existing_user_created(self):
+        """
+        Test the overridden ``save`` method maintains a ``user_created`` value if
+        one already exists when creating a new instance.
+        """
+        
+        obj = CommonInfoTest(user_created=self.user2)
+        obj.save(self.user1)
+        
+        # Test the object attributes are updated
+        self.assertEquals(obj.user_created_id, self.user2.pk)
+        self.assertEquals(obj.user_modified_id, self.user1.pk)
+        
+        # Test the changes are correctly written to the database
+        obj = CommonInfoTest.objects.get(pk=obj.pk)
+        self.assertEquals(obj.user_created_id, self.user2.pk)
+        self.assertEquals(obj.user_modified_id, self.user1.pk)
+        
+        self.assertNumQueries(1)
+    
+    def test_object_update__user__required(self):
+        """
+        Test the overridden ``save`` method automatically sets the necessary
+        fields when updating an existing instance, passing the ``user`` argument
+        when it is required.
         """
         
         obj1 = CommonInfoTest()
@@ -93,69 +198,57 @@ class CommonInfoTestCase(TestCase):
         
         self.assertNumQueries(3)
     
-    def test_object_create_with_date_created(self):
+    def test_object_update__user__not_required(self):
         """
-        Test object creation maintains a date_created value if a specific one
-        is given, and doesn't override it with the default.
+        Test the overridden ``save`` method automatically sets the necessary
+        fields when updating an existing instance, passing the ``user`` argument
+        when it is not required. This should be identical to passing it when
+        it is required.
         """
         
-        d = timezone.now() - datetime.timedelta(days=5)
+        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            self.test_object_update__user__required()
+    
+    def test_object_update__no_user(self):
+        """
+        Test the overridden ``save`` method automatically sets the necessary
+        fields when updating an existing instance, not passing the ``user``
+        argument.
+        """
         
-        obj = CommonInfoTest(date_created=d)
-        obj.save(self.user1)
+        user = self.user1
         
-        # Test the object attributes are updated
-        self.assertEquals(obj.date_created, d)
+        obj1 = CommonInfoTest()
+        obj1.save(user)
+        
+        obj2 = CommonInfoTest.objects.get(pk=obj1.pk)
+        
+        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            obj2.save(update_fields=('test',))
+        
+        # Test the object attributes are updated/not updated as necessary
+        self.assertEquals(obj2.user_created_id, user.pk)
+        self.assertEquals(obj2.user_modified_id, user.pk)
+        
+        self.assertEquals(obj1.date_created, obj2.date_created)
+        self.assertGreater(obj2.date_modified, obj1.date_modified)
         
         # Test the changes are correctly written to the database
-        obj = CommonInfoTest.objects.get(pk=obj.pk)
-        self.assertEquals(obj.date_created, d)
+        obj2 = CommonInfoTest.objects.get(pk=obj2.pk)
         
-        self.assertNumQueries(1)
+        self.assertEquals(obj2.user_created_id, user.pk)
+        self.assertEquals(obj2.user_modified_id, user.pk)
+        
+        self.assertEquals(obj1.date_created, obj2.date_created)
+        self.assertGreater(obj2.date_modified, obj1.date_modified)
+        
+        self.assertNumQueries(3)
     
-    def test_object_create_with_user_created(self):
+    def test_queryset_update__user__required(self):
         """
-        Test object creation maintains a user_created value if a specific one
-        is given, and doesn't override it with the default.
-        """
-        
-        obj = CommonInfoTest(user_created=self.user2)
-        obj.save(self.user1)
-        
-        # Test the object attributes are updated
-        self.assertEquals(obj.user_created_id, self.user2.pk)
-        self.assertEquals(obj.user_modified_id, self.user1.pk)
-        
-        # Test the changes are correctly written to the database
-        obj = CommonInfoTest.objects.get(pk=obj.pk)
-        self.assertEquals(obj.user_created_id, self.user2.pk)
-        self.assertEquals(obj.user_modified_id, self.user1.pk)
-        
-        self.assertNumQueries(1)
-    
-    def test_manager_update(self):
-        """
-        Test the overridden ``update`` method of the custom queryset, accessed
-        from a manager.
-        """
-        
-        obj = CommonInfoTest()
-        obj.save(self.user1)
-        date_modified = obj.date_modified
-        
-        self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user1).count(), 1)
-        
-        CommonInfoTest.objects.update(self.user2, test=False)
-        
-        self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user2).count(), 1)
-        self.assertGreater(CommonInfoTest.objects.first().date_modified, date_modified)
-        
-        self.assertNumQueries(5)
-    
-    def test_queryset_update(self):
-        """
-        Test the overridden ``update`` method of the custom queryset, accessed
-        from a queryset.
+        Test the overridden ``update`` method of the custom queryset
+        automatically sets the necessary fields when updating existing records,
+        passing the ``user`` argument when it is required.
         """
         
         obj = CommonInfoTest()
@@ -165,6 +258,74 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user1).count(), 1)
         
         CommonInfoTest.objects.all().update(self.user2, test=False)
+        
+        self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user2).count(), 1)
+        self.assertGreater(CommonInfoTest.objects.first().date_modified, date_modified)
+        
+        self.assertNumQueries(5)
+    
+    def test_queryset_update__user__not_required(self):
+        """
+        Test the overridden ``update`` method of the custom queryset
+        automatically sets the necessary fields when updating existing records,
+        passing the ``user`` argument when it is not required. This should be
+        identical to passing it when it is required.
+        """
+        
+        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_update__user__required()
+    
+    def test_queryset_update__no_user__required(self):
+        """
+        Test the overridden ``update`` method of the custom queryset
+        automatically sets the necessary fields when updating existing records,
+        not passing the ``user`` argument when it is required.
+        """
+        
+        obj = CommonInfoTest()
+        obj.save(self.user1)
+        
+        with self.assertRaises(TypeError):
+            CommonInfoTest.objects.all().update(test=False)
+        
+        self.assertNumQueries(1)
+    
+    def test_queryset_update__no_user__not_required(self):
+        """
+        Test the overridden ``update`` method of the custom queryset
+        automatically sets the necessary fields when updating existing records,
+        not passing the ``user`` argument when it is not required.
+        """
+        
+        user = self.user1
+        
+        obj = CommonInfoTest()
+        obj.save(user)
+        date_modified = obj.date_modified
+        
+        self.assertEquals(CommonInfoTest.objects.filter(user_modified=user).count(), 1)
+        
+        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            CommonInfoTest.objects.all().update(test=False)
+        
+        self.assertEquals(CommonInfoTest.objects.filter(user_modified=user).count(), 1)
+        self.assertGreater(CommonInfoTest.objects.first().date_modified, date_modified)
+        
+        self.assertNumQueries(5)
+    
+    def test_manager_update(self):
+        """
+        Test the overridden ``update`` method of the custom queryset, accessed
+        from the custom manager.
+        """
+        
+        obj = CommonInfoTest()
+        obj.save(self.user1)
+        date_modified = obj.date_modified
+        
+        self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user1).count(), 1)
+        
+        CommonInfoTest.objects.update(self.user2, test=False)
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user2).count(), 1)
         self.assertGreater(CommonInfoTest.objects.first().date_modified, date_modified)
@@ -182,15 +343,34 @@ class CommonInfoTestCase(TestCase):
         obj2 = CommonInfoTest()
         obj2.save(self.user2)
         
-        self.assertTrue(obj1.owned_by(self.user1), True)
-        self.assertTrue(obj1.owned_by(self.user1.pk), True)
-        self.assertFalse(obj1.owned_by(self.user2), False)
+        self.assertTrue(obj1.owned_by(self.user1))
+        self.assertTrue(obj1.owned_by(self.user1.pk))
+        self.assertFalse(obj1.owned_by(self.user2))
         
-        self.assertTrue(obj2.owned_by(self.user2), True)
-        self.assertTrue(obj2.owned_by(self.user2.pk), True)
-        self.assertFalse(obj2.owned_by(self.user1), False)
+        self.assertTrue(obj2.owned_by(self.user2))
+        self.assertTrue(obj2.owned_by(self.user2.pk))
+        self.assertFalse(obj2.owned_by(self.user1))
         
         self.assertNumQueries(2)
+    
+    def test_queryset_owned_by(self):
+        """
+        Test the ``owned_by`` method of the custom queryset.
+        """
+        
+        CommonInfoTest().save(self.user1)
+        CommonInfoTest().save(self.user2)
+        
+        self.assertEquals(CommonInfoTest.objects.count(), 2)
+        
+        qs = CommonInfoTest.objects.all()
+        
+        self.assertEquals(qs.owned_by(self.user1).count(), 1)
+        self.assertEquals(qs.owned_by(self.user1.pk).count(), 1)
+        self.assertEquals(qs.filter(test=False).owned_by(self.user1).count(), 0)
+        self.assertEquals(qs.owned_by(self.user1).owned_by(self.user2).count(), 0)
+        
+        self.assertNumQueries(7)
     
     def test_manager_owned_by(self):
         """
@@ -213,25 +393,41 @@ class CommonInfoTestCase(TestCase):
         
         self.assertNumQueries(7)
     
-    def test_queryset_owned_by(self):
+    def test_object_permissions__change(self):
         """
-        Test the ``owned_by`` method of the custom queryset, accessed from a
-        queryset.
+        Test the out-of-the-box implementation of object-level "change"
+        permissions using ``owned_by``.
         """
         
-        CommonInfoTest().save(self.user1)
-        CommonInfoTest().save(self.user2)
+        user = self.user1
         
-        self.assertEquals(CommonInfoTest.objects.count(), 2)
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        user.user_permissions.add(Permission.objects.get(codename='change_commoninfotest'))
         
-        qs = CommonInfoTest.objects.all()
+        obj = CommonInfoTest()
+        obj.save(user)
         
-        self.assertEquals(qs.owned_by(self.user1).count(), 1)
-        self.assertEquals(qs.owned_by(self.user1.pk).count(), 1)
-        self.assertEquals(qs.filter(test=False).owned_by(self.user1).count(), 0)
-        self.assertEquals(qs.owned_by(self.user1).owned_by(self.user2).count(), 0)
+        self.assertTrue(user.has_perm('app.change_commoninfotest', obj))
+        self.assertFalse(self.user2.has_perm('app.change_commoninfotest', obj))
+    
+    def test_object_permissions__delete(self):
+        """
+        Test the out-of-the-box implementation of object-level "delete"
+        permissions using ``owned_by``.
+        """
         
-        self.assertNumQueries(7)
+        user = self.user1
+        
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        user.user_permissions.add(Permission.objects.get(codename='delete_commoninfotest'))
+        
+        obj = CommonInfoTest()
+        obj.save(user)
+        
+        self.assertTrue(user.has_perm('app.delete_commoninfotest', obj))
+        self.assertFalse(self.user2.has_perm('app.delete_commoninfotest', obj))
 
 
 class ArchivableTestCase(TestCase):
@@ -240,16 +436,10 @@ class ArchivableTestCase(TestCase):
     model.
     """
     
-    @classmethod
-    def setUpTestData(cls):
-        
-        cls.obj1 = ArchivableTest.objects.create(is_archived=True)
-        cls.obj2 = ArchivableTest.objects.create(is_archived=False)
-    
     def setUp(self):
         
-        self.obj1.refresh_from_db()
-        self.obj2.refresh_from_db()
+        self.obj1 = ArchivableTest.objects.create(is_archived=True)
+        self.obj2 = ArchivableTest.objects.create(is_archived=False)
     
     def test_managers_archived_flag(self):
         """
@@ -264,7 +454,7 @@ class ArchivableTestCase(TestCase):
         
         self.assertNumQueries(3)
     
-    def test_object_archive_no_args(self):
+    def test_object_archive__no_args(self):
         """
         Test the ``archive`` method of an instance, when called with no
         arguments.
@@ -286,7 +476,7 @@ class ArchivableTestCase(TestCase):
         
         self.assertNumQueries(7)
     
-    def test_object_archive_args(self):
+    def test_object_archive__args(self):
         """
         Test the ``archive`` method of an instance, when called with the
         ``update_fields`` argument subsequently passed to its call to ``save``.
@@ -308,7 +498,7 @@ class ArchivableTestCase(TestCase):
         
         self.assertNumQueries(7)
     
-    def test_object_unarchive_no_args(self):
+    def test_object_unarchive__no_args(self):
         """
         Test the ``unarchive`` method of an instance, when called with no
         arguments.
@@ -330,7 +520,7 @@ class ArchivableTestCase(TestCase):
         
         self.assertNumQueries(7)
     
-    def test_object_unarchive_args(self):
+    def test_object_unarchive__args(self):
         """
         Test the ``unarchive`` method of an instance, when called with the
         ``update_fields`` argument subsequently passed to its call to ``save``.
@@ -536,18 +726,10 @@ class StaticTestCase(TestCase):
      - CommonInfoTestCase.test_object_create_with_user_created
     """
     
-    @classmethod
-    def setUpTestData(cls):
-        
-        cls.model = StaticTest
-        
-        cls.user1 = make_user('test')
-        cls.user2 = make_user('test2')
-    
     def setUp(self):
         
-        self.user1.refresh_from_db()
-        self.user2.refresh_from_db()
+        self.user1 = make_user('test')
+        self.user2 = make_user('test2')
     
     def get_object(self, **kwargs):
         """
@@ -563,8 +745,8 @@ class StaticTestCase(TestCase):
         Test object creation and modification.
         
         Covers:
-         - CommonInfoTestCase.test_object_create
-         - CommonInfoTestCase.test_object_update
+         - CommonInfoTestCase.test_object_create__user
+         - CommonInfoTestCase.test_object_update__user
          - VersioningTestCase.test_save_version_increment
         """
         
@@ -573,7 +755,7 @@ class StaticTestCase(TestCase):
         
         # Test object created with correct user_created and user_modified,
         # and with the correct initial version
-        obj = self.model.objects.get(pk=obj.pk)
+        obj = StaticTest.objects.get(pk=obj.pk)
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_created_id, obj.user_modified_id)
         self.assertEquals(obj.version, 1)
@@ -582,7 +764,7 @@ class StaticTestCase(TestCase):
         
         # Test saving the object updates the user_modified and increments the
         # version
-        obj = self.model.objects.get(pk=obj.pk)
+        obj = StaticTest.objects.get(pk=obj.pk)
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_modified_id, self.user2.pk)
         self.assertEquals(obj.version, 2)
@@ -607,10 +789,10 @@ class StaticTestCase(TestCase):
         self.assertFalse(obj.owned_by(self.user2))
         
         # Test the manager's owned_by method
-        self.assertEquals(self.model.objects.owned_by(self.user1).count(), 1)
+        self.assertEquals(StaticTest.objects.owned_by(self.user1).count(), 1)
         
         # Test the queryset's owned_by method
-        self.assertEquals(self.model.objects.all().owned_by(self.user1).count(), 1)
+        self.assertEquals(StaticTest.objects.all().owned_by(self.user1).count(), 1)
         
         self.assertNumQueries(3)
     
@@ -625,13 +807,13 @@ class StaticTestCase(TestCase):
         
         Covers:
          - ArchivableTestCase.test_managers_archived_flag
-         - ArchivableTestCase.test_object_archive_no_args
-         - ArchivableTestCase.test_object_archive_args
-         - ArchivableTestCase.test_object_unarchive_no_args
-         - ArchivableTestCase.test_object_unarchive_args
+         - ArchivableTestCase.test_object_archive__no_args
+         - ArchivableTestCase.test_object_archive__args
+         - ArchivableTestCase.test_object_unarchive__no_args
+         - ArchivableTestCase.test_object_unarchive__args
         """
         
-        model = self.model
+        model = StaticTest
         
         obj = self.get_object(is_archived=False)
         obj.save(self.user1)
@@ -676,7 +858,7 @@ class StaticTestCase(TestCase):
          - ArchivableTestCase.test_queryset_unarchive
         """
         
-        model = self.model
+        model = StaticTest
         
         self.get_object(is_archived=True).save(self.user1)
         self.get_object(is_archived=False).save(self.user1)
@@ -724,12 +906,12 @@ class StaticTestCase(TestCase):
         
         Covers:
          - CommonInfoTestCase.test_manager_update
-         - CommonInfoTestCase.test_queryset_update
+         - CommonInfoTestCase.test_queryset_update__user
          - VersioningTestCase.test_manager_update_version_increment
          - VersioningTestCase.test_queryset_update_version_increment
         """
         
-        model = self.model
+        model = StaticTest
         
         obj = self.get_object()
         obj.save(self.user1)
@@ -753,6 +935,75 @@ class StaticTestCase(TestCase):
         self.assertEquals(obj.user_modified_id, self.user1.pk)
         
         self.assertNumQueries(6)
+    
+    def test_object_permissions__change(self):
+        """
+        Test object-level "change" permission checking.
+        """
+        
+        user1 = self.user1
+        user2 = self.user2
+        
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        permission = Permission.objects.get(codename='change_statictest')
+        user1.user_permissions.add(permission)
+        user2.user_permissions.add(permission)
+        
+        obj = self.get_object()
+        obj.save(user1)
+        
+        # user1 should have access as it is the owner, even though "test" is
+        # False. user2 should not. See StaticTest._user_can_change_statictest.
+        obj.test = False
+        obj.save(user1)
+        self.assertTrue(user1.has_perm('app.change_statictest', obj))
+        self.assertFalse(user2.has_perm('app.change_statictest', obj))
+        
+        # user2 should get access when "test" is True, even though it is not
+        # the owner. See StaticTest._user_can_change_statictest.
+        obj.test = True
+        obj.save(user1)
+        
+        user2 = get_user_model().objects.get(pk=user2.pk)
+        self.assertTrue(user2.has_perm('app.change_statictest', obj))
+    
+    def test_object_permissions__delete(self):
+        """
+        Test object-level "delete" permission checking. Also test the group
+        permission side of things.
+        """
+        
+        user1 = self.user1
+        user2 = self.user2
+        
+        # Add model-level permission to ensure it is object-level permissions
+        # being granted/denied
+        permission = Permission.objects.get(codename='delete_statictest')
+        user1.user_permissions.add(permission)
+        user2.user_permissions.add(permission)
+        
+        group = Group.objects.create(name='Test Group')
+        user2.groups.add(group)
+        
+        obj = self.get_object()
+        obj.save(user1)
+        
+        # user1 should have access as it is the owner, regardless of group
+        # permissions (from the default CommonInfoMixin ownership permissions).
+        # user2 should get access because of group permissions, even though it
+        # is not the owner. See StaticTest._group_can_delete_statictest.
+        obj.save(user1)
+        self.assertTrue(user1.has_perm('app.delete_statictest', obj))
+        self.assertTrue(user2.has_perm('app.delete_statictest', obj))
+        
+        # user2 should lose access when "test" is False, even though they have
+        # groups. See StaticTest._group_can_delete_statictest.
+        obj.test = False
+        obj.save(user1)
+        
+        user2 = get_user_model().objects.get(pk=user2.pk)
+        self.assertFalse(user2.has_perm('app.delete_statictest', obj))
 
 
 class TimeZoneFieldTest(TestCase):

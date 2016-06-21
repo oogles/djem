@@ -13,7 +13,16 @@ Date/Time Utils
     
     A simple helper class that provides shortcuts for getting the current date and the current datetime for a known local timezone.
     
-    ``tz`` should be a valid timezone name string, as accepted by the ``pytz.timezone`` function.
+    ``tz`` should be a valid timezone name string (as accepted by the ``pytz.timezone`` function) or a ``pytz`` ``tzinfo`` instance (as returned by the ``pytz.timezone`` function).
+    
+    .. attribute:: tz
+        
+        The ``pytz`` ``tzinfo`` instance representing the timezone used by this ``TimeZoneHelper`` instance.
+    
+    .. attribute:: name
+        
+        The name of the timezone represented by this ``TimeZoneHelper`` instance, as a string.
+        Equivalent to ``tz.zone``, where ``tz`` is the :attr:`instance's tz attribute <TimeZoneHelper.tz>`.
     
     .. automethod:: now
     

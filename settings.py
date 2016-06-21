@@ -3,23 +3,30 @@
 
 SECRET_KEY = 'abcde12345'
 
-# Need to point at something. If django-goodies actually uses urls one day,
-# this file should live in the django_goodies app directory.
-ROOT_URLCONF = 'urls'
+# For testing. If django-goodies ever includes real views that also need testing,
+# this should point to that urlconf and the test app's urls should be tested
+# by overriding the setting.
+ROOT_URLCONF = 'django_goodies.tests.app.urls'
 
-# Required for TimeZoneHelper/TimeZoneField tests
+# For TimeZoneHelper/TimeZoneField tests
 USE_TZ = True
 
-MIDDLEWARE_CLASSES = ()
+MIDDLEWARE_CLASSES = (
+    'django.contrib.sessions.middleware.SessionMiddleware',    # for AjaxResponse tests
+    'django.contrib.messages.middleware.MessageMiddleware',    # for AjaxResponse tests
+    'django.contrib.auth.middleware.AuthenticationMiddleware'  # add request.user
+)
 
 INSTALLED_APPS = (
     'django.contrib.contenttypes',  # for django.contrib.auth
-    'django.contrib.auth',  # for RequestFactoryTestCase
+    'django.contrib.sessions',      # for django.contrib.auth, at least when actually logging in
+    'django.contrib.auth',          # for various tests
+    'django.contrib.messages',      # for AjaxResponse tests
     
     'django_extensions',  # for dev tools, e.g. shell_plus
     
     'django_goodies',
-    'django_goodies.tests',
+    'django_goodies.tests.app',
 )
 
 DATABASES = {
@@ -28,3 +35,20 @@ DATABASES = {
         'NAME': ':memory:',
     },
 }
+
+# For object-level permissions framework tests
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'django_goodies.auth.ObjectPermissionsBackend'
+]
+
+# For testing template tags
+TEMPLATES = [{
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'APP_DIRS': True,
+    'OPTIONS': {
+        'context_processors': [
+            'django.contrib.auth.context_processors.auth'
+        ],
+    },
+}]

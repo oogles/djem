@@ -20,9 +20,3 @@ Documentation
 -------------
 
 Full documentation can be found at: http://django-goodies.readthedocs.org.
-
-
-Thanks
-------
-
-The project-independent test platform was inspired by https://github.com/dabapps/django-reusable-app

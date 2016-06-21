@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models.base import ModelBase
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
@@ -9,6 +10,33 @@ from django_goodies.models.managers import (
     ArchivableManager, CommonInfoManager, StaticAbstractManager,
     VersioningManager
 )
+
+
+class CommonInfoMixinBase(ModelBase):
+    """
+    Metaclass for adding appropriately named permission checking methods to
+    concrete subclasses of CommonInfoMixin.
+    As a reasonable default, "change" and "delete" permissions for such a
+    subclass can be mapped to the ``owned_by`` method, granting owners the
+    permissions and denying others.
+    The permissions themselves will contain the name of the subclass model, so
+    must be added dynamically once the name is known.
+    """
+    
+    def __init__(cls, *args, **kwargs):
+        
+        name = cls._meta.model_name
+        
+        if not cls._meta.abstract:
+            change_attr_name = '_user_can_change_{0}'.format(name)
+            if not hasattr(cls, change_attr_name):
+                setattr(cls, change_attr_name, lambda self, user: self.owned_by(user))
+            
+            delete_attr_name = '_user_can_delete_{0}'.format(name)
+            if not hasattr(cls, delete_attr_name):
+                setattr(cls, delete_attr_name, lambda self, user: self.owned_by(user))
+        
+        return super(CommonInfoMixinBase, cls).__init__(*args, **kwargs)
 
 
 class CommonInfoMixin(models.Model):
@@ -24,6 +52,8 @@ class CommonInfoMixin(models.Model):
     as will saves performed by ModelForms that aren't overridden to support the
     custom signature.
     """
+    
+    __metaclass__ = CommonInfoMixinBase
     
     date_created = models.DateTimeField(editable=False, verbose_name='Date Created')
     date_modified = models.DateTimeField(editable=False, verbose_name='Date Last Modified')
@@ -45,6 +75,46 @@ class CommonInfoMixin(models.Model):
     class Meta:
         abstract = True
     
+    def save(self, user=None, *args, **kwargs):
+        """
+        Overridden to ensure the ``user_modified`` and ``date_modified`` fields
+        are always updated. The ``user`` argument is required and must be passed
+        a ``User`` instance, unless the ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        setting is ``False``.
+        """
+        
+        require_user = getattr(settings, 'GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
+        if require_user and not user:
+            raise TypeError("save() requires the 'user' argument")
+        
+        now = timezone.now()
+        update_fields = []
+        
+        self.date_modified = now
+        update_fields.append('date_modified')
+        
+        if user:
+            self.user_modified = user
+            update_fields.append('user_modified')
+        
+        if self.pk is None:
+            if self.date_created is None:
+                self.date_created = now
+            
+            if user:
+                try:
+                    self.user_created
+                except ObjectDoesNotExist:
+                    self.user_created = user
+        
+        if 'update_fields' in kwargs:
+            # If only saving a subset of fields, make sure the fields altered
+            # above are included. Not applicable when creating a new record,
+            # so *_created fields can be ignored.
+            kwargs['update_fields'] = set(kwargs['update_fields']).union(update_fields)
+        
+        super(CommonInfoMixin, self).save(*args, **kwargs)
+    
     def owned_by(self, user):
         """
         Return ``True`` if ``user_created`` matches the given user, otherwise
@@ -58,35 +128,6 @@ class CommonInfoMixin(models.Model):
             user_id = user
         
         return user_id == self.user_created_id
-    
-    def save(self, user, *args, **kwargs):
-        """
-        Overridden to ensure the ``user_modified`` and ``date_modified`` fields
-        are always updated. The required ``user`` argument must be passed a
-        ``User`` instance.
-        """
-        
-        now = timezone.now()
-        
-        self.date_modified = now
-        self.user_modified = user
-        
-        if self.pk is None:
-            if self.date_created is None:
-                self.date_created = now
-            
-            try:
-                self.user_created
-            except ObjectDoesNotExist:
-                self.user_created = user
-        
-        if 'update_fields' in kwargs:
-            # If only saving a subset of fields, make sure the fields altered
-            # above are included. Not applicable when creating a new record,
-            # so *_created fields can be ignored.
-            kwargs['update_fields'] = set(kwargs['update_fields']).union(('date_modified', 'user_modified'))
-        
-        super(CommonInfoMixin, self).save(*args, **kwargs)
 
 
 class ArchivableMixin(models.Model):

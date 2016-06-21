@@ -1,5 +1,6 @@
 import re
 
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -12,18 +13,22 @@ class CommonInfoQuerySet(models.QuerySet):
     ``CommonInfoMixin``.
     """
     
-    def update(self, user, **kwargs):
+    def update(self, user=None, **kwargs):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
-        are always updated. The required ``user`` argument must be passed a
-        ``User`` instance.
+        are always updated. The ``user`` argument is required and must be passed
+        a ``User`` instance, unless the ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        setting is ``False``.
         """
         
-        # Ensure the user_modified field is always updated on any change
-        kwargs.update({
-            'user_modified': user,
-            'date_modified': timezone.now()
-        })
+        require_user = getattr(settings, 'GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
+        if require_user and not user:
+            raise TypeError("save() requires the 'user' argument")
+        
+        kwargs['date_modified'] = timezone.now()
+        
+        if user:
+            kwargs['user_modified'] = user
         
         return super(CommonInfoQuerySet, self).update(**kwargs)
     

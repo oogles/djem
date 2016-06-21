@@ -28,6 +28,11 @@ class TimeZoneHelper(object):
         
         self.tz = tz
     
+    @property
+    def name(self):
+        
+        return self.tz.zone
+    
     def now(self):
         """
         Return the current datetime in the local timezone.
