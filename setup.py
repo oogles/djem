@@ -1,19 +1,28 @@
+import re
+
 from setuptools import setup, find_packages
 from codecs import open # To use a consistent encoding
 from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-# Get the long description from the README file
+# Read the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-# Execute the django_goodies/__init__.py file to get the version
-execfile('django_goodies/__init__.py')
+# Read the version from django_goodies/__init__.py
+version_re = r'^__version__ = [\'"]([^\'"]*)[\'"]'
+init_path = path.join(here, 'django_goodies', '__init__.py')
+with open(init_path) as f:
+    match = re.search(version_re, f.read(), re.MULTILINE)
+    if match:
+        version = match.group(1)
+    else:
+        raise RuntimeError('Unable to find __version__ in {0}'.format(init_path))
 
 setup(
     name='django-goodies',
-    version=__version__,
+    version=version,
     
     description='A collection of useful stuff for Django projects.',
     long_description=long_description,

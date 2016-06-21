@@ -19,4 +19,4 @@ Install the latest stable version from PyPI:
 Documentation
 -------------
 
-Full documentation can be found at: http://django-goodies.readthedocs.org.
+Full documentation can be found at: https://django-goodies.readthedocs.io.
