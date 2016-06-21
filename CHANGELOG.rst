@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.4.2
+=====
+
+* Fixed missing commits under 0.4.1 tag
+
 0.4.1
 =====
 
