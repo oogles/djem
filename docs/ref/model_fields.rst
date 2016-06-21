@@ -44,7 +44,7 @@ Model Fields
         
         class CustomUser(AbstractBaseUser):
             ...
-            time_zone = models.TimeZoneField()
+            time_zone = TimeZoneField()
     
     .. code-block:: python
         

@@ -19,12 +19,10 @@ Django Goodies provides :class:`~django_goodies.forms.CommonInfoForm` to enable 
 
 Setting ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "required" nature of the ``user`` argument to :meth:`~django_goodies.models.CommonInfoMixin.save`/:meth:`~django_goodies.models.managers.CommonInfoQuerySet.update`. It will still be accepted, and will still be used as per usual if it is provided. But if it is not provided, no exception will be raised, and the fields that would ordinarily be populated by it will simply be left alone.
 
-.. _require-user-on-save-warnings:
-
 .. warning::
     
     The ``user_created`` and ``user_modified`` fields will still be required. When creating instances of models using ``CommonInfoMixin``, and a ``User`` is not passed to the :meth:`~django_goodies.models.CommonInfoMixin.save` method, these fields will need to be populated manually, or an ``IntegrityError`` will be raised.
 
 .. warning::
     
-    Using this setting can reduce the accuracy of ``user_modified``, as it is no longer guaranteed to be updated by any save/update to the model instance. It will be up to you to ensure that this field is updated whenever any other changes are made.
+    Using this setting can reduce the accuracy of ``user_modified``, as it is no longer guaranteed to be updated by any save/update to the model instance. It will be up to you to ensure that this field is updated when necessary.

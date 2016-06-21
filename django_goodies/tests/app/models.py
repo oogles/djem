@@ -79,7 +79,7 @@ class OPTest(models.Model):
         
         return True
     
-    def _group_can_view_optest(self, user):
+    def _group_can_view_optest(self, groups):
         
         return True
     
