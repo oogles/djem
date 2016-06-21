@@ -11,7 +11,7 @@ class AjaxResponseTestCase(TestCase):
         """
         
         with self.assertRaises(TypeError):
-            self.client.get(reverse('no_args'))
+            self.client.get(reverse('ajax__no_args'))
     
     def test_response__request_only(self):
         """
@@ -19,7 +19,7 @@ class AjaxResponseTestCase(TestCase):
         "request" argument, and simply contains an empty response body.
         """
         
-        response = self.client.get(reverse('request_only'))
+        response = self.client.get(reverse('ajax__request_only'))
         
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.json(), {})
@@ -30,7 +30,7 @@ class AjaxResponseTestCase(TestCase):
         body.
         """
         
-        response = self.client.get(reverse('data'))
+        response = self.client.get(reverse('ajax__data'))
         
         self.assertEquals(response.status_code, 200)
         
@@ -45,7 +45,7 @@ class AjaxResponseTestCase(TestCase):
         """
         
         with self.assertRaises(TypeError):
-            self.client.get(reverse('bad_data'))
+            self.client.get(reverse('ajax__bad_data'))
     
     def test_response__success__true(self):
         """
@@ -53,7 +53,7 @@ class AjaxResponseTestCase(TestCase):
         body when no other data is given.
         """
         
-        response = self.client.get(reverse('success__true'))
+        response = self.client.get(reverse('ajax__success__true'))
         
         self.assertEquals(response.status_code, 200)
         
@@ -67,7 +67,7 @@ class AjaxResponseTestCase(TestCase):
         body.
         """
         
-        response = self.client.get(reverse('success__false'))
+        response = self.client.get(reverse('ajax__success__false'))
         
         self.assertEquals(response.status_code, 200)
         
@@ -81,7 +81,7 @@ class AjaxResponseTestCase(TestCase):
         response body when the success argument is given as a non-boolean value.
         """
         
-        response = self.client.get(reverse('success__dumb'))
+        response = self.client.get(reverse('ajax__success__dumb'))
         
         self.assertEquals(response.status_code, 200)
         
@@ -95,7 +95,7 @@ class AjaxResponseTestCase(TestCase):
         response body when other data is also provided.
         """
         
-        response = self.client.get(reverse('success__data'))
+        response = self.client.get(reverse('ajax__success__data'))
         
         self.assertEquals(response.status_code, 200)
         
@@ -110,7 +110,7 @@ class AjaxResponseTestCase(TestCase):
         messages framework in the response body.
         """
         
-        response = self.client.get(reverse('messages'))
+        response = self.client.get(reverse('ajax__messages'))
         
         self.assertEquals(response.status_code, 200)
         
@@ -136,7 +136,7 @@ class AjaxResponseTestCase(TestCase):
         messages framework in the response body when other data is also provided.
         """
         
-        response = self.client.get(reverse('messages__data'))
+        response = self.client.get(reverse('ajax__messages__data'))
         
         self.assertEquals(response.status_code, 200)
         
