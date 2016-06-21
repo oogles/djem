@@ -47,6 +47,16 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         
         self.assertIs(helper.tz, tz)
     
+    def test_name(self):
+        """
+        Test the TimeZoneHelper ``name`` property for several different
+        timezones.
+        """
+        
+        self.assertEquals(TimeZoneHelper(pytz.UTC).name, 'UTC')
+        self.assertEquals(TimeZoneHelper('Australia/Sydney').name, 'Australia/Sydney')
+        self.assertEquals(TimeZoneHelper('US/Eastern').name, 'US/Eastern')
+    
     def test_now__utc(self):
         """
         Test the TimeZoneHelper ``now`` method, using the UTC timezone.
