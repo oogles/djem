@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.4.1
+=====
+
+* Fixed documentation build issues on readthedocs.org
+
 0.4
 ===
 
