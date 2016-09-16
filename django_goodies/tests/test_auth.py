@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
@@ -37,6 +37,24 @@ class ObjectPermissionsTestCase(TestCase):
         self.group1 = group1
         self.group2 = group2
         self.all_permissions = permissions
+    
+    def test_auth__valid(self):
+        """
+        Test the backend does not interfere with valid user authentication.
+        """
+        
+        user = self.user1
+        user.set_password('blahblahblah')
+        user.save()
+        
+        self.assertTrue(authenticate(username='test1', password='blahblahblah'))
+    
+    def test_auth__invalid(self):
+        """
+        Test the backend does not interfere with invalid user authentication.
+        """
+        
+        self.assertFalse(authenticate(username='test1', password='badpassword'))
     
     def test_has_perm__no_model_level(self):
         """

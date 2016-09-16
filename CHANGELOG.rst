@@ -7,6 +7,11 @@ Change Log
 
 * Added replacements for permission_required decorator and PermissionRequiredMixin that support object-level permissions
 
+0.4.3
+=====
+
+* Added authenticate() method to ObjectPermissionsBackend, fixing a bug where it broke authentication if a user's credentials were not authenticated by earlier backends
+
 0.4.2
 =====
 
