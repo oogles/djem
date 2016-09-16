@@ -1,5 +1,13 @@
+from functools import wraps
+
+from django.conf import settings
+from django.contrib.auth.mixins import AccessMixin
 from django.contrib.auth.models import Permission
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+from django.shortcuts import get_object_or_404, resolve_url
+from django.utils import six
+from django.utils.decorators import available_attrs
+from django.utils.six.moves.urllib.parse import urlparse
 
 
 class ObjectPermissionsBackend(object):
@@ -104,3 +112,143 @@ class ObjectPermissionsBackend(object):
             self._get_object_permission(perm, user_obj, obj, 'user') or
             self._get_object_permission(perm, user_obj, obj, 'group')
         )
+
+
+def _check_perms(perms, user, view_kwargs):
+    
+    for perm in perms:
+        if isinstance(perm, six.string_types):
+            obj = None
+        else:
+            perm, obj_arg = perm  # expand two-tuple
+            obj_pk = view_kwargs[obj_arg]
+            
+            # Get the model this permission belongs to
+            try:
+                perm_app, perm_code = perm.split('.')
+                perm_obj = Permission.objects.get(
+                    content_type__app_label=perm_app,
+                    codename=perm_code
+                )
+            except (ValueError, Permission.DoesNotExist):
+                # Treat malformed (missing a '.') or non-existent
+                # permission names as permission denied
+                raise PermissionDenied
+            
+            model = perm_obj.content_type.model_class()
+            
+            # Get the object instance using the inferred model and the
+            # primary key passed to the view
+            obj = get_object_or_404(model, pk=obj_pk)
+            
+            # Swap out the primary key with the instance itself in the view
+            # kwargs, so the view doesn't have to query for it again
+            view_kwargs[obj_arg] = obj
+        
+        if not user.has_perm(perm, obj):
+            raise PermissionDenied
+
+
+def permission_required(*perms, **kwargs):
+    """
+    Replacement for Django's ``permission_required`` decorator, providing
+    support for object-level permissions. Instead of accepting either a string
+    or an iterable of strings naming the permission/s to check, this version
+    accepts multiple positional arguments, one for each permission to check.
+    These arguments can be either strings or two-tuples. If two-tuples, the
+    items should be:
+      - a string naming the permission to check (in the <app label>.<permission code>
+        format)
+      - a string naming the keyword argument of the view that contains the
+        primary key of the object to check the permission against
+    
+    Behaviour of the ``login_url`` and ``raise_exception`` keyword arguments is
+    as per the original.
+    """
+    
+    raise_exception_default = getattr(settings, 'GOODIES_DEFAULT_403', False)
+    
+    login_url = kwargs.pop('login_url', None)
+    raise_exception = kwargs.pop('raise_exception', raise_exception_default)
+    
+    def decorator(view_func):
+        
+        @wraps(view_func, assigned=available_attrs(view_func))
+        def _wrapped_view(request, *args, **kwargs):
+            
+            # First, check if the user has the permission (even anon users)
+            try:
+                _check_perms(perms, request.user, kwargs)
+            except PermissionDenied:
+                # In case the 403 handler should be called, raise the exception
+                if raise_exception:
+                    raise
+            else:
+                return view_func(request, *args, **kwargs)
+            
+            # As the last resort, show the login form
+            path = request.build_absolute_uri()
+            resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+            
+            # If the login url is the same scheme and net location then just
+            # use the path as the "next" url.
+            login_scheme, login_netloc = urlparse(resolved_login_url)[:2]
+            current_scheme, current_netloc = urlparse(path)[:2]
+            
+            if ((not login_scheme or login_scheme == current_scheme) and
+                    (not login_netloc or login_netloc == current_netloc)):
+                path = request.get_full_path()
+            
+            from django.contrib.auth.views import redirect_to_login
+            
+            return redirect_to_login(path, resolved_login_url)
+        
+        return _wrapped_view
+    
+    return decorator
+
+
+class PermissionRequiredMixin(AccessMixin):
+    """
+    CBV mixin which verifies that the current user has all specified
+    permissions, on the specified object where applicable.
+    """
+    
+    permission_required = None
+    
+    def get_permission_required(self):
+        """
+        Override this method to override the permission_required attribute.
+        Must return an iterable.
+        """
+        
+        if self.permission_required is None:
+            raise ImproperlyConfigured(
+                '{0} is missing the permission_required attribute. Define {0}.permission_required, or override '
+                '{0}.get_permission_required().'.format(self.__class__.__name__)
+            )
+        
+        if isinstance(self.permission_required, six.string_types):
+            perms = (self.permission_required, )
+        else:
+            perms = self.permission_required
+        
+        return perms
+    
+    def has_permission(self, view_kwargs):
+        
+        perms = self.get_permission_required()
+        
+        try:
+            _check_perms(perms, self.request.user, view_kwargs)
+        except PermissionDenied:
+            return False
+        else:
+            return True
+    
+    def dispatch(self, request, *args, **kwargs):
+        
+        if not self.has_permission(kwargs):
+            return self.handle_no_permission()
+        
+        return super(PermissionRequiredMixin, self).dispatch(request, *args, **kwargs)

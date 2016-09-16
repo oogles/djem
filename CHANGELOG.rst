@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.5
+===
+
+* Added replacements for permission_required decorator and PermissionRequiredMixin that support object-level permissions
+
 0.4.2
 =====
 
