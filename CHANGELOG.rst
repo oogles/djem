@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.4.3
+=====
+
+* Added authenticate() method to ObjectPermissionsBackend, fixing a bug where it broke authentication if a user's credentials were not authenticated by earlier backends
+
 0.4.2
 =====
 

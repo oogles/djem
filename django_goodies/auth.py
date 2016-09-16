@@ -4,6 +4,10 @@ from django.core.exceptions import PermissionDenied
 
 class ObjectPermissionsBackend(object):
     
+    def authenticate(self, *args, **kwargs):
+        
+        return None
+    
     def _get_object_permission(self, perm, user_obj, obj, from_name):
         """
         Test if a user has a permission on a specific model object.
