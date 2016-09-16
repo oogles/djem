@@ -1,10 +1,15 @@
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import render
+from django.views import View
 
 from django_goodies import AjaxResponse
+from django_goodies.auth import PermissionRequiredMixin, permission_required
 
 from .models import CommonInfoTest
 
+
+# --- AjaxResponse test views --> #
 
 def ajax__no_args(request):
     
@@ -61,6 +66,10 @@ def ajax__messages__data(request):
     
     return AjaxResponse(request, {'test': 'test'})
 
+# <-- AjaxResponse test views --- #
+
+
+# --- ifperm/ifnotperm template tag test views --> #
 
 def ifperm__render(request):
     
@@ -74,3 +83,117 @@ def ifnotperm__render(request):
     return render(request, 'app/ifnotperm_test.html', {
         'obj': CommonInfoTest.objects.first()
     })
+
+# <-- ifperm/ifnotperm template tag test views --- #
+
+
+# --- permission_required decorator test views --> #
+
+# Target for standard unauthenticated user redirects
+def redir_login(request):
+    
+    return HttpResponse('login')
+
+
+# Target for custom unauthenticated user redirects
+def redir_custom(request):
+    
+    return HttpResponse('custom')
+
+
+@permission_required('app.add_optest')
+def perm_decorator__string__add(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.add_optest', login_url='/custom/')
+def perm_decorator__string__add__custom_redir(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.add_optest', raise_exception=True)
+def perm_decorator__string__add__raise(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.delete_optest')
+def perm_decorator__string__delete(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('fail')
+def perm_decorator__string__invalid(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required(('app.delete_optest', 'pk'))
+def perm_decorator__tuple(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required(('app.delete_optest', 'pk'), login_url='/custom/')
+def perm_decorator__tuple__custom_redir(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required(('app.delete_optest', 'pk'), raise_exception=True)
+def perm_decorator__tuple__raise(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required(('fail', 'pk'))
+def perm_decorator__tuple__invalid(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.view_optest', ('app.delete_optest', 'pk'))
+def perm_decorator__multiple__view_delete(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.view_optest', ('app.delete_optest', 'pk'), login_url='/custom/')
+def perm_decorator__multiple__view_delete__custom_redir(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.view_optest', ('app.delete_optest', 'pk'), raise_exception=True)
+def perm_decorator__multiple__view_delete__raise(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.add_optest', ('app.delete_optest', 'pk'))
+def perm_decorator__multiple__add_delete(request, pk):
+    
+    return HttpResponse('success')
+
+
+@permission_required('app.view_optest', ('fail', 'pk'))
+def perm_decorator__multiple__invalid(request, pk):
+    
+    return HttpResponse('success')
+
+# <-- permission_required decorator test views --- #
+
+
+# --- PermissionRequiredMixin test views --> #
+
+# urls configure the permission_required attribute
+class PermissionProtectedView(PermissionRequiredMixin, View):
+    
+    def get(self, *args, **kwargs):
+        
+        return HttpResponse('success')
+
+# <-- PermissionRequiredMixin test views --- #
