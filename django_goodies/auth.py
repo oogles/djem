@@ -63,7 +63,7 @@ class ObjectPermissionsBackend(object):
         It can also be None to determine the users permissions from both sources.
         """
         
-        if not user_obj.is_active or user_obj.is_anonymous() or not obj:
+        if not user_obj.is_active or user_obj.is_anonymous or not obj:
             return set()
         
         perms_for_model = Permission.objects.filter(
