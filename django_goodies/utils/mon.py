@@ -1,6 +1,7 @@
 from __future__ import division
 
 import datetime
+import logging
 import resource
 
 from django.db import connection
@@ -365,6 +366,26 @@ class Mon(object):
         del cls.monitors[name]
         
         return m
+    
+    @classmethod
+    def start_qlog(cls):
+        
+        logger = logging.getLogger('django.db.backends')
+        handler = logging.StreamHandler()
+        
+        cls._qlogger_original_level = logger.level
+        cls._qlogger_handler = handler
+        
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+    
+    @classmethod
+    def stop_qlog(cls):
+        
+        logger = logging.getLogger('django.db.backends')
+        
+        logger.setLevel(cls._qlogger_original_level)
+        logger.addHandler(cls._qlogger_handler)
 
 
 def mon(name, allow_recursion=False):
