@@ -7,6 +7,7 @@ Change Log
 
 * Added replacements for permission_required decorator and PermissionRequiredMixin that support object-level permissions
 * Added get_page helper function
+* Added Table helper class
 
 0.4.3
 =====
