@@ -52,9 +52,9 @@ def get_page(page, object_list, per_page=None, **kwargs):
     """
     Return the specified page, as a Django Page instance, from a Paginator
     constructed from the given object list and other keyword arguments.
+    Handle InvalidPage exceptions and return logical valid pages instead.
     The ``per_page`` argument defaults to GOODIES_DEFAULT_PAGE_LENGTH, if set.
     Otherwise, it is a required argument.
-    Handle InvalidPage exceptions and return logical valid pages instead.
     """
     
     if per_page is None:
