@@ -67,6 +67,9 @@ class Table(object):
     
     def __init__(self, headings=None, title=None, footer=None, max_width=FULL_WIDTH):
         
+        self._rows = []
+        self._columns = []
+        
         if headings:
             self.add_headings(headings)
         else:
@@ -83,9 +86,6 @@ class Table(object):
             self.footer = None
         
         self._raw_max_width = max_width
-        
-        self._rows = []
-        self._columns = []
     
     def _update_col_metadata(self, col_data, value=NOT_PROVIDED, heading=NOT_PROVIDED):
         
@@ -191,9 +191,16 @@ class Table(object):
             try:
                 col_data = self._columns[i]
             except IndexError:
-                col_data = self._columns[i] = {}
+                self._columns.append({})
+                col_data = self._columns[i]
             
             self._update_col_metadata(col_data, value=value)
+        
+        self._rows.append(row)
+    
+    def add_full_width_row(self, value):
+        
+        row = RowWrapper(value)
         
         self._rows.append(row)
     
@@ -284,19 +291,19 @@ class Table(object):
         br = '|{0}|'.format(' ' * (table_width - 2))
         hr = '+{0}+'.format('-' * (table_width - 2))
         
-        rows = self.get_rows()
-        
         output = []
         
         if self.title:
             output.append(hr)
             output.extend(self.title.get_rows(table_width))
         
-        for row in rows:
+        for row in self.get_rows():
             if row is self.BR:
                 output.append(br)
             elif row is self.HR:
                 output.append(hr)
+            elif isinstance(row, RowWrapper):
+                output.extend(row.get_rows(table_width))
             else:
                 row_str = []
                 for i, col in enumerate(self._columns):
