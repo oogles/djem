@@ -10,6 +10,7 @@ Change Log
 * Added Table helper class
 * Added M and Mon helper classes for simple code performance debugging
 * Added mon() decorator as a shortcut for monitoring a function
+* Added extensible Developer class as a home for shortcuts to common user-based operations useful to developers
 
 0.4.3
 =====
