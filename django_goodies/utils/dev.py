@@ -2,6 +2,11 @@ from django.contrib.auth import get_user_model
 
 
 class Developer(object):
+    """
+    Designed for use within the Django shell to aid developers in performing
+    regular operations used for testing and debugging, primarily regarding
+    altering aspects of the developer's own User.
+    """
     
     def __init__(self, *kwargs):
         

@@ -55,12 +55,24 @@ class RowWrapper(object):
 class Table(object):
     
     class FULL_WIDTH:
+        """
+        Max width constant indicating the full width of the terminal.
+        """
+        
         pass
     
     class BR:
+        """
+        Row constant representing a blank row.
+        """
+        
         pass
     
     class HR:
+        """
+        Row constant representing a horizontal rule.
+        """
+        
         pass
     
     MIN_COLUMN_WIDTH = 4  # allows for a single character and "..." to indicate truncation
@@ -198,9 +210,9 @@ class Table(object):
         
         self._rows.append(row)
     
-    def add_full_width_row(self, value):
+    def add_full_width_row(self, value, alignment='left'):
         
-        row = RowWrapper(value)
+        row = RowWrapper(value, alignment)
         
         self._rows.append(row)
     
@@ -251,7 +263,7 @@ class Table(object):
         # width and the heading width
         for i, col in enumerate(self._columns):
             col['pos'] = i
-            col_width = max(col['raw_width'], len(col.get('heading', '')))
+            col_width = max(col.get('raw_width', 0), len(col.get('heading', '')))
             col['render_width'] = col_width
             total_width += col_width
             min_width += min(col_width, self.MIN_COLUMN_WIDTH)
