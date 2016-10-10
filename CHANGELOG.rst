@@ -6,11 +6,12 @@ Change Log
 ===
 
 * Added replacements for permission_required decorator and PermissionRequiredMixin that support object-level permissions
-* Added get_page helper function
+* Added get_page() helper function
 * Added Table helper class
 * Added M and Mon helper classes for simple code performance debugging
 * Added mon() decorator as a shortcut for monitoring a function
 * Added extensible Developer class as a home for shortcuts to common user-based operations useful to developers
+* Added inspection/prettyprint utilities for debugging
 
 0.4.3
 =====
