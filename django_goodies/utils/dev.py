@@ -8,9 +8,9 @@ class Developer(object):
     altering aspects of the developer's own User.
     """
     
-    def __init__(self, *kwargs):
+    def __init__(self, **user_lookup_kwargs):
         
-        self.user_lookup_kwargs = kwargs
+        self.user_lookup_kwargs = user_lookup_kwargs
     
     @property
     def user(self):
