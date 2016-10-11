@@ -603,7 +603,11 @@ def pp(obj, *args, **kwargs):
         args/kwargs of ObjectTable.
     """
     
-    if isinstance(obj, (dict, list, tuple, set, QuerySet)):
+    # Force QuerySets to lists for pretty-printing
+    if isinstance(obj, QuerySet):
+        obj = list(obj)
+    
+    if isinstance(obj, (dict, list, tuple, set)):
         pprint.pprint(obj, *args, **kwargs)
         return
     
