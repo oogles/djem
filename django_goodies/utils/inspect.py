@@ -4,9 +4,7 @@ import inspect as inspector
 import pprint
 import types
 
-from django.db.models import (
-    FieldDoesNotExist, ForeignKey, Manager, ManyToManyField, Model, QuerySet
-)
+from django.db.models import FieldDoesNotExist, Manager, Model, QuerySet
 from django.db.models.fields import NOT_PROVIDED
 
 from django_goodies.utils.table import Table
@@ -327,15 +325,18 @@ class ModelTable(InspectTable):
     FIELD_TYPE_REPLACEMENT_MAP = {
         'Field': '',
         'ForeignKey': 'FK',
-        'ManyToMany': 'M2M'
+        'ManyToMany': 'M2M',
+        'OneToOne': 'O2O',
+        'ManyToOne': 'M2O'
     }
     
-    def __init__(self, model, *field_filters):
+    def __init__(self, model, *field_filters, **kwargs):
         
         super(ModelTable, self).__init__()
         
         self.model = model
         self.field_filters = [f.lower() for f in field_filters]
+        self.only_concrete = kwargs.pop('only_concrete', True)
         
         hierarchy, pk_hierarchy = self._get_hierarchies()
         
@@ -388,6 +389,11 @@ class ModelTable(InspectTable):
     
     def _get_field_flags(self, field):
         
+        if not field.concrete:
+            # Abstract fields do not have most of the attributes checked below,
+            # nor do they apply, so return early.
+            return ['Not Concrete']
+        
         flags = []
         
         if field.unique:
@@ -408,7 +414,23 @@ class ModelTable(InspectTable):
         for string, replacement in self.FIELD_TYPE_REPLACEMENT_MAP.items():
             field_type = field_type.replace(string, replacement)
         
-        # Get size of CharField, DecimalField, etc
+        # Add the foreign model to the type display of relationship fields
+        rel = field.related_model
+        if rel:
+            # If a string reference, grab the model portion (if given in
+            # <app_label>.<model> format). If a model class, use its name.
+            if isinstance(rel, basestring):
+                rel = rel.split('.')[-1]
+            else:
+                rel = rel.__name__
+            
+            field_type = '{0} ({1})'.format(field_type, rel)
+        
+        if not field.concrete:
+            # Stop here for non-concrete fields
+            return field_type
+        
+        # Add the size to the type display of CharField, DecimalField, etc
         try:
             size = field.max_digits
         except AttributeError:
@@ -421,14 +443,6 @@ class ModelTable(InspectTable):
         
         if size:
             field_type = '{0} ({1})'.format(field_type, size)
-        
-        try:
-            rel = field.related_model  # can be None
-        except AttributeError:
-            rel = None
-        
-        if rel:
-            field_type = '{0} ({1})'.format(field_type, rel.__name__)
         
         return field_type
     
@@ -445,17 +459,17 @@ class ModelTable(InspectTable):
     
     def _discover_fields(self):
         
-        # Track fields to avoid duplicates
-        seen_fields = set()
-        
         def field_sort_key(field):
             
             prefix = 0
             
-            if isinstance(field, ForeignKey):
-                prefix = 1
-            elif isinstance(field, ManyToManyField):
+            if not field.concrete:
+                # E.g. Automatic reverse ForeignKey field
+                prefix = 3
+            elif field.many_to_many:
                 prefix = 2
+            elif field.is_relation:
+                prefix = 1
             
             return '{0}{1}'.format(prefix, field.name)
         
@@ -463,16 +477,20 @@ class ModelTable(InspectTable):
             num_discovered_fields = 0
             matching_fields = []
             
-            all_fields = config['meta'].local_fields
-            all_fields.extend(config['meta'].many_to_many)
+            all_fields = config['meta'].get_fields(include_parents=False)
             
             for field in sorted(all_fields, key=field_sort_key):
-                if field.primary_key or field.name in seen_fields:
+                if getattr(field, 'primary_key', False):
+                    # Exclude primary key fields. Some automatic fields do not have
+                    # the primary_key attribute to check.
                     continue
                 
-                # Count against total and consider "seen" before filtering out
-                seen_fields.add(field.name)
+                if self.only_concrete and not field.concrete:
+                    # Exclude non-concrete fields unless they are explicitly
+                    # specified to be included
+                    continue
                 
+                # Count against total before filtering out
                 num_discovered_fields += 1
                 
                 # Apply field filters, if any
@@ -561,6 +579,9 @@ class ModelTable(InspectTable):
                 title,
                 ' || '.join([repr(s) for s in filters])
             )
+        
+        if self.concrete_only:
+            title = '{0} [Concrete Only]'.format(title)
         
         return title
     
