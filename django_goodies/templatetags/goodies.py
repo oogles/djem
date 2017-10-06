@@ -1,5 +1,5 @@
+from django.template import Library, loader
 from django.template.base import Node, NodeList, TemplateSyntaxError
-from django.template.library import Library
 
 register = Library()
 
@@ -95,3 +95,15 @@ def ifnotperm(parser, token):
     """
     
     return do_ifperm(parser, token, True)
+
+
+@register.simple_tag(takes_context=True)
+def csrfify_ajax(context, lib='jquery'):
+    """
+    Add the X-CSRFToken header to all appropriate outgoing AJAX requests.
+    Only usable in templates rendered using the django.core.context_processors.request
+    context processor.
+    """
+    
+    t = loader.get_template('goodies/csrfify_ajax/{0}.js'.format(lib))
+    return t.render(context)

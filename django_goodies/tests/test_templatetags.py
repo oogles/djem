@@ -1,10 +1,47 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.urlresolvers import reverse
-from django.template import Context, Template, TemplateSyntaxError
-from django.test import TestCase
+from django.template import engines, TemplateSyntaxError, TemplateDoesNotExist
+from django.test import Client, TestCase
 
 from .app.models import CommonInfoTest
+
+
+class CsrfifyAjaxTestCase(TestCase):
+    
+    def test_valid__explicit(self):
+        """
+        Test the csrfify_ajax template tag when used in a request/response
+        cycle with a present CSRF token, and with an explicitly provided valid
+        target library.
+        """
+        
+        response = Client().get(reverse('csrfify_ajax__valid__explicit'))
+        
+        self.assertEquals(response.status_code, 200)
+        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+    
+    def test_valid__implicit(self):
+        """
+        Test the csrfify_ajax template tag when used in a request/response
+        cycle with a present CSRF token, and with no arguments (therefore using
+        the default target library).
+        """
+        
+        response = Client().get(reverse('csrfify_ajax__valid__implicit'))
+        
+        self.assertEquals(response.status_code, 200)
+        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+    
+    def test_invalid(self):
+        """
+        Test the csrfify_ajax template tag when used in a request/response
+        cycle with a present CSRF token, and with an explicitly provided but
+        invalid target library.
+        """
+        
+        with self.assertRaisesRegexp(TemplateDoesNotExist, 'invalid.js'):
+            Client().get(reverse('csrfify_ajax__invalid'))
 
 
 class PermTagTestCase(TestCase):
@@ -27,7 +64,8 @@ class PermTagTestCase(TestCase):
         
         context['user'] = self.user
         
-        output = Template(template_string).render(Context(context))
+        output = engines['django'].from_string(template_string).render(context)
+        
         return output.strip()  # remove unnecessary whitespace
 
 

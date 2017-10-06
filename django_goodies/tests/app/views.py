@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.template import engines
 from django.views import View
 
 from django_goodies import AjaxResponse
@@ -67,6 +68,37 @@ def ajax__messages__data(request):
     return AjaxResponse(request, {'test': 'test'})
 
 # <-- AjaxResponse test views --- #
+
+
+# --- csrfify_ajax template tag test views --> #
+
+def csrfify_ajax__valid__explicit(request):
+    
+    template = engines['django'].from_string(
+        "{% load goodies %}\n{% csrfify_ajax 'jquery' %}"
+    )
+    
+    return HttpResponse(template.render({}, request))
+
+
+def csrfify_ajax__valid__implicit(request):
+    
+    template = engines['django'].from_string(
+        "{% load goodies %}\n{% csrfify_ajax %}"
+    )
+    
+    return HttpResponse(template.render({}, request))
+
+
+def csrfify_ajax__invalid(request):
+    
+    template = engines['django'].from_string(
+        "{% load goodies %}\n{% csrfify_ajax 'invalid' %}"
+    )
+    
+    return HttpResponse(template.render({}, request))
+
+# <-- csrfify_ajax template tag test views --- #
 
 
 # --- ifperm/ifnotperm template tag test views --> #
