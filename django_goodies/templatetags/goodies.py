@@ -107,3 +107,17 @@ def csrfify_ajax(context, lib='jquery'):
     
     t = loader.get_template('goodies/csrfify_ajax/{0}.js'.format(lib))
     return t.render(context)
+
+
+@register.inclusion_tag('goodies/pagination.html')
+def paginate(page):
+    """
+    Render a pagination block with appropriate links, based on the given Django
+    Page object.
+    """
+    
+    context = {
+        'page': page
+    }
+    
+    return context

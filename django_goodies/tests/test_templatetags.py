@@ -1,50 +1,31 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.paginator import Paginator
 from django.core.urlresolvers import reverse
-from django.template import engines, TemplateSyntaxError, TemplateDoesNotExist
+from django.template import TemplateDoesNotExist, TemplateSyntaxError, engines
 from django.test import Client, TestCase
 
 from .app.models import CommonInfoTest
 
 
-class CsrfifyAjaxTestCase(TestCase):
+class TemplateRendererMixin(object):
+    """
+    A helper for the following test cases, which render templates they provide
+    as strings (not paths to files).
     
-    def test_valid__explicit(self):
-        """
-        Test the csrfify_ajax template tag when used in a request/response
-        cycle with a present CSRF token, and with an explicitly provided valid
-        target library.
-        """
-        
-        response = Client().get(reverse('csrfify_ajax__valid__explicit'))
-        
-        self.assertEquals(response.status_code, 200)
-        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+    Requires a ``user`` attribute be accessible on the class.
+    """
     
-    def test_valid__implicit(self):
-        """
-        Test the csrfify_ajax template tag when used in a request/response
-        cycle with a present CSRF token, and with no arguments (therefore using
-        the default target library).
-        """
+    def render_template(self, template_string, context):
         
-        response = Client().get(reverse('csrfify_ajax__valid__implicit'))
+        context['user'] = self.user
         
-        self.assertEquals(response.status_code, 200)
-        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
-    
-    def test_invalid(self):
-        """
-        Test the csrfify_ajax template tag when used in a request/response
-        cycle with a present CSRF token, and with an explicitly provided but
-        invalid target library.
-        """
+        output = engines['django'].from_string(template_string).render(context)
         
-        with self.assertRaisesRegexp(TemplateDoesNotExist, 'invalid.js'):
-            Client().get(reverse('csrfify_ajax__invalid'))
+        return output.strip()  # remove unnecessary whitespace
 
 
-class PermTagTestCase(TestCase):
+class PermTagTestCase(TemplateRendererMixin, TestCase):
     
     def setUp(self):
         
@@ -59,14 +40,6 @@ class PermTagTestCase(TestCase):
         user.user_permissions.set(permissions)
         
         self.user = user
-    
-    def render_template(self, template_string, context):
-        
-        context['user'] = self.user
-        
-        output = engines['django'].from_string(template_string).render(context)
-        
-        return output.strip()  # remove unnecessary whitespace
 
 
 class IfPermTestCase(PermTagTestCase):
@@ -731,3 +704,175 @@ class IfNotPermTestCase(PermTagTestCase):
         
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'ELSE')
+
+
+class CsrfifyAjaxTestCase(TestCase):
+    
+    def test_valid__explicit(self):
+        """
+        Test the csrfify_ajax template tag when used in a request/response
+        cycle with a present CSRF token, and with an explicitly provided valid
+        target library.
+        """
+        
+        response = Client().get(reverse('csrfify_ajax__valid__explicit'))
+        
+        self.assertEquals(response.status_code, 200)
+        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+    
+    def test_valid__implicit(self):
+        """
+        Test the csrfify_ajax template tag when used in a request/response
+        cycle with a present CSRF token, and with no arguments (therefore using
+        the default target library).
+        """
+        
+        response = Client().get(reverse('csrfify_ajax__valid__implicit'))
+        
+        self.assertEquals(response.status_code, 200)
+        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+    
+    def test_invalid(self):
+        """
+        Test the csrfify_ajax template tag when used in a request/response
+        cycle with a present CSRF token, and with an explicitly provided but
+        invalid target library.
+        """
+        
+        with self.assertRaisesRegexp(TemplateDoesNotExist, 'invalid.js'):
+            Client().get(reverse('csrfify_ajax__invalid'))
+
+
+class PaginateTestCase(TemplateRendererMixin, TestCase):
+    
+    @classmethod
+    def setUpTestData(cls):
+        
+        user = get_user_model().objects.create_user('test')
+        
+        for i in range(23):
+            CommonInfoTest().save(user)
+        
+        # All tests will use the same Paginator with 5 results per page
+        cls.paginator = Paginator(CommonInfoTest.objects.all(), 5)
+        
+        # All tests will render the same basic template - just the
+        # {% paginate %} tag on the given Page. It is the Page object that will
+        # differ between tests.
+        cls.template_string = (
+            '{% load goodies %}'
+            '{% paginate page %}'
+        )
+        
+        cls.user = user  # for TemplateRendererMixin
+    
+    def test_no_argument(self):
+        """
+        Test the paginate template tag when not provided with an argument. It
+        should raise a TemplateSyntaxError - a single argument is required.
+        """
+        
+        template_string = (
+            '{% load goodies %}'
+            '{% paginate %}'
+        )
+        
+        with self.assertRaises(TemplateSyntaxError):
+            self.render_template(template_string, {})
+    
+    def test_multiple_arguments(self):
+        """
+        Test the paginate template tag when provided with multiple arguments. It
+        should raise a TemplateSyntaxError - a single argument is required.
+        """
+        
+        template_string = (
+            '{% load goodies %}'
+            '{% paginate "multiple" "arguments" %}'
+        )
+        
+        with self.assertRaises(TemplateSyntaxError):
+            self.render_template(template_string, {})
+    
+    def test_first_page(self):
+        """
+        Test the paginate template tag when used on the first Page of a
+        Paginator. It should render without previous/first links.
+        """
+        
+        page = self.paginator.page(1)
+        
+        output = self.render_template(self.template_string, {'page': page})
+        
+        # The pagination block for the first page should:
+        #  - show the page number and the number of pages
+        #  - contain links to "Next" and "Last"
+        #  - not contain links to "Previous" or "First"
+        self.assertIn('Page 1 of 5', output)
+        
+        self.assertIn('"?page=2">Next', output)
+        self.assertIn('"?page=5">Last', output)
+        
+        self.assertNotIn('Previous', output)
+        self.assertNotIn('First', output)
+    
+    def test_last_page(self):
+        """
+        Test the paginate template tag when used on the last Page of a
+        Paginator. It should render without next/last links.
+        """
+        
+        page = self.paginator.page(5)
+        
+        output = self.render_template(self.template_string, {'page': page})
+        
+        # The pagination block for the first page should:
+        #  - show the page number and the number of pages
+        #  - contain links to "Previous" and "First"
+        #  - not contain links to "Next" or "Last"
+        self.assertIn('Page 5 of 5', output)
+        
+        self.assertIn('"?page=4">Previous', output)
+        self.assertIn('"?page=1">First', output)
+        
+        self.assertNotIn('Next', output)
+        self.assertNotIn('Last', output)
+    
+    def test_middle_page(self):
+        """
+        Test the paginate template tag when used on a middle Page of a
+        Paginator. It should render with all navigation links.
+        """
+        
+        page = self.paginator.page(3)
+        
+        output = self.render_template(self.template_string, {'page': page})
+        
+        # The pagination block for the first page should:
+        #  - show the page number and the number of pages
+        #  - contain links to "Previous" and "First"
+        #  - contain links to "Next" and "Last"
+        self.assertIn('Page 3 of 5', output)
+        
+        self.assertIn('"?page=2">Previous', output)
+        self.assertIn('"?page=1">First', output)
+        
+        self.assertIn('"?page=4">Next', output)
+        self.assertIn('"?page=5">Last', output)
+    
+    def test_invalid_page(self):
+        """
+        Test the paginate template tag when given something other than a Page
+        object. Due to not having the attributes expected on a Page object, it
+        should render without navigation links or valid page numbers.
+        """
+        
+        output = self.render_template(self.template_string, {'page': None})
+        
+        self.assertIn('Page  of ', output)
+        
+        self.assertNotIn('Previous', output)
+        self.assertNotIn('First', output)
+        
+        self.assertNotIn('Next', output)
+        self.assertNotIn('Last', output)
