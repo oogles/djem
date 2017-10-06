@@ -1,13 +1,13 @@
 {
     "name": "django_goodies",
     "version": "1.0.0",
-    
+
     "devDependencies": {
         "watch": "latest"
     },
-    
+
     "scripts": {
         "lint": "isort -rc --diff . && flake8 . --max-complexity 10 || true",
-        "watch": "watch 'npm run lint' ."
+        "watch": "watch 'npm run lint' django_goodies"
     }
 }
