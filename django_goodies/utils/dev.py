@@ -8,15 +8,15 @@ class Developer(object):
     altering aspects of the developer's own User.
     """
     
-    def __init__(self, *kwargs):
+    def __init__(self, **user_lookup_kwargs):
         
-        self.user_lookup_kwargs = kwargs
+        self.user_lookup_kwargs = user_lookup_kwargs
     
     @property
     def user(self):
         
         if not hasattr(self, '_user'):
-            self._user = get_user_model().objects.get(self.user_lookup_kwargs)
+            self._user = get_user_model().objects.get(**self.user_lookup_kwargs)
         
         return self._user
     

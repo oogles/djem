@@ -12,35 +12,6 @@ from django.db.models.fields import NOT_PROVIDED
 from django_goodies.utils.table import Table
 
 
-def _get_inspect_value(v, obj, attr):
-    """
-    Return the given value in a format suitable for output in one of the below
-    inspection functions.
-    """
-    
-    if inspector.isclass(obj):
-        cls = obj
-    else:
-        cls = obj.__class__
-    
-    if isinstance(v, Manager):
-        try:
-            model_field = cls._meta.get_field(attr)
-        except FieldDoesNotExist:
-            v = 'Manager on {0} model'.format(cls.__name__)
-        else:
-            v = 'Referencing {0} {1} records'.format(
-                v.count(),
-                model_field.related_model.__name__
-            )
-    elif isinstance(v, types.MethodType):
-        v = 'pp({0}.{1})'.format(cls.__name__, attr)
-    else:
-        v = unicode(v)
-    
-    return v
-
-
 def get_defined_by(obj, attr):
     """
     Return the class that defines the given attribute on the given object.
@@ -208,6 +179,33 @@ class ObjectTable(InspectTable):
         self.num_inspected = num_inspected
         self.data_groups = data_groups
     
+    def _get_inspect_value(self, v, obj, attr):
+        """
+        Return the given value in a format suitable for output in the table.
+        """
+        
+        if inspector.isclass(obj):
+            cls = obj
+        else:
+            cls = obj.__class__
+        
+        if isinstance(v, Manager):
+            try:
+                model_field = cls._meta.get_field(attr)
+            except FieldDoesNotExist:
+                v = 'Manager on {0} model'.format(cls.__name__)
+            else:
+                v = 'Referencing {0} {1} records'.format(
+                    v.count(),
+                    model_field.related_model.__name__
+                )
+        elif isinstance(v, types.MethodType):
+            v = 'pp({0}.{1})'.format(cls.__name__, attr)
+        else:
+            v = unicode(v)
+        
+        return v
+    
     def _inspect_obj(self):
         
         obj = self.obj
@@ -259,7 +257,7 @@ class ObjectTable(InspectTable):
                 defined_by,
                 title,
                 t,
-                _get_inspect_value(v, obj, attr)
+                self._get_inspect_value(v, obj, attr)
             ))
         
         return magic, methods, other
@@ -603,7 +601,11 @@ def pp(obj, *args, **kwargs):
         args/kwargs of ObjectTable.
     """
     
-    if isinstance(obj, (dict, list, tuple, set, QuerySet)):
+    # Force QuerySets to lists for pretty-printing
+    if isinstance(obj, QuerySet):
+        obj = list(obj)
+    
+    if isinstance(obj, (dict, list, tuple, set)):
         pprint.pprint(obj, *args, **kwargs)
         return
     
