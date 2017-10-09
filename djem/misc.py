@@ -53,15 +53,15 @@ def get_page(page, object_list, per_page=None, **kwargs):
     Return the specified page, as a Django Page instance, from a Paginator
     constructed from the given object list and other keyword arguments.
     Handle InvalidPage exceptions and return logical valid pages instead.
-    The ``per_page`` argument defaults to GOODIES_DEFAULT_PAGE_LENGTH, if set.
+    The ``per_page`` argument defaults to DJEM_DEFAULT_PAGE_LENGTH, if set.
     Otherwise, it is a required argument.
     """
     
     if per_page is None:
         try:
-            per_page = settings.GOODIES_DEFAULT_PAGE_LENGTH
+            per_page = settings.DJEM_DEFAULT_PAGE_LENGTH
         except AttributeError:
-            raise TypeError('The "per_page" argument is required unless GOODIES_DEFAULT_PAGE_LENGTH is set.')
+            raise TypeError('The "per_page" argument is required unless DJEM_DEFAULT_PAGE_LENGTH is set.')
     
     paginator = Paginator(object_list, per_page, **kwargs)
     

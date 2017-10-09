@@ -170,7 +170,7 @@ def permission_required(*perms, **kwargs):
     as per the original.
     """
     
-    raise_exception_default = getattr(settings, 'GOODIES_DEFAULT_403', False)
+    raise_exception_default = getattr(settings, 'DJEM_DEFAULT_403', False)
     
     login_url = kwargs.pop('login_url', None)
     raise_exception = kwargs.pop('raise_exception', raise_exception_default)

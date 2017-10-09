@@ -3,7 +3,7 @@
 SECRET_KEY = 'abcde12345'
 
 # Need to point at something
-ROOT_URLCONF = 'django_goodies.tests.app.urls'
+ROOT_URLCONF = 'djem.tests.app.urls'
 
 MIDDLEWARE_CLASSES = ()
 

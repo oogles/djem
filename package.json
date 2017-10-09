@@ -1,5 +1,5 @@
 {
-    "name": "django_goodies",
+    "name": "djem",
     "version": "1.0.0",
 
     "devDependencies": {
@@ -8,6 +8,6 @@
 
     "scripts": {
         "lint": "isort -rc --diff . && flake8 . --max-complexity 10 || true",
-        "watch": "watch 'npm run lint' django_goodies"
+        "watch": "watch 'npm run lint' djem"
     }
 }

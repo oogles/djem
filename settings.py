@@ -3,10 +3,10 @@
 
 SECRET_KEY = 'abcde12345'
 
-# For testing. If django-goodies ever includes real views that also need testing,
+# For testing. If djem ever includes real views that also need testing,
 # this should point to that urlconf and the test app's urls should be tested
 # by overriding the setting.
-ROOT_URLCONF = 'django_goodies.tests.app.urls'
+ROOT_URLCONF = 'djem.tests.app.urls'
 
 # For TimeZoneHelper/TimeZoneField tests
 USE_TZ = True
@@ -25,8 +25,8 @@ INSTALLED_APPS = (
     
     'django_extensions',  # for dev tools, e.g. shell_plus
     
-    'django_goodies',
-    'django_goodies.tests.app',
+    'djem',
+    'djem.tests.app',
 )
 
 DATABASES = {
@@ -39,7 +39,7 @@ DATABASES = {
 # For object-level permissions framework tests
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'django_goodies.auth.ObjectPermissionsBackend'
+    'djem.auth.ObjectPermissionsBackend'
 ]
 
 # For testing template tags

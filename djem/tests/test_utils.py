@@ -3,7 +3,7 @@ from django.utils import timezone
 
 import pytz
 
-from django_goodies.utils.dt import TimeZoneHelper
+from djem.utils.dt import TimeZoneHelper
 
 
 class TimeZoneHelperTestCase(SimpleTestCase):

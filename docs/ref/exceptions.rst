@@ -2,7 +2,7 @@
 Exceptions
 ==========
 
-The following custom exceptions are raised by Django Goodies.
+The following custom exceptions are raised by Djem.
 
-.. automodule:: django_goodies.exceptions
+.. automodule:: djem.exceptions
     :members:

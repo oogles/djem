@@ -6,7 +6,7 @@ import resource
 
 from django.db import connection
 
-from django_goodies.utils.table import Table
+from djem.utils.table import Table
 
 
 def _get_mem_mb():

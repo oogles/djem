@@ -7,7 +7,7 @@ import types
 from django.db.models import FieldDoesNotExist, Manager, Model, QuerySet
 from django.db.models.fields import NOT_PROVIDED
 
-from django_goodies.utils.table import Table
+from djem.utils.table import Table
 
 
 def get_defined_by(obj, attr):

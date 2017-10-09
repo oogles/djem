@@ -51,7 +51,7 @@ class IfPermTestCase(PermTagTestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm %}'
             '   IF'
             '{% endifperm %}'
@@ -67,7 +67,7 @@ class IfPermTestCase(PermTagTestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm "blah" %}'
             '   IF'
             '{% endifperm %}'
@@ -83,7 +83,7 @@ class IfPermTestCase(PermTagTestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm "blah" "blah" "blah" "blah" %}'
             '   IF'
             '{% endifperm %}'
@@ -102,7 +102,7 @@ class IfPermTestCase(PermTagTestCase):
         obj.save(self.user)
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user "app.not_a_real_permission" obj %}'
             '   IF'
             '{% endifperm %}'
@@ -124,7 +124,7 @@ class IfPermTestCase(PermTagTestCase):
         obj.save(self.user)
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user "app.not_a_real_permission" obj %}'
             '   IF'
             '{% else %}'
@@ -150,7 +150,7 @@ class IfPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% endifperm %}'
@@ -174,7 +174,7 @@ class IfPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% else %}'
@@ -202,7 +202,7 @@ class IfPermTestCase(PermTagTestCase):
         self.assertFalse(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% endifperm %}'
@@ -227,7 +227,7 @@ class IfPermTestCase(PermTagTestCase):
         self.assertFalse(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% else %}'
@@ -253,7 +253,7 @@ class IfPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm some.complex.variable "app.change_commoninfotest" obj %}'
             '   IF'
             '{% else %}'
@@ -284,7 +284,7 @@ class IfPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user some.complex.variable obj %}'
             '   IF'
             '{% else %}'
@@ -315,7 +315,7 @@ class IfPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifperm user "app.change_commoninfotest" some.complex.variable %}'
             '   IF'
             '{% else %}'
@@ -382,7 +382,7 @@ class IfNotPermTestCase(PermTagTestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm %}'
             '   IF'
             '{% endifnotperm %}'
@@ -398,7 +398,7 @@ class IfNotPermTestCase(PermTagTestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm "blah" %}'
             '   IF'
             '{% endifnotperm %}'
@@ -414,7 +414,7 @@ class IfNotPermTestCase(PermTagTestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm "blah" "blah" "blah" "blah" %}'
             '   IF'
             '{% endifnotperm %}'
@@ -433,7 +433,7 @@ class IfNotPermTestCase(PermTagTestCase):
         obj.save(self.user)
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user "app.not_a_real_permission" obj %}'
             '   IF'
             '{% endifnotperm %}'
@@ -455,7 +455,7 @@ class IfNotPermTestCase(PermTagTestCase):
         obj.save(self.user)
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user "app.not_a_real_permission" obj %}'
             '   IF'
             '{% else %}'
@@ -482,7 +482,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% endifnotperm %}'
@@ -506,7 +506,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% else %}'
@@ -534,7 +534,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertFalse(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% endifnotperm %}'
@@ -560,7 +560,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertFalse(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user "app.change_commoninfotest" obj %}'
             '   IF'
             '{% else %}'
@@ -586,7 +586,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm some.complex.variable "app.change_commoninfotest" obj %}'
             '   IF'
             '{% else %}'
@@ -617,7 +617,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user some.complex.variable obj %}'
             '   IF'
             '{% else %}'
@@ -648,7 +648,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertTrue(self.user.has_perm('app.change_commoninfotest', obj))
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% ifnotperm user "app.change_commoninfotest" some.complex.variable %}'
             '   IF'
             '{% else %}'
@@ -760,7 +760,7 @@ class PaginateTestCase(TemplateRendererMixin, TestCase):
         # {% paginate %} tag on the given Page. It is the Page object that will
         # differ between tests.
         cls.template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% paginate page %}'
         )
         
@@ -773,7 +773,7 @@ class PaginateTestCase(TemplateRendererMixin, TestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% paginate %}'
         )
         
@@ -787,7 +787,7 @@ class PaginateTestCase(TemplateRendererMixin, TestCase):
         """
         
         template_string = (
-            '{% load goodies %}'
+            '{% load djem %}'
             '{% paginate "multiple" "arguments" %}'
         )
         

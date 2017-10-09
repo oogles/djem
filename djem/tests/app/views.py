@@ -4,8 +4,8 @@ from django.shortcuts import render
 from django.template import engines
 from django.views import View
 
-from django_goodies import AjaxResponse
-from django_goodies.auth import PermissionRequiredMixin, permission_required
+from djem import AjaxResponse
+from djem.auth import PermissionRequiredMixin, permission_required
 
 from .models import CommonInfoTest
 
@@ -75,7 +75,7 @@ def ajax__messages__data(request):
 def csrfify_ajax__valid__explicit(request):
     
     template = engines['django'].from_string(
-        "{% load goodies %}\n{% csrfify_ajax 'jquery' %}"
+        "{% load djem %}\n{% csrfify_ajax 'jquery' %}"
     )
     
     return HttpResponse(template.render({}, request))
@@ -84,7 +84,7 @@ def csrfify_ajax__valid__explicit(request):
 def csrfify_ajax__valid__implicit(request):
     
     template = engines['django'].from_string(
-        "{% load goodies %}\n{% csrfify_ajax %}"
+        "{% load djem %}\n{% csrfify_ajax %}"
     )
     
     return HttpResponse(template.render({}, request))
@@ -93,7 +93,7 @@ def csrfify_ajax__valid__implicit(request):
 def csrfify_ajax__invalid(request):
     
     template = engines['django'].from_string(
-        "{% load goodies %}\n{% csrfify_ajax 'invalid' %}"
+        "{% load djem %}\n{% csrfify_ajax 'invalid' %}"
     )
     
     return HttpResponse(template.render({}, request))

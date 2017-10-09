@@ -8,7 +8,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "shell" do |s|
     s.path = "provision/scripts/bootstrap.sh"
-    s.args = ["django_goodies", "app"]
+    s.args = ["djem", "app"]
   end
 
   # Create a forwarded port mapping which allows access to a specific port
@@ -16,10 +16,10 @@ Vagrant.configure(2) do |config|
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network "forwarded_port", guest: 80, host: 8080
-  
+
   # Postgres
   config.vm.network "forwarded_port", guest: 5432, host: 15432
-  
+
   # Add a few ports for runserver use
   config.vm.network "forwarded_port", guest: 8460, host: 8460
   config.vm.network "forwarded_port", guest: 8461, host: 8461
@@ -29,7 +29,7 @@ Vagrant.configure(2) do |config|
   #config.vm.provider "virtualbox" do |vb|
   #  # Display the VirtualBox GUI when booting the machine
   #  #vb.gui = true
-  #  
+  #
   #  # Customize the amount of memory on the VM:
   #  #vb.memory = "1024"
   #end

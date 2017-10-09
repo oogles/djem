@@ -10,9 +10,9 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-# Read the version from django_goodies/__init__.py
+# Read the version from djem/__init__.py
 version_re = r'^__version__ = [\'"]([^\'"]*)[\'"]'
-init_path = path.join(here, 'django_goodies', '__init__.py')
+init_path = path.join(here, 'djem', '__init__.py')
 with open(init_path) as f:
     match = re.search(version_re, f.read(), re.MULTILINE)
     if match:
@@ -21,7 +21,7 @@ with open(init_path) as f:
         raise RuntimeError('Unable to find __version__ in {0}'.format(init_path))
 
 setup(
-    name='django-goodies',
+    name='djem',
     version=version,
     
     description='A collection of useful stuff for Django projects.',
@@ -32,7 +32,7 @@ setup(
     
     install_requires=['Django>=1.8'],
     
-    url='https://github.com/oogles/django-goodies',
+    url='https://github.com/oogles/djem',
     author='Alex Church',
     author_email='alex@church.id.au'
 )

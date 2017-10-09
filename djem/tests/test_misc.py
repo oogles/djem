@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from django_goodies import get_page
+from djem import get_page
 
 from .app.models import CommonInfoTest
 
@@ -174,7 +174,7 @@ class GetPageTestCase(TestCase):
     
     def test_per_page__default(self):
         
-        with self.settings(GOODIES_DEFAULT_PAGE_LENGTH=10):
+        with self.settings(DJEM_DEFAULT_PAGE_LENGTH=10):
             page = get_page(1, self.object_list)
         
         self.assertEquals(page.number, 1)
@@ -186,7 +186,7 @@ class GetPageTestCase(TestCase):
     
     def test_per_page__custom(self):
         
-        with self.settings(GOODIES_DEFAULT_PAGE_LENGTH=10):
+        with self.settings(DJEM_DEFAULT_PAGE_LENGTH=10):
             page = get_page(1, self.object_list, 20)
         
         self.assertEquals(page.number, 1)

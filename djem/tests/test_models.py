@@ -8,8 +8,8 @@ from django.utils import timezone
 
 import pytz
 
-from django_goodies.models import TimeZoneField
-from django_goodies.utils.dt import TimeZoneHelper
+from djem.models import TimeZoneField
+from djem.utils.dt import TimeZoneHelper
 
 from .app.models import (
     ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
@@ -36,7 +36,7 @@ class CommonInfoTestCase(TestCase):
         """
         Test the overridden ``save`` method correctly raises TypeError when
         the ``user`` argument is not provided and it is required (per
-        ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE`` setting).
+        ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` setting).
         """
         
         obj = CommonInfoTest()
@@ -47,14 +47,14 @@ class CommonInfoTestCase(TestCase):
     def test_object_save__no_user__not_required(self):
         """
         Test the overridden ``save`` method correctly accepts a null ``user``
-        argument when it is not required (per``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        argument when it is not required (per``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
         setting). Instance creation should fail on missing fields as they are
         not automatically populated by the given user.
         """
         
         obj = CommonInfoTest()
         
-        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
             with self.assertRaises(IntegrityError):
                 obj.save()
     
@@ -94,7 +94,7 @@ class CommonInfoTestCase(TestCase):
         it is required.
         """
         
-        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
             self.test_object_create__user__required()
     
     def test_object_create__no_user(self):
@@ -106,7 +106,7 @@ class CommonInfoTestCase(TestCase):
         user = self.user1
         obj = CommonInfoTest(user_created=user, user_modified=user)
         
-        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
             obj.save()
         
         # Test the object attributes are updated/not updated as necessary
@@ -206,7 +206,7 @@ class CommonInfoTestCase(TestCase):
         it is required.
         """
         
-        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
             self.test_object_update__user__required()
     
     def test_object_update__no_user(self):
@@ -223,7 +223,7 @@ class CommonInfoTestCase(TestCase):
         
         obj2 = CommonInfoTest.objects.get(pk=obj1.pk)
         
-        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
             obj2.save(update_fields=('test',))
         
         # Test the object attributes are updated/not updated as necessary
@@ -272,7 +272,7 @@ class CommonInfoTestCase(TestCase):
         identical to passing it when it is required.
         """
         
-        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
             self.test_queryset_update__user__required()
     
     def test_queryset_update__no_user__required(self):
@@ -305,7 +305,7 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=user).count(), 1)
         
-        with self.settings(GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
             CommonInfoTest.objects.all().update(test=False)
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=user).count(), 1)

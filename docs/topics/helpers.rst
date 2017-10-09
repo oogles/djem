@@ -2,7 +2,7 @@
 Helpers
 =======
 
-.. module:: django_goodies.misc
+.. module:: djem.misc
 
 AjaxResponse
 ============
@@ -32,22 +32,22 @@ Usage
 This simple example demontrates how :class:`AjaxResponse` can be used with the messages framework:
 
 .. code-block:: python
-    
+
     from django.contrib import messages
-    from django_goodies import AjaxResponse
-    
+    from djem import AjaxResponse
+
     def my_view(request):
-        
+
         # do something...
-        
+
         messages.success(request, 'Did something!')
-        
+
         return AjaxResponse(request)
 
 This will give a JSON-encoded response body that looks like this:
 
 .. code-block:: python
-    
+
     {
         "messages":[{
             "message":"Did something!",
@@ -58,23 +58,23 @@ This will give a JSON-encoded response body that looks like this:
 The following is a more complete example, based on the "polls" application created `in the Django tutorial <https://docs.djangoproject.com/en/stable/intro/tutorial01/>`_. This view records a vote on a given ``Choice``:
 
 .. code-block:: python
-    
+
     from django.contrib import messages
-    from django_goodies import AjaxResponse
-    
+    from djem import AjaxResponse
+
     from polls.models import Choice
-    
+
     def vote_on_question(request, choice_id):
-        
+
         try:
             choice = Choice.objects.get(pk=choice_id)
         except Choice.DoesNotExist:
             messages.error(request, 'Invalid choice.')
             return AjaxResponse(request, success=False)
-        
+
         choice.votes += 1
         choice.save()
-        
+
         messages.success(request, 'Vote recorded.')
-        
+
         return AjaxResponse(request, {'votes': choice.votes}, success=True)

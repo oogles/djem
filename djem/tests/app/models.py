@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import models
 
-from django_goodies.models import (
+from djem.models import (
     ArchivableMixin, CommonInfoMixin, StaticAbstract, TimeZoneField,
     VersioningMixin
 )

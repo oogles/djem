@@ -1,6 +1,6 @@
 from django import forms
 
-from django_goodies.utils.dt import TIMEZONE_CHOICES, get_tz_helper
+from djem.utils.dt import TIMEZONE_CHOICES, get_tz_helper
 
 
 # Based on django-timezone-field

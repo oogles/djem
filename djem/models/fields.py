@@ -1,8 +1,6 @@
 from django.db import models
 
-from django_goodies.utils.dt import (
-    PYTZ_AVAILABLE, TIMEZONE_CHOICES, get_tz_helper
-)
+from djem.utils.dt import PYTZ_AVAILABLE, TIMEZONE_CHOICES, get_tz_helper
 
 
 # Based on django-timezone-field
@@ -16,11 +14,11 @@ class TimeZoneField(models.Field):
      - A timezone string (accepted by pytz.timezone())
      - An instance of pytz.tzinfo.BaseTzInfo
      - The pytz.UTC singleton
-     - An instance of django_goodies.utils.dt.TimeZoneHelper
+     - An instance of djem.utils.dt.TimeZoneHelper
      - None and the empty string (both representing a null value)
     
     When the value of the field is not null, accessing the value of the field
-    will output an instance of django_goodies.utils.dt.TimeZoneHelper,
+    will output an instance of djem.utils.dt.TimeZoneHelper,
     instantiated with the stored timezone.
     """
     

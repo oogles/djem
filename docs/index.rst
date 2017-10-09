@@ -1,8 +1,8 @@
-============================
-Django Goodies Documentation
-============================
+==================
+Djem Documentation
+==================
 
-Django Goodies is a collection of useful stuff for Django projects.
+Djem is a collection of useful stuff for Django projects.
 
 
 Installation
@@ -11,16 +11,16 @@ Installation
 Install the latest stable version from PyPI:
 
 .. code-block:: bash
-    
-    pip install django-goodies
+
+    pip install djem
 
 
-Goodies
-=======
+Features
+========
 
 .. toctree::
     :maxdepth: 2
-    
+
     topics/index
     ref/index
 
@@ -28,7 +28,7 @@ Goodies
 Dependencies
 ============
 
-.. currentmodule:: django_goodies
+.. currentmodule:: djem
 
 * `pytz <http://pytz.sourceforge.net/>`_ is required to make use of :class:`models.TimeZoneField`, :class:`forms.TimeZoneField` and :class:`~utils.dt.TimeZoneHelper`.
 

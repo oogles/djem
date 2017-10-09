@@ -17,11 +17,11 @@ class CommonInfoQuerySet(models.QuerySet):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
         are always updated. The ``user`` argument is required and must be passed
-        a ``User`` instance, unless the ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        a ``User`` instance, unless the ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
         setting is ``False``.
         """
         
-        require_user = getattr(settings, 'GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
+        require_user = getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
         if require_user and not user:
             raise TypeError("save() requires the 'user' argument")
         

@@ -2,8 +2,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from django_goodies.forms import CommonInfoForm, TimeZoneField
-from django_goodies.utils.dt import TIMEZONE_CHOICES, TimeZoneHelper
+from djem.forms import CommonInfoForm, TimeZoneField
+from djem.utils.dt import TIMEZONE_CHOICES, TimeZoneHelper
 
 from .app.models import StaticTest, TimeZoneTest
 
