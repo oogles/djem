@@ -1,8 +1,8 @@
-=============
-Other Goodies
-=============
+====
+AJAX
+====
 
-.. module:: djem.misc
+.. module:: djem.ajax
 
 ``AjaxResponse``
 ================

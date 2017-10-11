@@ -6,6 +6,8 @@ Change Log
 ===
 
 * Renamed project
+* Moved AjaxResponse from djem.misc.AjaxResponse to djem.ajax.AjaxResponse - does not affect recommended import location of djem.AjaxResponse
+* Moved get_page() from djem.misc.get_page to djem.pagination.get_page - does not affect recommended import location of djem.get_page
 * Added csrfify_ajax template tag
 * Added paginate template tag
 

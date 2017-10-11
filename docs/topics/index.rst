@@ -7,4 +7,4 @@ Using Djem
 
     models
     permissions
-    helpers
+    ajax
