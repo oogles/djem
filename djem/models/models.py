@@ -36,7 +36,7 @@ class CommonInfoMixinBase(ModelBase):
             if not hasattr(cls, delete_attr_name):
                 setattr(cls, delete_attr_name, lambda self, user: self.owned_by(user))
         
-        return super(CommonInfoMixinBase, cls).__init__(*args, **kwargs)
+        super(CommonInfoMixinBase, cls).__init__(*args, **kwargs)
 
 
 class CommonInfoMixin(models.Model):

@@ -100,7 +100,7 @@ class InspectTable(object):
     
     def populate_data(self, table):
         
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def build(self):
         
