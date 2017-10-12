@@ -225,7 +225,9 @@ class VersioningMixin(models.Model):
             if 'update_fields' in kwargs:
                 # If only saving a subset of fields, make sure the version
                 # field is included.
-                kwargs['update_fields'] = set(kwargs['update_fields']).add('version')
+                update_fields = set(kwargs['update_fields'])
+                update_fields.add('version')
+                kwargs['update_fields'] = update_fields
         
         super(VersioningMixin, self).save(*args, **kwargs)
         

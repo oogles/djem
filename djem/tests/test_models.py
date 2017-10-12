@@ -76,7 +76,7 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(obj.date_created, obj.date_modified)
         
         # Test the changes are correctly written to the database
-        obj = CommonInfoTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_created_id, obj.user_modified_id)
@@ -117,7 +117,7 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(obj.date_created, obj.date_modified)
         
         # Test the changes are correctly written to the database
-        obj = CommonInfoTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         
         self.assertEquals(obj.user_created_id, user.pk)
         self.assertEquals(obj.user_created_id, obj.user_modified_id)
@@ -142,7 +142,7 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(obj.date_created, d)
         
         # Test the changes are correctly written to the database
-        obj = CommonInfoTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.date_created, d)
         
         self.assertNumQueries(1)
@@ -161,7 +161,7 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(obj.user_modified_id, self.user1.pk)
         
         # Test the changes are correctly written to the database
-        obj = CommonInfoTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.user_created_id, self.user2.pk)
         self.assertEquals(obj.user_modified_id, self.user1.pk)
         
@@ -177,23 +177,38 @@ class CommonInfoTestCase(TestCase):
         obj1 = CommonInfoTest()
         obj1.save(self.user1)
         
+        self.assertEquals(obj1.user_created_id, self.user1.pk)
+        self.assertEquals(obj1.user_modified_id, self.user1.pk)
+        self.assertTrue(obj1.field1)
+        self.assertTrue(obj1.field2)
+        
+        # Modify some fields on a separate instance of the same record. The
+        # user_modified should be saved, the date modified should be updated,
+        # "field1" should be saved (listed in update_fields), "field2" should
+        # NOT be saved (not listed in update_fields)
         obj2 = CommonInfoTest.objects.get(pk=obj1.pk)
-        obj2.save(self.user2, update_fields=('test',))
+        obj2.field1 = False
+        obj2.field2 = False
+        obj2.save(self.user2, update_fields=('field1',))
         
         # Test the object attributes are updated
         self.assertEquals(obj2.user_created_id, self.user1.pk)
         self.assertEquals(obj2.user_modified_id, self.user2.pk)
+        self.assertFalse(obj2.field1)
+        self.assertFalse(obj2.field2)
         
-        self.assertEquals(obj1.date_created, obj2.date_created)
+        self.assertEquals(obj2.date_created, obj1.date_created)
         self.assertGreater(obj2.date_modified, obj1.date_modified)
         
         # Test the changes are correctly written to the database
-        obj2 = CommonInfoTest.objects.get(pk=obj2.pk)
+        obj2.refresh_from_db()
         
         self.assertEquals(obj2.user_created_id, self.user1.pk)
         self.assertEquals(obj2.user_modified_id, self.user2.pk)
+        self.assertFalse(obj2.field1)
+        self.assertTrue(obj2.field2)
         
-        self.assertEquals(obj1.date_created, obj2.date_created)
+        self.assertEquals(obj2.date_created, obj1.date_created)
         self.assertGreater(obj2.date_modified, obj1.date_modified)
         
         self.assertNumQueries(3)
@@ -221,25 +236,36 @@ class CommonInfoTestCase(TestCase):
         obj1 = CommonInfoTest()
         obj1.save(user)
         
+        self.assertEquals(obj1.user_created_id, self.user1.pk)
+        self.assertEquals(obj1.user_modified_id, self.user1.pk)
+        self.assertTrue(obj1.field1)
+        self.assertTrue(obj1.field2)
+        
         obj2 = CommonInfoTest.objects.get(pk=obj1.pk)
+        obj2.field1 = False
+        obj2.field2 = False
         
         with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
-            obj2.save(update_fields=('test',))
+            obj2.save(update_fields=('field1',))
         
         # Test the object attributes are updated/not updated as necessary
         self.assertEquals(obj2.user_created_id, user.pk)
         self.assertEquals(obj2.user_modified_id, user.pk)
+        self.assertFalse(obj2.field1)
+        self.assertFalse(obj2.field2)
         
-        self.assertEquals(obj1.date_created, obj2.date_created)
+        self.assertEquals(obj2.date_created, obj1.date_created)
         self.assertGreater(obj2.date_modified, obj1.date_modified)
         
         # Test the changes are correctly written to the database
-        obj2 = CommonInfoTest.objects.get(pk=obj2.pk)
+        obj2.refresh_from_db()
         
         self.assertEquals(obj2.user_created_id, user.pk)
         self.assertEquals(obj2.user_modified_id, user.pk)
+        self.assertFalse(obj2.field1)
+        self.assertTrue(obj2.field2)
         
-        self.assertEquals(obj1.date_created, obj2.date_created)
+        self.assertEquals(obj2.date_created, obj1.date_created)
         self.assertGreater(obj2.date_modified, obj1.date_modified)
         
         self.assertNumQueries(3)
@@ -257,7 +283,7 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user1).count(), 1)
         
-        CommonInfoTest.objects.all().update(self.user2, test=False)
+        CommonInfoTest.objects.all().update(self.user2, field1=False)
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user2).count(), 1)
         self.assertGreater(CommonInfoTest.objects.first().date_modified, date_modified)
@@ -286,7 +312,7 @@ class CommonInfoTestCase(TestCase):
         obj.save(self.user1)
         
         with self.assertRaises(TypeError):
-            CommonInfoTest.objects.all().update(test=False)
+            CommonInfoTest.objects.all().update(field1=False)
         
         self.assertNumQueries(1)
     
@@ -306,7 +332,7 @@ class CommonInfoTestCase(TestCase):
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=user).count(), 1)
         
         with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
-            CommonInfoTest.objects.all().update(test=False)
+            CommonInfoTest.objects.all().update(field1=False)
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=user).count(), 1)
         self.assertGreater(CommonInfoTest.objects.first().date_modified, date_modified)
@@ -325,7 +351,7 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user1).count(), 1)
         
-        CommonInfoTest.objects.update(self.user2, test=False)
+        CommonInfoTest.objects.update(self.user2, field1=False)
         
         self.assertEquals(CommonInfoTest.objects.filter(user_modified=self.user2).count(), 1)
         self.assertGreater(CommonInfoTest.objects.first().date_modified, date_modified)
@@ -367,7 +393,7 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEquals(qs.owned_by(self.user1).count(), 1)
         self.assertEquals(qs.owned_by(self.user1.pk).count(), 1)
-        self.assertEquals(qs.filter(test=False).owned_by(self.user1).count(), 0)
+        self.assertEquals(qs.filter(field1=False).owned_by(self.user1).count(), 0)
         self.assertEquals(qs.owned_by(self.user1).owned_by(self.user2).count(), 0)
         
         self.assertNumQueries(7)
@@ -399,17 +425,20 @@ class CommonInfoTestCase(TestCase):
         permissions using ``owned_by``.
         """
         
-        user = self.user1
+        user1 = self.user1
+        user2 = self.user2
         
         # Add model-level permission to ensure it is object-level permissions
         # being granted/denied
-        user.user_permissions.add(Permission.objects.get(codename='change_commoninfotest'))
+        permission = Permission.objects.get(codename='change_commoninfotest')
+        user1.user_permissions.add(permission)
+        user2.user_permissions.add(permission)
         
         obj = CommonInfoTest()
-        obj.save(user)
+        obj.save(user1)
         
-        self.assertTrue(user.has_perm('app.change_commoninfotest', obj))
-        self.assertFalse(self.user2.has_perm('app.change_commoninfotest', obj))
+        self.assertTrue(user1.has_perm('app.change_commoninfotest', obj))
+        self.assertFalse(user2.has_perm('app.change_commoninfotest', obj))
     
     def test_object_permissions__delete(self):
         """
@@ -417,17 +446,20 @@ class CommonInfoTestCase(TestCase):
         permissions using ``owned_by``.
         """
         
-        user = self.user1
+        user1 = self.user1
+        user2 = self.user2
         
         # Add model-level permission to ensure it is object-level permissions
         # being granted/denied
-        user.user_permissions.add(Permission.objects.get(codename='delete_commoninfotest'))
+        permission = Permission.objects.get(codename='delete_commoninfotest')
+        user1.user_permissions.add(permission)
+        user2.user_permissions.add(permission)
         
         obj = CommonInfoTest()
-        obj.save(user)
+        obj.save(user1)
         
-        self.assertTrue(user.has_perm('app.delete_commoninfotest', obj))
-        self.assertFalse(self.user2.has_perm('app.delete_commoninfotest', obj))
+        self.assertTrue(user1.has_perm('app.delete_commoninfotest', obj))
+        self.assertFalse(user2.has_perm('app.delete_commoninfotest', obj))
 
 
 class ArchivableTestCase(TestCase):
@@ -439,7 +471,7 @@ class ArchivableTestCase(TestCase):
     def setUp(self):
         
         self.obj1 = ArchivableTest.objects.create(is_archived=True)
-        self.obj2 = ArchivableTest.objects.create(is_archived=False)
+        self.obj2 = ArchivableTest.objects.create(is_archived=False, field1=False, field2=False)
     
     def test_managers_archived_flag(self):
         """
@@ -460,43 +492,50 @@ class ArchivableTestCase(TestCase):
         arguments.
         """
         
-        self.assertFalse(self.obj2.is_archived)
+        obj = self.obj2
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 1)
-        self.assertEquals(ArchivableTest.archived.count(), 1)
+        self.assertFalse(obj.is_archived)
+        self.assertFalse(obj.field1)
+        self.assertFalse(obj.field2)
         
-        self.obj2.archive()
+        # Change the fields and archive the record - the changes to the fields
+        # should not be saved
+        obj.field1 = True
+        obj.field2 = True
+        obj.archive()
         
-        self.assertTrue(self.obj2.is_archived)
+        obj.refresh_from_db()
+        self.assertTrue(obj.is_archived)
+        self.assertFalse(obj.field1)
+        self.assertFalse(obj.field2)
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 0)
-        self.assertEquals(ArchivableTest.archived.count(), 2)
-        
-        self.assertNumQueries(7)
+        self.assertNumQueries(2)
     
     def test_object_archive__args(self):
         """
         Test the ``archive`` method of an instance, when called with the
-        ``update_fields`` argument subsequently passed to its call to ``save``.
+        ``update_fields`` argument. It should pass the argument through to its
+        internal call to ``save``.
         """
         
-        self.assertFalse(self.obj2.is_archived)
+        obj = self.obj2
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 1)
-        self.assertEquals(ArchivableTest.archived.count(), 1)
+        self.assertFalse(obj.is_archived)
+        self.assertFalse(obj.field1)
+        self.assertFalse(obj.field2)
         
-        self.obj2.archive(update_fields=('test',))
+        # Change the fields and archive the record - only the to "field1" should
+        # be saved
+        obj.field1 = True
+        obj.field2 = True
+        obj.archive(update_fields=('field1',))
         
-        self.assertTrue(self.obj2.is_archived)
+        obj.refresh_from_db()
+        self.assertTrue(obj.is_archived)
+        self.assertTrue(obj.field1)
+        self.assertFalse(obj.field2)
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 0)
-        self.assertEquals(ArchivableTest.archived.count(), 2)
-        
-        self.assertNumQueries(7)
+        self.assertNumQueries(2)
     
     def test_object_unarchive__no_args(self):
         """
@@ -504,43 +543,50 @@ class ArchivableTestCase(TestCase):
         arguments.
         """
         
-        self.assertTrue(self.obj1.is_archived)
+        obj = self.obj1
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 1)
-        self.assertEquals(ArchivableTest.archived.count(), 1)
+        self.assertTrue(obj.is_archived)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
         
-        self.obj1.unarchive()
+        # Change the fields and archive the record - the changes to the fields
+        # should not be saved
+        obj.field1 = False
+        obj.field2 = False
+        obj.unarchive()
         
-        self.assertFalse(self.obj1.is_archived)
+        obj.refresh_from_db()
+        self.assertFalse(obj.is_archived)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 2)
-        self.assertEquals(ArchivableTest.archived.count(), 0)
-        
-        self.assertNumQueries(7)
+        self.assertNumQueries(2)
     
     def test_object_unarchive__args(self):
         """
         Test the ``unarchive`` method of an instance, when called with the
-        ``update_fields`` argument subsequently passed to its call to ``save``.
+        ``update_fields`` argument. It should pass the argument through to its
+        internal call to ``save``.
         """
         
-        self.assertTrue(self.obj1.is_archived)
+        obj = self.obj1
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 1)
-        self.assertEquals(ArchivableTest.archived.count(), 1)
+        self.assertTrue(obj.is_archived)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
         
-        self.obj1.unarchive(update_fields=('test',))
+        # Change the fields and archive the record - only the to "field1" should
+        # be saved
+        obj.field1 = False
+        obj.field2 = False
+        obj.unarchive(update_fields=('field1',))
         
-        self.assertFalse(self.obj1.is_archived)
+        obj.refresh_from_db()
+        self.assertFalse(obj.is_archived)
+        self.assertFalse(obj.field1)
+        self.assertTrue(obj.field2)
         
-        self.assertEquals(ArchivableTest.objects.count(), 2)
-        self.assertEquals(ArchivableTest.live.count(), 2)
-        self.assertEquals(ArchivableTest.archived.count(), 0)
-        
-        self.assertNumQueries(7)
+        self.assertNumQueries(2)
     
     def test_queryset_archive(self):
         """
@@ -619,17 +665,24 @@ class VersioningTestCase(TestCase):
         
         # Test default value set correctly on object
         self.assertEquals(obj.version, 1)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
         
         # Test default value correctly saved to the database without increment
-        obj = VersioningTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.version, 1)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
         
-        # Increment value
-        obj.save(update_fields=('test',))
+        # Make a change and test it was saved correctly
+        obj.field1 = False
+        obj.field2 = False
+        obj.save(update_fields=('field1',))
         
-        # Test incremented value correctly saved to the database
-        obj = VersioningTest.objects.get(pk=obj.pk)
-        self.assertEquals(obj.version, 2)
+        obj.refresh_from_db()
+        self.assertEquals(obj.version, 2)  # should be incremented
+        self.assertFalse(obj.field1)       # should be modified
+        self.assertTrue(obj.field2)        # should not be modified (not listed in update_fields)
         
         self.assertNumQueries(4)
     
@@ -645,7 +698,7 @@ class VersioningTestCase(TestCase):
         obj.save()  # version 3
         
         # Test incremented value correctly saved to the database
-        obj = VersioningTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.version, 3)
         
         self.assertNumQueries(4)
@@ -680,10 +733,10 @@ class VersioningTestCase(TestCase):
         self.assertEquals(obj.version, 1)
         
         # Increment value
-        VersioningTest.objects.update(test=False)
+        VersioningTest.objects.update(field1=False)
         
         # Test value incremented correctly
-        obj = VersioningTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.version, 2)
         
         self.assertNumQueries(3)
@@ -700,10 +753,10 @@ class VersioningTestCase(TestCase):
         self.assertEquals(obj.version, 1)
         
         # Increment value
-        VersioningTest.objects.all().update(test=False)
+        VersioningTest.objects.all().update(field1=False)
         
         # Test value incremented correctly
-        obj = VersioningTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.version, 2)
         
         self.assertNumQueries(3)
@@ -717,10 +770,6 @@ class StaticTestCase(TestCase):
     ``ArchivableTestCase``, ``VersioningTestCase``) in less detail, while still
     ensuring functionality inherits correctly.
     
-    Designed to be inherited by ``TestCases`` for ``StaticAbstract`` subclasses,
-    so they automatically cover common functionality, by simply overriding the
-    ``setUp`` and ``get_object`` methods.
-    
     Tests from "parent" ``TestCases`` not covered:
      - CommonInfoTestCase.test_object_create_with_date_created
      - CommonInfoTestCase.test_object_create_with_user_created
@@ -730,15 +779,6 @@ class StaticTestCase(TestCase):
         
         self.user1 = make_user('test')
         self.user2 = make_user('test2')
-    
-    def get_object(self, **kwargs):
-        """
-        Return a StaticTest created with defaults for all required fields,
-        allowing per-test saving, updating, etc without worrying about filling
-        all details.
-        """
-        
-        return StaticTest(**kwargs)
     
     def test_object_save(self):
         """
@@ -750,12 +790,12 @@ class StaticTestCase(TestCase):
          - VersioningTestCase.test_save_version_increment
         """
         
-        obj = self.get_object()
+        obj = StaticTest()
         obj.save(self.user1)
         
         # Test object created with correct user_created and user_modified,
         # and with the correct initial version
-        obj = StaticTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_created_id, obj.user_modified_id)
         self.assertEquals(obj.version, 1)
@@ -764,7 +804,7 @@ class StaticTestCase(TestCase):
         
         # Test saving the object updates the user_modified and increments the
         # version
-        obj = StaticTest.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.user_created_id, self.user1.pk)
         self.assertEquals(obj.user_modified_id, self.user2.pk)
         self.assertEquals(obj.version, 2)
@@ -781,7 +821,7 @@ class StaticTestCase(TestCase):
          - CommonInfoTestCase.test_queryset_owned_by
         """
         
-        obj = self.get_object()
+        obj = StaticTest()
         obj.save(self.user1)
         
         # Test the object's owned_by method
@@ -813,32 +853,30 @@ class StaticTestCase(TestCase):
          - ArchivableTestCase.test_object_unarchive__args
         """
         
-        model = StaticTest
-        
-        obj = self.get_object(is_archived=False)
+        obj = StaticTest(is_archived=False)
         obj.save(self.user1)
         
-        self.assertEquals(model.objects.count(), 1)
-        self.assertEquals(model.live.count(), 1)
-        self.assertEquals(model.archived.count(), 0)
+        self.assertEquals(StaticTest.objects.count(), 1)
+        self.assertEquals(StaticTest.live.count(), 1)
+        self.assertEquals(StaticTest.archived.count(), 0)
         
-        self.assertEquals(model.objects.filter(user_modified=self.user1).count(), 1)
+        self.assertEquals(StaticTest.objects.filter(user_modified=self.user1).count(), 1)
         
         obj.archive(self.user2)
         
-        self.assertEquals(model.objects.count(), 1)
-        self.assertEquals(model.live.count(), 0)
-        self.assertEquals(model.archived.count(), 1)
+        self.assertEquals(StaticTest.objects.count(), 1)
+        self.assertEquals(StaticTest.live.count(), 0)
+        self.assertEquals(StaticTest.archived.count(), 1)
         
-        self.assertEquals(model.objects.filter(user_modified=self.user2).count(), 1)
+        self.assertEquals(StaticTest.objects.filter(user_modified=self.user2).count(), 1)
         
         obj.unarchive(self.user1)
         
-        self.assertEquals(model.objects.count(), 1)
-        self.assertEquals(model.live.count(), 1)
-        self.assertEquals(model.archived.count(), 0)
+        self.assertEquals(StaticTest.objects.count(), 1)
+        self.assertEquals(StaticTest.live.count(), 1)
+        self.assertEquals(StaticTest.archived.count(), 0)
         
-        self.assertEquals(model.objects.filter(user_modified=self.user1).count(), 1)
+        self.assertEquals(StaticTest.objects.filter(user_modified=self.user1).count(), 1)
         
         self.assertNumQueries(15)
     
@@ -858,26 +896,24 @@ class StaticTestCase(TestCase):
          - ArchivableTestCase.test_queryset_unarchive
         """
         
-        model = StaticTest
+        StaticTest(is_archived=True).save(self.user1)
+        StaticTest(is_archived=False).save(self.user1)
         
-        self.get_object(is_archived=True).save(self.user1)
-        self.get_object(is_archived=False).save(self.user1)
+        self.assertEquals(StaticTest.objects.count(), 2)
+        self.assertEquals(StaticTest.live.count(), 1)
+        self.assertEquals(StaticTest.archived.count(), 1)
         
-        self.assertEquals(model.objects.count(), 2)
-        self.assertEquals(model.live.count(), 1)
-        self.assertEquals(model.archived.count(), 1)
+        StaticTest.objects.all().archive(self.user2)
         
-        model.objects.all().archive(self.user2)
+        self.assertEquals(StaticTest.objects.count(), 2)
+        self.assertEquals(StaticTest.live.count(), 0)
+        self.assertEquals(StaticTest.archived.count(), 2)
         
-        self.assertEquals(model.objects.count(), 2)
-        self.assertEquals(model.live.count(), 0)
-        self.assertEquals(model.archived.count(), 2)
+        StaticTest.objects.all().unarchive(self.user1)
         
-        model.objects.all().unarchive(self.user1)
-        
-        self.assertEquals(model.objects.count(), 2)
-        self.assertEquals(model.live.count(), 2)
-        self.assertEquals(model.archived.count(), 0)
+        self.assertEquals(StaticTest.objects.count(), 2)
+        self.assertEquals(StaticTest.live.count(), 2)
+        self.assertEquals(StaticTest.archived.count(), 0)
         
         self.assertNumQueries(11)
     
@@ -911,26 +947,24 @@ class StaticTestCase(TestCase):
          - VersioningTestCase.test_queryset_update_version_increment
         """
         
-        model = StaticTest
-        
-        obj = self.get_object()
+        obj = StaticTest()
         obj.save(self.user1)
         
-        obj = model.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.version, 1)
         self.assertEquals(obj.user_modified_id, self.user1.pk)
         
         # Test manager update method
-        model.objects.update(self.user2)
+        StaticTest.objects.update(self.user2)
         
-        obj = model.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.version, 2)
         self.assertEquals(obj.user_modified_id, self.user2.pk)
         
         # Test queryset update method
-        model.objects.all().update(self.user1)
+        StaticTest.objects.all().update(self.user1)
         
-        obj = model.objects.get(pk=obj.pk)
+        obj.refresh_from_db()
         self.assertEquals(obj.version, 3)
         self.assertEquals(obj.user_modified_id, self.user1.pk)
         
@@ -950,21 +984,22 @@ class StaticTestCase(TestCase):
         user1.user_permissions.add(permission)
         user2.user_permissions.add(permission)
         
-        obj = self.get_object()
+        obj = StaticTest()
         obj.save(user1)
         
-        # user1 should have access as it is the owner, even though "test" is
+        # user1 should have access as it is the owner, even though "field1" is
         # False. user2 should not. See StaticTest._user_can_change_statictest.
-        obj.test = False
+        obj.field1 = False
         obj.save(user1)
         self.assertTrue(user1.has_perm('app.change_statictest', obj))
         self.assertFalse(user2.has_perm('app.change_statictest', obj))
         
-        # user2 should get access when "test" is True, even though it is not
+        # user2 should get access when "field1" is True, even though it is not
         # the owner. See StaticTest._user_can_change_statictest.
-        obj.test = True
+        obj.field1 = True
         obj.save(user1)
         
+        # Re-query for the user to clear the permissions cache stored on the instance.
         user2 = get_user_model().objects.get(pk=user2.pk)
         self.assertTrue(user2.has_perm('app.change_statictest', obj))
     
@@ -986,7 +1021,7 @@ class StaticTestCase(TestCase):
         group = Group.objects.create(name='Test Group')
         user2.groups.add(group)
         
-        obj = self.get_object()
+        obj = StaticTest()
         obj.save(user1)
         
         # user1 should have access as it is the owner, regardless of group
@@ -997,11 +1032,12 @@ class StaticTestCase(TestCase):
         self.assertTrue(user1.has_perm('app.delete_statictest', obj))
         self.assertTrue(user2.has_perm('app.delete_statictest', obj))
         
-        # user2 should lose access when "test" is False, even though they have
+        # user2 should lose access when "field1" is False, even though they have
         # groups. See StaticTest._group_can_delete_statictest.
-        obj.test = False
+        obj.field1 = False
         obj.save(user1)
         
+        # Re-query for the user to clear the permissions cache stored on the instance.
         user2 = get_user_model().objects.get(pk=user2.pk)
         self.assertFalse(user2.has_perm('app.delete_statictest', obj))
 

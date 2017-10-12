@@ -14,7 +14,8 @@ class CommonInfoTest(CommonInfoMixin, models.Model):
     the mixin without introducing the variables of a real subclass.
     """
     
-    test = models.BooleanField(default=True)
+    field1 = models.BooleanField(default=True)
+    field2 = models.BooleanField(default=True)
 
 
 class ArchivableTest(ArchivableMixin, models.Model):
@@ -23,7 +24,8 @@ class ArchivableTest(ArchivableMixin, models.Model):
     the mixin without introducing the variables of a real subclass.
     """
     
-    test = models.BooleanField(default=True)
+    field1 = models.BooleanField(default=True)
+    field2 = models.BooleanField(default=True)
 
 
 class VersioningTest(VersioningMixin, models.Model):
@@ -32,7 +34,8 @@ class VersioningTest(VersioningMixin, models.Model):
     the mixin without introducing the variables of a real subclass.
     """
     
-    test = models.BooleanField(default=True)
+    field1 = models.BooleanField(default=True)
+    field2 = models.BooleanField(default=True)
 
 
 class StaticTest(StaticAbstract):
@@ -44,16 +47,16 @@ class StaticTest(StaticAbstract):
     inherited from CommonInfoMixin and model-specific overrides.
     """
     
-    test = models.BooleanField(default=True)
+    field1 = models.BooleanField(default=True)
     
     # Customise permission access functions for testing
     def _user_can_change_statictest(self, user):
         
-        return self.owned_by(user) or self.test
+        return self.owned_by(user) or self.field1
     
     def _group_can_delete_statictest(self, groups):
         
-        return groups.exists() and self.test
+        return groups.exists() and self.field1
 
 
 class TimeZoneTest(models.Model):
@@ -71,7 +74,6 @@ class OPTest(models.Model):
     This model provides some access functions for object-level permissions testing.
     """
     
-    test = models.BooleanField(default=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
     group = models.ForeignKey(Group, null=True)
     
