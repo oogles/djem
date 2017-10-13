@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from djem import get_page
+from djem.pagination import get_page
 
 from .app.models import CommonInfoTest
 

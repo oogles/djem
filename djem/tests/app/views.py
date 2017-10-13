@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.template import engines
 from django.views import View
 
-from djem import AjaxResponse
+from djem.ajax import AjaxResponse
 from djem.auth import PermissionRequiredMixin, permission_required
 
 from .models import CommonInfoTest
