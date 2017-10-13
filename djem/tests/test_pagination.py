@@ -1,3 +1,4 @@
+from django.core.paginator import EmptyPage
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
@@ -79,3 +80,48 @@ class GetPageTestCase(TestCase):
         self.assertEquals(page.end_index(), 23)
         self.assertEquals(page.paginator.count, 23)
         self.assertEquals(page.paginator.num_pages, 3)
+    
+    def test_empty_list__allow_empty_first__page0(self):
+        
+        page = get_page(0, [], 10)
+        
+        self.assertEquals(page.number, 1)
+        self.assertEquals(len(page), 0)
+        self.assertEquals(page.paginator.count, 0)
+        self.assertEquals(page.paginator.num_pages, 1)
+    
+    def test_empty_list__allow_empty_first__page1(self):
+        
+        page = get_page(1, [], 10)
+        
+        self.assertEquals(page.number, 1)
+        self.assertEquals(len(page), 0)
+        self.assertEquals(page.paginator.count, 0)
+        self.assertEquals(page.paginator.num_pages, 1)
+    
+    def test_empty_list__allow_empty_first__page2(self):
+        
+        page = get_page(2, [], 10)
+        
+        self.assertEquals(page.number, 1)
+        self.assertEquals(len(page), 0)
+        self.assertEquals(page.paginator.count, 0)
+        self.assertEquals(page.paginator.num_pages, 1)
+    
+    def test_empty_list__deny_empty_first__page0(self):
+        
+        # Specifically ensure it is not the "That page number is less than 1" error
+        with self.assertRaisesMessage(EmptyPage, 'That page contains no results'):
+            get_page(0, [], 10, allow_empty_first_page=False)
+    
+    def test_empty_list__deny_empty_first__page1(self):
+        
+        # Specifically ensure it is not the "That page number is less than 1" error
+        with self.assertRaisesMessage(EmptyPage, 'That page contains no results'):
+            get_page(1, [], 10, allow_empty_first_page=False)
+    
+    def test_empty_list__deny_empty_first__page2(self):
+        
+        # Specifically ensure it is not the "That page number is less than 1" error
+        with self.assertRaisesMessage(EmptyPage, 'That page contains no results'):
+            get_page(2, [], 10, allow_empty_first_page=False)

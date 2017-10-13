@@ -20,13 +20,19 @@ def get_page(page, object_list, per_page=None, **kwargs):
     paginator = Paginator(object_list, per_page, **kwargs)
     
     try:
-        objects = paginator.page(page)
+        return paginator.page(page)
     except PageNotAnInteger:
-        objects = paginator.page(1)
+        page = 1
     except EmptyPage:
-        if page <= 0:
-            objects = paginator.page(1)
+        if page < 1:
+            # Page number too low, return first page
+            page = 1
+        elif paginator.num_pages:
+            # Page number too high, return last page
+            page = paginator.num_pages
         else:
-            objects = paginator.page(paginator.num_pages)
+            # Paginator has no pages, still try for the first page. Will return
+            # an empty page unless allow_empty_first_page is False.
+            page = 1
     
-    return objects
+    return paginator.page(page)
