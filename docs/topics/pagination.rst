@@ -103,7 +103,7 @@ While ``get_page()`` only returns a ``Page`` instance, the ``Paginator`` that cr
 Controlling page length
 -----------------------
 
-In a lot of cases, sites use a standard page length for multiple (sometimes numerous) paginated lists they display. Djem reduces the need to specify this value in repeated calls to :func:`get_page` by providing a setting that defines this standard page length: :ref:`setting-DJEM_DEFAULT_PAGE_LENGTH`.
+In a lot of cases, sites use a standard page length for multiple (sometimes numerous) paginated lists they display. Djem reduces the need to specify this value in repeated calls to :func:`get_page` by providing a setting that defines this standard page length: :setting:`DJEM_DEFAULT_PAGE_LENGTH`.
 
 If added to your ``settings.py`` file, ``get_page()`` will use the defined page length in any call that does not explicitly pass the ``per_page`` argument. Providing the argument will override the default on a call-by-call basis.
 
@@ -113,7 +113,9 @@ Not providing the ``per_page`` argument when ``DJEM_DEFAULT_PAGE_LENGTH`` is **n
 In the template
 ===============
 
-Rendering a block of links to control pagination of a result list (first, last, next, previous, etc) can also involve boilerplate code and repetition. The :ref:`tags-paginate` template tag allows one-line generation of such pagination links. Simply pass it the same Django ``Page`` instance used to render the list itself and it will render appropriate page navigation links. This allows quick and easy rendering of a consistent paged-list navigation block site wide.
+Rendering a block of links to control pagination of a result list (first, last, next, previous, etc) can also involve boilerplate code and repetition. The :ttag:`paginate` template tag allows one-line generation of such pagination links. Simply pass it the same Django ``Page`` instance used to render the list itself and it will render appropriate page navigation links. This allows quick and easy rendering of a consistent paged-list navigation block site wide.
+
+.. versionadded:: 0.6
 
 For example, where ``user_list`` is a ``Page`` instance:
 

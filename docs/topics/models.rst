@@ -130,7 +130,7 @@ Caveats and workarounds
 
 Obviously any code that calls a model's ``save()`` method or a queryset's ``update()`` method will need to be updated to pass the ``user`` argument for models that incorporate :class:`CommonInfoMixin`. This may not always be possible for third party code. :class:`~djem.forms.CommonInfoForm` solves this problem for one common occurrence, by providing a wrapper around Django's ``ModelForm``, but there are plenty of others. E.g. the queryset methods ``create()`` and ``get_or_create()``, which are not currently supported.
 
-If it is not feasible to customise code that calls these methods, it *is* possible to disable the requirement of the ``user`` argument. This can be done by setting :ref:`setting-DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` in ``settings.py``:
+If it is not feasible to customise code that calls these methods, it *is* possible to disable the requirement of the ``user`` argument. This can be done by setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` in ``settings.py``:
 
 .. code-block:: python
 
@@ -139,15 +139,15 @@ If it is not feasible to customise code that calls these methods, it *is* possib
 This allows the use of ``CommonInfoMixin`` and all related functionality without the strict requirement of passing the ``user`` argument to methods that save/update the record. If passed, it will still be used as usual, but not providing it will not raise an exception. Of course, the methods won't automatically populate the appropriate fields, either. This means that ``user_created`` and ``user_modified`` will need to be manually populated when creating, and ``user_modified`` will need to be manually populated when updating.
 
 .. versionadded:: 0.4
-    The :ref:`setting-DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` setting
+    The :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` setting
 
 .. warning::
 
-    Setting :ref:`setting-DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` reduces the accuracy of the ``user_modified`` field, as it cannot be guaranteed that the user that made a change was recorded.
+    Setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` reduces the accuracy of the ``user_modified`` field, as it cannot be guaranteed that the user that made a change was recorded.
 
 .. note::
 
-    As the accuracy of the ``user_modified`` field is often irrelevant in tests, setting :ref:`setting-DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` using `override_settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.override_settings>`_ can help make updating model instances in tests a bit easier.
+    As the accuracy of the ``user_modified`` field is often irrelevant in tests, setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` using `override_settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.override_settings>`_ can help make updating model instances in tests a bit easier.
 
     E.g.
 
@@ -169,7 +169,7 @@ This allows the use of ``CommonInfoMixin`` and all related functionality without
             def test_something(self):
                 # ...
 
-An additional caveat is that there may not always be a known user when a change is being made to a ``CommonInfoMixin`` record, e.g. during a system-triggered background process. Situations such as these may be solved by setting :ref:`setting-DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` as described above, and taking responsibility for keeping ``user_modified`` up to date when necessary, or by creating a "system" user that can be passed in during these operations.
+An additional caveat is that there may not always be a known user when a change is being made to a ``CommonInfoMixin`` record, e.g. during a system-triggered background process. Situations such as these may be solved by setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` as described above, and taking responsibility for keeping ``user_modified`` up to date when necessary, or by creating a "system" user that can be passed in during these operations.
 
 
 .. _commoninfomixin-ownership-checking:

@@ -5,7 +5,7 @@ Settings
 The following settings can be added to your project's ``settings.py`` file to customise the behaviour of Djem features.
 
 
-.. _setting-DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE:
+.. setting:: DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE
 
 ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
 =========================================
@@ -29,7 +29,7 @@ Setting ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "requ
     Using this setting can reduce the accuracy of ``user_modified``, as it is no longer guaranteed to be updated by any save/update to the model instance. It will be up to you to ensure that this field is updated when necessary.
 
 
-.. _setting-DJEM_DEFAULT_PAGE_LENGTH:
+.. setting:: DJEM_DEFAULT_PAGE_LENGTH
 
 ``DJEM_DEFAULT_PAGE_LENGTH``
 ============================

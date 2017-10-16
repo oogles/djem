@@ -118,7 +118,7 @@ See ``has_perm()`` documentation for `User <https://docs.djangoproject.com/en/st
 Checking in templates
 ~~~~~~~~~~~~~~~~~~~~~
 
-Checking object-level permissions in a Django template can be done using the :ref:`tags-ifperm` and :ref:`tags-ifnotperm` template tags. These are block tags whose content is displayed if the permissions check passes. For :ref:`tags-ifperm`, it passes if the user *has* the permission. For :ref:`tags-ifnotperm`, it passes if the user *does not* have the permission. Each tag supports an ``else`` block, whose content is displayed if the permissions check fails.
+Checking object-level permissions in a Django template can be done using the :ttag:`ifperm` and :ttag:`ifnotperm` template tags. These are block tags whose content is displayed if the permissions check passes. For :ttag:`ifperm`, it passes if the user *has* the permission. For :ttag:`ifnotperm`, it passes if the user *does not* have the permission. Each tag supports an ``else`` block, whose content is displayed if the permissions check fails.
 
 Each tag must be passed a user instance, the name of the permission to check and the object to check it on.
 

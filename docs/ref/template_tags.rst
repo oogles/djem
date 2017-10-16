@@ -6,7 +6,7 @@ Template Tags
 
 Djem provides several template tags as part of the ``djem`` tag library.
 
-.. _tags-ifperm:
+.. templatetag:: ifperm
 
 ``ifperm``
 ----------
@@ -36,7 +36,7 @@ The tag supports an ``else`` block, which will be rendered if the user does not 
     ...
 
 
-.. _tags-ifnotperm:
+.. templatetag:: ifnotperm
 
 ``ifnotperm``
 -------------
@@ -66,10 +66,12 @@ The tag supports an ``else`` block, which will be rendered if the user does have
     ...
 
 
-.. _tag-paginate:
+.. templatetag:: paginate
 
 ``paginate``
 ------------
+
+.. versionadded:: 0.6
 
 The ``{% paginate %}`` template tag helps keep things `DRY <https://docs.djangoproject.com/en/stable/misc/design-philosophies/#don-t-repeat-yourself-dry>`_ and alleviate the boilerplate around defining the pagination links associated with a result list. Simply pass it the same Django ``Page`` instance used to render the list itself and it will render appropriate page navigation links.
 
