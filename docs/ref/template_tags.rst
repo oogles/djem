@@ -86,3 +86,8 @@ For example, where ``user_list`` is a ``Page`` instance:
     ...
 
 The structure of the navigation block that is rendered is controlled by the ``djem/pagination.html`` template. Djem's default can be overridden per-project `as per any Django app template <https://docs.djangoproject.com/en/stable/howto/overriding-templates/>`_
+
+.. seealso::
+
+    :func:`~djem.pagination.get_page`
+        A helper utility for retrieving a ``Page`` instance.

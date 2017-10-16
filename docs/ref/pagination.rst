@@ -20,3 +20,11 @@ Pagination
     ``per_page`` is the number of results to be included in each page. Not required if :ref:`setting-DJEM_DEFAULT_PAGE_LENGTH` has been defined.
 
     All other keyword arguments of the ``Paginator`` constructor are also accepted and passed through to the ``Paginator`` instance created internally.
+
+.. seealso::
+
+    :ref:`setting-DJEM_DEFAULT_PAGE_LENGTH`
+        The setting for controlling the default value of the ``per_page`` argument.
+
+    :ref:`tag-paginate`
+        A templatetag for rendering a block of pagination links based on a given ``Page`` object.
