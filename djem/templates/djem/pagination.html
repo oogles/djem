@@ -3,17 +3,17 @@
         <li class="pagination__first">
             <a href="?page=1">First</a>
         </li>
-        <li>
+        <li class="pagination__previous">
             <a href="?page={{ page.previous_page_number }}">Previous</a>
         </li>
     {% endif %}
-    
+
     <li>
         Page {{ page.number }} of {{ page.paginator.num_pages }}
     </li>
-    
+
     {% if page.has_next %}
-        <li>
+        <li class="pagination__next">
             <a href="?page={{ page.next_page_number }}">Next</a>
         </li>
         <li class="pagination__last">

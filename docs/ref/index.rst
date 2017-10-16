@@ -10,8 +10,9 @@ API Reference
     model_fields
     forms
     form_fields
-    template_tags
+    pagination
     ajax
+    template_tags
     dateutils
     settings
     exceptions

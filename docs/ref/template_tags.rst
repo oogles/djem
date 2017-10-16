@@ -2,6 +2,8 @@
 Template Tags
 =============
 
+.. module:: djem.templatetags.djem
+
 Djem provides several template tags as part of the ``djem`` tag library.
 
 .. _tags-ifperm:
@@ -33,6 +35,7 @@ The tag supports an ``else`` block, which will be rendered if the user does not 
     {% endifperm %}
     ...
 
+
 .. _tags-ifnotperm:
 
 ``ifnotperm``
@@ -61,3 +64,25 @@ The tag supports an ``else`` block, which will be rendered if the user does have
         <a href="{% url 'vote' question_obj.pk %}">Vote Now</a>
     {% endifnotperm %}
     ...
+
+
+.. _tag-paginate:
+
+``paginate``
+------------
+
+The ``{% paginate %}`` template tag helps keep things `DRY <https://docs.djangoproject.com/en/stable/misc/design-philosophies/#don-t-repeat-yourself-dry>`_ and alleviate the boilerplate around defining the pagination links associated with a result list. Simply pass it the same Django ``Page`` instance used to render the list itself and it will render appropriate page navigation links.
+
+For example, where ``user_list`` is a ``Page`` instance:
+
+.. code-block:: html+django
+
+    {% load djem %}
+    ...
+    {% for user in user_list %}
+        {{ user.name }}
+    {% endfor %}
+    {% paginate user_list %}
+    ...
+
+The structure of the navigation block that is rendered is controlled by the ``djem/pagination.html`` template. Djem's default can be overridden per-project `as per any Django app template <https://docs.djangoproject.com/en/stable/howto/overriding-templates/>`_

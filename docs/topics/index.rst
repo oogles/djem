@@ -7,4 +7,5 @@ Using Djem
 
     models
     permissions
+    pagination
     ajax

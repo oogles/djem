@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 
 
-def get_page(page, object_list, per_page=None, **kwargs):
+def get_page(number, object_list, per_page=None, **kwargs):
     """
     Return the specified page, as a Django Page instance, from a Paginator
     constructed from the given object list and other keyword arguments.
@@ -20,19 +20,19 @@ def get_page(page, object_list, per_page=None, **kwargs):
     paginator = Paginator(object_list, per_page, **kwargs)
     
     try:
-        return paginator.page(page)
+        return paginator.page(number)
     except PageNotAnInteger:
-        page = 1
+        number = 1
     except EmptyPage:
-        if page < 1:
+        if number < 1:
             # Page number too low, return first page
-            page = 1
+            number = 1
         elif paginator.num_pages:
             # Page number too high, return last page
-            page = paginator.num_pages
+            number = paginator.num_pages
         else:
             # Paginator has no pages, still try for the first page. Will return
             # an empty page unless allow_empty_first_page is False.
-            page = 1
+            number = 1
     
-    return paginator.page(page)
+    return paginator.page(number)
