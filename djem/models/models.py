@@ -233,13 +233,13 @@ class VersioningMixin(models.Model):
         
         if incremented:
             # If the version has been incremented, make it inaccessible. It
-            # cannot be accurately determined without requerying for it, and
+            # cannot be accurately determined without re-querying for it, and
             # even getting an accurate version number does not mean it is the
-            # version that correlates with the values of all other fields values
-            # on this instance. The only way to get all correlated values is to
-            # requery the entire object. This is too much overhead to impose
-            # on every save, especially when accessing the version after a save
-            # will be an edge case. It will be up to application logic to
+            # version that correlates with the values of all other fields on
+            # this instance. The only way to get all correlated values is to
+            # re-query for the entire object. This is too much overhead to
+            # impose on every save, especially when accessing the version after
+            # a save will be an edge case. It will be up to application logic to
             # detect and handle the circumstance of an ambiguous version.
             self.version = SimpleLazyObject(self.AmbiguousVersionError._raise)
 

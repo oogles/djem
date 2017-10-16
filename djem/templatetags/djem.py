@@ -6,7 +6,7 @@ register = Library()
 
 #
 # ifperm and ifnotperm are extremely similar to, and mostly copied directly
-# from, Django's ifequal and ifnotequal tags in django.template.defaulttags.
+# from Django's ifequal and ifnotequal tags in django.template.defaulttags.
 #
 
 class IfPermNode(Node):
