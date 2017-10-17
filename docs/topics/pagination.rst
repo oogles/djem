@@ -141,10 +141,36 @@ By default, the block will be rendered as a HTML ordered list (``<ol>``) with th
 
 The links are defined simply as "?page=n", where n is the relevant page number.
 
-To alter the labels, change the format of the links (e.g. the name of the ``GET`` param), or completely change which links are displayed (e.g. adding links to individual page numbers), the ``djem/pagination.html`` will need to be overridden. However, this is not necessary to simply style the default navigation block. The following CSS classes are available.
+To alter the labels, change the format of the links (e.g. the name of the ``GET`` param), or completely change which links are displayed (e.g. adding links to individual page numbers), the ``djem/pagination.html`` will need to be overridden. However, this is not necessary to simply style the default navigation block. The following CSS classes are available by default:
 
 * The ``<ol>`` element has the ``pagination`` class
 * The ``<li>`` element containing the first page link has the ``pagination__first`` class
 * The ``<li>`` element containing the previous page link has the ``pagination__previous`` class
 * The ``<li>`` element containing the next page link has the ``pagination__next`` class
 * The ``<li>`` element containing the last page link has the ``pagination__last`` class
+
+The following CSS renders the ``<ol>`` and its items horizontally, removes their indentation and bullets, and adds double-angle quotation marks as glyphs to the "first" and "last" links (|<<| and |>>|):
+
+.. |<<| unicode:: U+00AB
+.. |>>| unicode:: U+00BB
+
+.. code-block:: css
+
+    .pagination {
+        list-style: none;
+        margin-left: 0;
+        text-align: center;
+    }
+
+    .pagination > li {
+        display: inline-block;
+        margin-left: 0;
+    }
+
+    .pagination__first > a:before{
+        content:"\00AB" "\00A0";
+    }
+
+    .pagination__last > a:after{
+        content:"\00A0" "\00BB";
+    }
