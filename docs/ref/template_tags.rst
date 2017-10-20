@@ -66,6 +66,31 @@ The tag supports an ``else`` block, which will be rendered if the user does have
     ...
 
 
+.. templatetag:: csrfify_ajax
+
+``csrfify_ajax``
+----------------
+
+.. versionadded:: 0.6
+
+The ``{% csrfify_ajax %}`` template tag renders a HTML ``<script>`` tag containing JavaScript to configure the ``X-CSRFToken`` header on outgoing AJAX requests where necessary (e.g. POST requests). The JavaScript is library-specific, and is stored in templates under ``djem/csrfify_ajax/``, e.g. ``djem/csrfify_ajax/jquery.html``.
+
+Support for jQuery is included by default. Additional libraries can be added by creating project-specific templates for them under the ``djem/csrfify_ajax/`` path and providing the name of the template as an argument to the tag.
+
+.. code-block:: html+django
+
+    {% load djem %}
+
+    {# Uses jquery as default argument #}
+    {% csrfify_ajax %}
+
+    {# But it can be given explicitly #}
+    {% csrfify_ajax 'jquery' %}
+
+    {# As can another library, provided a template exists to support it #}
+    {% csrfify_ajax 'some_other_lib' %}
+
+
 .. templatetag:: paginate
 
 ``paginate``

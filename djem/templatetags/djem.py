@@ -101,11 +101,10 @@ def ifnotperm(parser, token):
 def csrfify_ajax(context, lib='jquery'):
     """
     Add the X-CSRFToken header to all appropriate outgoing AJAX requests.
-    Only usable in templates rendered using the django.core.context_processors.request
-    context processor.
+    Only usable in templates rendered using RequestContext.
     """
     
-    t = loader.get_template('djem/csrfify_ajax/{0}.js'.format(lib))
+    t = loader.get_template('djem/csrfify_ajax/{0}.html'.format(lib))
     return t.render(context)
 
 

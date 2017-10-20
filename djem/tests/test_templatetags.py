@@ -739,7 +739,7 @@ class CsrfifyAjaxTestCase(TestCase):
         invalid target library.
         """
         
-        with self.assertRaisesMessage(TemplateDoesNotExist, 'invalid.js'):
+        with self.assertRaisesMessage(TemplateDoesNotExist, 'invalid.html'):
             Client().get(reverse('csrfify_ajax__invalid'))
 
 

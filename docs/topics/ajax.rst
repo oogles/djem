@@ -2,16 +2,63 @@
 AJAX
 ====
 
-.. module:: djem.ajax
+AJAX and CSRF
+=============
 
-AjaxResponse
-============
+.. currentmodule:: djem.templatetags.djem
 
-:class:`AjaxResponse` is an extension of Django's ``JsonResponse`` that automatically adds any messages in the `Django messages framework <https://docs.djangoproject.com/en/stable/ref/contrib/messages/>`_ store to the response body.
+As `Django notes in its own documentation <https://docs.djangoproject.com/en/stable/ref/csrf/#ajax>`_, adding the CSRF token to AJAX POST requests can be done on each individual request, or you can use JavaScript framework features to add it to all outgoing POST requests, using the ``X-CSRFToken`` header.
 
-This allows views that are called via ``XMLHttpRequest`` requests, that simply return JSON-encoded raw data rather than a rendered template, to still make use of the messages framework and have those messages automatically embedded in the response and removed from the messages store.
+Djem's :ttag:`csrfify_ajax` template tag does exactly that in a single line:
 
-The messages are added to the ``JsonResponse``'s ``data`` dictionary using the "messages" key. The messages themselves are dictionaries containing the following:
+.. code-block:: html+django
+
+    {% load djem %}
+    ...
+    {% csrfify_ajax %}
+    ...
+
+The tag injects a ``<script>`` tag containing library-specific code to add ``X-CSRFToken`` headers to all outgoing requests that require it.
+
+.. note::
+
+    As with Django's standard ``{% csrf_token %}`` tag, to use ``{% csrfify_ajax %}`` the view must use ``RequestContext`` to render the template, e.g. using the ``render()`` shortcut function.
+
+.. note::
+
+    As the ``<script>`` tag rendered by the tag contains library-specific code, it needs to be included *after* the library itself.
+
+Library support
+---------------
+
+By default, Djem ships with support for jQuery, but it is simple to add additional libraries. Extra libraries may be included by default in future releases.
+
+The ``<script>`` tag, and its contents, that :ttag:`csrfify_ajax` renders is stored in a template under the ``djem/csrfify_ajax/`` directory, named after the library. E.g. the included jQuery template is at ``djem/csrfify_ajax/jquery.html``. As with any Django app templates, you can override those that Djem includes or add your own by including your own ``djem/csrfify_ajax/`` directory somewhere on your configured template path. See the `Django documentation for overriding templates <https://docs.djangoproject.com/en/stable/howto/overriding-templates/>`_.
+
+By providing your own template, you can use :ttag:`csrfify_ajax` with any library of your choosing. To specify which library template the tag should use, simply provide the name of the template (without the ``.html``) as an argument:
+
+.. code-block:: html+django
+
+    {% load djem %}
+    ...
+    {% csrfify_ajax 'some_other_lib' %}
+    ...
+
+A default value of ``'jquery'`` is used when no argument is provided.
+
+
+Responding to requests
+======================
+
+.. currentmodule:: djem.ajax
+
+Django provides ``JsonResponse`` to aid in responding to data-centric AJAX requests (as opposed to those that return rendered HTML to be injected directly into the page). Djem provides a simple extension of ``JsonResponse`` that adds some additional features: :class:`AjaxResponse`.
+
+``AjaxResponse`` automatically adds any messages in the `Django messages framework <https://docs.djangoproject.com/en/stable/ref/contrib/messages/>`_ store to the response body.
+
+This allows views that are called via AJAX and return JSON-encoded data to still make use of the messages framework and have those messages automatically embedded in the response and removed from the message store.
+
+The messages are added to the parent ``JsonResponse``'s ``data`` dictionary using the "messages" key. The messages themselves are dictionaries containing the following:
 
 * message: The message string.
 * tags: A string of the tags applied to the message, space separated.
