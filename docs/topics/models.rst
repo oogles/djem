@@ -2,7 +2,7 @@
 Models
 ======
 
-.. module:: djem.models
+.. currentmodule:: djem.models
 
 Djem provides a series of custom classes to support common model-related functionality, including models, model managers and model fields.
 
