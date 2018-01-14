@@ -754,7 +754,7 @@ class PaginateTestCase(TemplateRendererMixin, TestCase):
             CommonInfoTest().save(user)
         
         # All tests will use the same Paginator with 5 results per page
-        cls.paginator = Paginator(CommonInfoTest.objects.all(), 5)
+        cls.paginator = Paginator(CommonInfoTest.objects.order_by('pk'), 5)
         
         # All tests will render the same basic template - just the
         # {% paginate %} tag on the given Page. It is the Page object that will

@@ -17,7 +17,7 @@ class GetPageTestCase(TestCase):
         for i in range(23):
             CommonInfoTest().save(user)
         
-        cls.object_list = CommonInfoTest.objects.all()
+        cls.object_list = CommonInfoTest.objects.order_by('pk')
     
     def test_per_page__none(self):
         
