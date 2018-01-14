@@ -105,7 +105,9 @@ def csrfify_ajax(context, lib='jquery'):
     """
     
     t = loader.get_template('djem/csrfify_ajax/{0}.html'.format(lib))
-    return t.render(context)
+    return t.render({
+        'csrf_token': context['csrf_token']
+    })
 
 
 @register.inclusion_tag('djem/pagination.html')

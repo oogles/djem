@@ -46,6 +46,8 @@ By providing your own template, you can use :ttag:`csrfify_ajax` with any librar
 
 A default value of ``'jquery'`` is used when no argument is provided.
 
+These templates have access to the CSRF token via the ``{{ csrf_token }}`` template variable.
+
 
 Responding to requests
 ======================
