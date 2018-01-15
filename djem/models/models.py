@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.base import ModelBase
-from django.utils import timezone
+from django.utils import six, timezone
 from django.utils.functional import SimpleLazyObject
 
 from djem.exceptions import ModelAmbiguousVersionError
@@ -39,7 +39,7 @@ class CommonInfoMixinBase(ModelBase):
         super(CommonInfoMixinBase, cls).__init__(*args, **kwargs)
 
 
-class CommonInfoMixin(models.Model):
+class CommonInfoMixin(six.with_metaclass(CommonInfoMixinBase, models.Model)):
     """
     Model mixin that provides standard user and datetime fields (``user_created``,
     ``user_modified``, ``date_created`` and ``date_modified``) and overridden
@@ -52,8 +52,6 @@ class CommonInfoMixin(models.Model):
     as will saves performed by ModelForms that aren't overridden to support the
     custom signature.
     """
-    
-    __metaclass__ = CommonInfoMixinBase
     
     date_created = models.DateTimeField(editable=False, verbose_name='Date Created')
     date_modified = models.DateTimeField(editable=False, verbose_name='Date Last Modified')
