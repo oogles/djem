@@ -2,7 +2,6 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse
 from django.test import RequestFactory, TestCase
 from django.views import View
