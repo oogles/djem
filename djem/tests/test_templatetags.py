@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.paginator import Paginator
-from django.urls import reverse
+from django.http import HttpResponse
 from django.template import TemplateDoesNotExist, TemplateSyntaxError, engines
-from django.test import Client, TestCase
+from django.test import RequestFactory, TestCase
 
 from .app.models import CommonInfoTest
 
@@ -108,11 +108,11 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, '')
+        self.assertEquals(output, '')
     
     def test_ifperm__invalid_permission__else(self):
         """
@@ -132,11 +132,11 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'ELSE')
+        self.assertEquals(output, 'ELSE')
     
     def test_ifperm__with_permission(self):
         """
@@ -156,11 +156,11 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifperm__with_permission__else(self):
         """
@@ -182,11 +182,11 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifperm__without_permission(self):
         """
@@ -208,11 +208,11 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, '')
+        self.assertEquals(output, '')
     
     def test_ifperm__without_permission__else(self):
         """
@@ -235,11 +235,11 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'ELSE')
+        self.assertEquals(output, 'ELSE')
     
     def test_ifperm__complex_user_arg(self):
         """
@@ -261,7 +261,7 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'some': {
                 'complex': {
                     'variable': self.user
@@ -270,7 +270,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifperm__complex_permission_arg(self):
         """
@@ -292,7 +292,7 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj,
             'some': {
                 'complex': {
@@ -301,7 +301,7 @@ class IfPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifperm__complex_object_arg(self):
         """
@@ -323,7 +323,7 @@ class IfPermTestCase(PermTagTestCase):
             '{% endifperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'some': {
                 'complex': {
                     'variable': obj
@@ -331,42 +331,70 @@ class IfPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifperm__view__anonymous(self):
         """
-        Test the ifperm template tag when used in an actual request/response
-        cycle, using a template file rendered by the render() shortcut in a view
-        function (i.e. standard real world usage).
-        In this case, the user passed to the tag is the AnonymousUser, as added
-        to the template context by the "auth" context processor when no user is
-        logged in.
+        Test the ifperm template tag when used in a template rendered as part of
+        a request/response cycle (i.e. standard real world usage), when there
+        is no authenticated user.
         """
+        
+        def view(r, o):
+            
+            template_string = (
+                '{% load djem %}'
+                '{% ifperm user "app.change_commoninfotest" obj %}'
+                '   IF'
+                '{% else %}'
+                '   ELSE'
+                '{% endifperm %}'
+            )
+            
+            output = engines['django'].from_string(template_string).render({
+                'obj': o
+            }, r)
+            
+            return HttpResponse(output)
         
         obj = CommonInfoTest()
         obj.save(self.user)
         
-        response = self.client.get(reverse('ifperm__render'))
+        request = RequestFactory().get('/test/')
+        response = view(request, obj)
         
         self.assertContains(response, 'ELSE', status_code=200)
     
     def test_ifperm__view__login(self):
         """
-        Test the ifperm template tag when used in an actual request/response
-        cycle, using a template file rendered by the render() shortcut in a view
-        function (i.e. standard real world usage).
-        In this case, the user passed to the tag is a logged in user, as added
-        to the template context by the "auth" context processor.
+        Test the ifperm template tag when used in a template rendered as part of
+        a request/response cycle (i.e. standard real world usage), when there
+        is an authenticated user.
         """
+        
+        def view(r, o):
+            
+            template_string = (
+                '{% load djem %}'
+                '{% ifperm user "app.change_commoninfotest" obj %}'
+                '   IF'
+                '{% else %}'
+                '   ELSE'
+                '{% endifperm %}'
+            )
+            
+            output = engines['django'].from_string(template_string).render({
+                'obj': o
+            }, r)
+            
+            return HttpResponse(output)
         
         obj = CommonInfoTest()
         obj.save(self.user)
         
-        # Log the user in so the "user" variable in the template context is
-        # correct
-        self.client.force_login(self.user)
-        
-        response = self.client.get(reverse('ifperm__render'))
+        request = RequestFactory().get('/test/')
+        request.user = self.user  # simulate login
+        response = view(request, obj)
         
         self.assertContains(response, 'IF', status_code=200)
 
@@ -437,11 +465,11 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifnotperm__invalid_permission__else(self):
         """
@@ -461,11 +489,11 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifnotperm__with_permission(self):
         """
@@ -486,11 +514,11 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, '')
+        self.assertEquals(output, '')
     
     def test_ifnotperm__with_permission__else(self):
         """
@@ -512,11 +540,11 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'ELSE')
+        self.assertEquals(output, 'ELSE')
     
     def test_ifnotperm__without_permission(self):
         """
@@ -538,11 +566,11 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifnotperm__without_permission__else(self):
         """
@@ -566,11 +594,11 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj
         })
         
-        self.assertEquals(template, 'IF')
+        self.assertEquals(output, 'IF')
     
     def test_ifperm__complex_user_arg(self):
         """
@@ -592,7 +620,7 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'some': {
                 'complex': {
                     'variable': self.user
@@ -601,7 +629,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(template, 'ELSE')
+        self.assertEquals(output, 'ELSE')
     
     def test_ifnotperm__complex_permission_arg(self):
         """
@@ -623,7 +651,7 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'obj': obj,
             'some': {
                 'complex': {
@@ -632,7 +660,7 @@ class IfNotPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(template, 'ELSE')
+        self.assertEquals(output, 'ELSE')
     
     def test_ifnotperm__complex_object_arg(self):
         """
@@ -654,7 +682,7 @@ class IfNotPermTestCase(PermTagTestCase):
             '{% endifnotperm %}'
         )
         
-        template = self.render_template(template_string, {
+        output = self.render_template(template_string, {
             'some': {
                 'complex': {
                     'variable': obj
@@ -662,42 +690,70 @@ class IfNotPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(template, 'ELSE')
+        self.assertEquals(output, 'ELSE')
     
     def test_ifnotperm__view__anonymous(self):
         """
-        Test the ifnotperm template tag when used in an actual request/response
-        cycle, using a template file rendered by the render() shortcut in a view
-        function (i.e. standard real world usage).
-        In this case, the user passed to the tag is the AnonymousUser, as added
-        to the template context by the "auth" context processor when no user is
-        logged in.
+        Test the ifnotperm template tag when used in a template rendered as part
+        of a request/response cycle (i.e. standard real world usage), when there
+        is no authenticated user.
         """
+        
+        def view(r, o):
+            
+            template_string = (
+                '{% load djem %}'
+                '{% ifnotperm user "app.change_commoninfotest" obj %}'
+                '   IF'
+                '{% else %}'
+                '   ELSE'
+                '{% endifnotperm %}'
+            )
+            
+            output = engines['django'].from_string(template_string).render({
+                'obj': o
+            }, r)
+            
+            return HttpResponse(output)
         
         obj = CommonInfoTest()
         obj.save(self.user)
         
-        response = self.client.get(reverse('ifnotperm__render'))
+        request = RequestFactory().get('/test/')
+        response = view(request, obj)
         
         self.assertContains(response, 'IF', status_code=200)
     
     def test_ifnotperm__view__login(self):
         """
-        Test the ifnotperm template tag when used in an actual request/response
-        cycle, using a template file rendered by the render() shortcut in a view
-        function (i.e. standard real world usage).
-        In this case, the user passed to the tag is a logged in user, as added
-        to the template context by the "auth" context processor.
+        Test the ifnotperm template tag when used in a template rendered as part
+        of a request/response cycle (i.e. standard real world usage), when there
+        is an authenticated user.
         """
+        
+        def view(r, o):
+            
+            template_string = (
+                '{% load djem %}'
+                '{% ifnotperm user "app.change_commoninfotest" obj %}'
+                '   IF'
+                '{% else %}'
+                '   ELSE'
+                '{% endifnotperm %}'
+            )
+            
+            output = engines['django'].from_string(template_string).render({
+                'obj': o
+            }, r)
+            
+            return HttpResponse(output)
         
         obj = CommonInfoTest()
         obj.save(self.user)
         
-        # Log the user in so the "user" variable in the template context is
-        # correct
-        self.client.force_login(self.user)
-        
-        response = self.client.get(reverse('ifnotperm__render'))
+        request = RequestFactory().get('/test/')
+        request.user = self.user  # simulate login
+        response = view(request, obj)
         
         self.assertContains(response, 'ELSE', status_code=200)
 
@@ -711,7 +767,16 @@ class CsrfifyAjaxTestCase(TestCase):
         target library.
         """
         
-        response = Client().get(reverse('csrfify_ajax__valid__explicit'))
+        def view(r):
+            
+            template = engines['django'].from_string(
+                "{% load djem %}\n{% csrfify_ajax 'jquery' %}"
+            )
+            
+            return HttpResponse(template.render({}, r))
+        
+        request = RequestFactory().get('/test/')
+        response = view(request)
         
         self.assertEquals(response.status_code, 200)
         self.assertRegexpMatches(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
@@ -723,7 +788,16 @@ class CsrfifyAjaxTestCase(TestCase):
         the default target library).
         """
         
-        response = Client().get(reverse('csrfify_ajax__valid__implicit'))
+        def view(r):
+            
+            template = engines['django'].from_string(
+                "{% load djem %}\n{% csrfify_ajax %}"
+            )
+            
+            return HttpResponse(template.render({}, r))
+        
+        request = RequestFactory().get('/test/')
+        response = view(request)
         
         self.assertEquals(response.status_code, 200)
         self.assertRegexpMatches(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
@@ -735,8 +809,18 @@ class CsrfifyAjaxTestCase(TestCase):
         invalid target library.
         """
         
+        def view(r):
+            
+            template = engines['django'].from_string(
+                "{% load djem %}\n{% csrfify_ajax 'invalid' %}"
+            )
+            
+            return HttpResponse(template.render({}, r))
+        
+        request = RequestFactory().get('/test/')
+        
         with self.assertRaisesMessage(TemplateDoesNotExist, 'invalid.html'):
-            Client().get(reverse('csrfify_ajax__invalid'))
+            view(request)
 
 
 class PaginateTestCase(TemplateRendererMixin, TestCase):
