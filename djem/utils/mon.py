@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 
 import datetime
 import logging
@@ -277,43 +277,43 @@ class M(object):
     def print_mem_stats(self):
         
         if not self.children:
-            print '{0}: {1:.3f}MB of RAM'.format(
+            print('{0}: {1:.3f}MB of RAM'.format(
                 self.name,
                 self.get_mem_usage()
-            )
+            ))
             return
         
-        print _get_stat_table(self, 'Memory Usage Results', ('mem',))
+        print(_get_stat_table(self, 'Memory Usage Results', ('mem',)))
     
     def print_query_stats(self):
         
         if not self.children:
-            print '{0}: {1} queries'.format(
+            print('{0}: {1} queries'.format(
                 self.name,
                 self.get_query_count()
-            )
+            ))
             return
         
-        print _get_stat_table(self, 'Query Results', ('queries',))
+        print(_get_stat_table(self, 'Query Results', ('queries',)))
     
     def print_time_stats(self):
         
         if not self.children:
-            print '{0}: {1:.4f} seconds'.format(
+            print('{0}: {1:.4f} seconds'.format(
                 self.name,
                 self.get_seconds()
-            )
+            ))
             return
         
-        print _get_stat_table(self, 'Timing Results', ('time',))
+        print(_get_stat_table(self, 'Timing Results', ('time',)))
     
     def print_stats(self):
         
         if not self.children:
-            print self.get_total_string()
+            print(self.get_total_string())
             return
         
-        print _get_stat_table(self, 'Monitor Results', ('time', 'queries', 'mem'))
+        print(_get_stat_table(self, 'Monitor Results', ('time', 'queries', 'mem')))
     
     def __str__(self):
         
@@ -333,7 +333,7 @@ class Mon(object):
     def start(cls, name):
         
         if name in cls.monitors:
-            print 'Warning: Starting a monitor which has not been ended ({0})'.format(name)
+            print('Warning: Starting a monitor which has not been ended ({0})'.format(name))
         
         # Re-use an existing monitor with the same name on the same parent, if
         # there is one (this allows the same monitor object to build up stats).

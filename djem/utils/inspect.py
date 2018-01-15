@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 import inspect as inspector
 import pprint
@@ -639,9 +639,7 @@ def pp(obj, *args, **kwargs):
     )
     
     if isinstance(obj, function_types):
-        print
-        print inspectf(obj, *args, **kwargs)
-        print
+        print('\n', inspectf(obj, *args, **kwargs), '\n')
         return
     
     try:
@@ -651,7 +649,7 @@ def pp(obj, *args, **kwargs):
         pass
     else:
         if is_model_class:
-            print ModelTable(obj, *args, **kwargs).build()
+            print(ModelTable(obj, *args, **kwargs).build())
             return
     
-    print ObjectTable(obj, *args, **kwargs).build()
+    print(ObjectTable(obj, *args, **kwargs).build())

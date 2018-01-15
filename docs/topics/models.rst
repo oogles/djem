@@ -302,15 +302,15 @@ Archiving/unarchiving records in bulk is also possible via the queryset's :meth:
 
     >>> ExampleModel(name='Example1', is_archived=True).save()
     >>> ExampleModel(name='Example2', is_archived=False).save()
-    >>> print ExampleModel.live.count(), ExampleModel.archived.count()
+    >>> print(ExampleModel.live.count(), ExampleModel.archived.count())
     1, 1
     >>> ExampleModel.objects.all().archive()
     1
-    >>> print ExampleModel.live.count(), ExampleModel.archived.count()
+    >>> print(ExampleModel.live.count(), ExampleModel.archived.count())
     0, 2
     >>> ExampleModel.objects.all().unarchive()
     2
-    >>> print ExampleModel.live.count(), ExampleModel.archived.count()
+    >>> print(ExampleModel.live.count(), ExampleModel.archived.count())
     2, 0
 
 .. note::
