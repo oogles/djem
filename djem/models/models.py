@@ -61,13 +61,15 @@ class CommonInfoMixin(models.Model):
         settings.AUTH_USER_MODEL,
         editable=False,
         verbose_name='User Created',
-        related_name='+'
+        related_name='+',
+        on_delete=models.PROTECT
     )
     user_modified = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         editable=False,
         verbose_name='User Last Modified',
-        related_name='+'
+        related_name='+',
+        on_delete=models.PROTECT
     )
     
     objects = CommonInfoManager()

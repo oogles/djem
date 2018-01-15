@@ -74,8 +74,8 @@ class OPTest(models.Model):
     This model provides some access functions for object-level permissions testing.
     """
     
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
-    group = models.ForeignKey(Group, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
+    group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)
     
     def _user_can_view_optest(self, user):
         
