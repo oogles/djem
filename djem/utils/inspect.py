@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import inspect as inspector
 import pprint
@@ -6,6 +6,8 @@ import types
 
 from django.db.models import FieldDoesNotExist, Manager, Model, QuerySet
 from django.db.models.fields import NOT_PROVIDED
+from django.utils.encoding import force_text
+from django.utils import six
 
 from djem.utils.table import Table
 
@@ -52,7 +54,7 @@ def inspectf(func):
     
     for arg_string in args:
         if offset >= 0:
-            arg_string = u'{0}={1}'.format(arg_string, defaults[offset])
+            arg_string = '{0}={1}'.format(arg_string, defaults[offset])
         
         arguments.append(arg_string)
         offset += 1
@@ -200,7 +202,7 @@ class ObjectTable(InspectTable):
         elif isinstance(v, types.MethodType):
             v = 'pp({0}.{1})'.format(cls.__name__, attr)
         else:
-            v = unicode(v)
+            v = force_text(v)
         
         return v
     
@@ -242,10 +244,10 @@ class ObjectTable(InspectTable):
                 if ignore_methods:
                     continue
                 
-                title = u'{0}()'.format(attr)
+                title = '{0}()'.format(attr)
                 append_to = methods
             else:
-                title = unicode(attr)
+                title = force_text(attr)
                 append_to = other
             
             if is_magic:
@@ -417,7 +419,7 @@ class ModelTable(InspectTable):
         if rel:
             # If a string reference, grab the model portion (if given in
             # <app_label>.<model> format). If a model class, use its name.
-            if isinstance(rel, basestring):
+            if isinstance(rel, six.string_types):
                 rel = rel.split('.')[-1]
             else:
                 rel = rel.__name__

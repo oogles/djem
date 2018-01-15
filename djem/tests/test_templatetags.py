@@ -348,8 +348,7 @@ class IfPermTestCase(PermTagTestCase):
         
         response = self.client.get(reverse('ifperm__render'))
         
-        self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'ELSE')
+        self.assertContains(response, 'ELSE', status_code=200)
     
     def test_ifperm__view__login(self):
         """
@@ -369,8 +368,7 @@ class IfPermTestCase(PermTagTestCase):
         
         response = self.client.get(reverse('ifperm__render'))
         
-        self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'IF')
+        self.assertContains(response, 'IF', status_code=200)
 
 
 class IfNotPermTestCase(PermTagTestCase):
@@ -681,8 +679,7 @@ class IfNotPermTestCase(PermTagTestCase):
         
         response = self.client.get(reverse('ifnotperm__render'))
         
-        self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'IF')
+        self.assertContains(response, 'IF', status_code=200)
     
     def test_ifnotperm__view__login(self):
         """
@@ -702,8 +699,7 @@ class IfNotPermTestCase(PermTagTestCase):
         
         response = self.client.get(reverse('ifnotperm__render'))
         
-        self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'ELSE')
+        self.assertContains(response, 'ELSE', status_code=200)
 
 
 class CsrfifyAjaxTestCase(TestCase):
@@ -718,7 +714,7 @@ class CsrfifyAjaxTestCase(TestCase):
         response = Client().get(reverse('csrfify_ajax__valid__explicit'))
         
         self.assertEquals(response.status_code, 200)
-        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+        self.assertRegexpMatches(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
     
     def test_valid__implicit(self):
         """
@@ -730,7 +726,7 @@ class CsrfifyAjaxTestCase(TestCase):
         response = Client().get(reverse('csrfify_ajax__valid__implicit'))
         
         self.assertEquals(response.status_code, 200)
-        self.assertRegexpMatches(response.content, "('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+        self.assertRegexpMatches(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
     
     def test_invalid(self):
         """

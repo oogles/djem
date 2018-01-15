@@ -3,6 +3,8 @@ from __future__ import division
 import os
 import textwrap
 
+from django.utils.encoding import force_text
+
 
 class NOT_PROVIDED:
     pass
@@ -102,9 +104,9 @@ class Table(object):
     def _update_col_metadata(self, col_data, value=NOT_PROVIDED, heading=NOT_PROVIDED):
         
         if value is not NOT_PROVIDED:
-            width = len(unicode(value))
+            width = len(force_text(value))
         elif heading is not NOT_PROVIDED:
-            heading = unicode(heading)
+            heading = force_text(heading)
             width = 0
             
             col_data['heading'] = heading
@@ -319,7 +321,7 @@ class Table(object):
             else:
                 row_str = []
                 for i, col in enumerate(self._columns):
-                    value = unicode(row[i]).replace('\n', '\\n').replace('\r', '\\r')
+                    value = force_text(row[i]).replace('\n', '\\n').replace('\r', '\\r')
                     width = col['render_width']
                     
                     if len(value) > width:

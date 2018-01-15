@@ -492,8 +492,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         response = view(request)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'success')
+        self.assertContains(response, 'success', status_code=200)
     
     def test_string_arg__no_access__redirect(self):
         """
@@ -582,8 +581,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'success')
+        self.assertContains(response, 'success', status_code=200)
     
     def test_tuple_arg__no_access__redirect(self):
         """
@@ -689,8 +687,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'success')
+        self.assertContains(response, 'success', status_code=200)
     
     def test_multiple_args__no_access__model(self):
         """
@@ -879,8 +876,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         response = view(request)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'success')
+        self.assertContains(response, 'success', status_code=200)
     
     def test_string_arg__no_access__redirect(self):
         """
@@ -980,8 +976,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'success')
+        self.assertContains(response, 'success', status_code=200)
     
     def test_tuple_arg__no_access__redirect(self):
         """
@@ -1098,8 +1093,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'success')
+        self.assertContains(response, 'success', status_code=200)
     
     def test_multiple_args__no_access__model(self):
         """

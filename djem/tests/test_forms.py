@@ -160,7 +160,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertFalse(form.is_valid())
         self.assertEquals(form.errors['timezone'], [
-            u'Select a valid choice. fail is not one of the available choices.'
+            'Select a valid choice. fail is not one of the available choices.'
         ])
     
     def test_submit__form__valid(self):
@@ -185,7 +185,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertFalse(form.is_valid())
         self.assertEquals(form.errors['timezone'], [
-            u'Select a valid choice. fail is not one of the available choices.'
+            'Select a valid choice. fail is not one of the available choices.'
         ])
     
     def test_submit__form__empty_valid__no_input(self):
@@ -231,7 +231,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertFalse(form.is_valid())
         self.assertEquals(form.errors['timezone'], [
-            u'This field is required.'
+            'This field is required.'
         ])
     
     def test_submit__form__empty_invalid__blank_string(self):
@@ -244,7 +244,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertFalse(form.is_valid())
         self.assertEquals(form.errors['timezone'], [
-            u'This field is required.'
+            'This field is required.'
         ])
     
     def test_submit__form__empty_invalid__none(self):
@@ -257,7 +257,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertFalse(form.is_valid())
         self.assertEquals(form.errors['timezone'], [
-            u'This field is required.'
+            'This field is required.'
         ])
     
     def test_custom_choices__valid(self):
@@ -286,5 +286,5 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertFalse(form.is_valid())
         self.assertEquals(form.errors['timezone'], [
-            u'Select a valid choice. Australia/Sydney is not one of the available choices.'
+            'Select a valid choice. Australia/Sydney is not one of the available choices.'
         ])
