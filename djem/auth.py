@@ -1,13 +1,16 @@
 from functools import wraps
 
 from django.conf import settings
-from django.contrib.auth.mixins import AccessMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin
 from django.contrib.auth.models import Permission
-from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, resolve_url
 from django.utils import six
 from django.utils.decorators import available_attrs
 from django.utils.six.moves.urllib.parse import urlparse
+
+
+DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
 
 class ObjectPermissionsBackend(object):
@@ -167,13 +170,12 @@ def permission_required(*perms, **kwargs):
         primary key of the object to check the permission against
     
     Behaviour of the ``login_url`` and ``raise_exception`` keyword arguments is
-    as per the original.
+    as per the original, except that the default value for ``raise_exception``
+    can be specified with the ``DJEM_DEFAULT_403`` setting.
     """
     
-    raise_exception_default = getattr(settings, 'DJEM_DEFAULT_403', False)
-    
     login_url = kwargs.pop('login_url', None)
-    raise_exception = kwargs.pop('raise_exception', raise_exception_default)
+    raise_exception = kwargs.pop('raise_exception', DEFAULT_403)
     
     def decorator(view_func):
         
@@ -212,32 +214,13 @@ def permission_required(*perms, **kwargs):
     return decorator
 
 
-class PermissionRequiredMixin(AccessMixin):
+class PermissionRequiredMixin(DjangoPermissionRequiredMixin):
     """
     CBV mixin which verifies that the current user has all specified
     permissions, on the specified object where applicable.
     """
     
-    permission_required = None
-    
-    def get_permission_required(self):
-        """
-        Override this method to override the permission_required attribute.
-        Must return an iterable.
-        """
-        
-        if self.permission_required is None:
-            raise ImproperlyConfigured(
-                '{0} is missing the permission_required attribute. Define {0}.permission_required, or override '
-                '{0}.get_permission_required().'.format(self.__class__.__name__)
-            )
-        
-        if isinstance(self.permission_required, six.string_types):
-            perms = (self.permission_required, )
-        else:
-            perms = self.permission_required
-        
-        return perms
+    raise_exception = DEFAULT_403
     
     def has_permission(self, view_kwargs):
         
@@ -250,9 +233,12 @@ class PermissionRequiredMixin(AccessMixin):
         else:
             return True
     
+    # Overridden to pass kwargs to has_permission() and skip the immediate
+    # parent's dispatch() when calling the super method (because it attempts
+    # to call has_permission without the kwargs).
     def dispatch(self, request, *args, **kwargs):
         
         if not self.has_permission(kwargs):
             return self.handle_no_permission()
         
-        return super(PermissionRequiredMixin, self).dispatch(request, *args, **kwargs)
+        return super(DjangoPermissionRequiredMixin, self).dispatch(request, *args, **kwargs)

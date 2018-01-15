@@ -1,11 +1,27 @@
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.models import Group, Permission
-from django.core.exceptions import ImproperlyConfigured
+from django.contrib.auth.models import AnonymousUser, Group, Permission
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+from django.http import Http404, HttpResponse
+from django.test import RequestFactory, TestCase
+from django.views import View
+
+from djem.auth import PermissionRequiredMixin, permission_required
 
 from .app.models import ArchivableTest, OPTest
+
+
+def _test_view(request, obj=None):
+    
+    return HttpResponse('success')
+
+
+class _TestView(PermissionRequiredMixin, View):
+    
+    def get(self, *args, **kwargs):
+        
+        return HttpResponse('success')
 
 
 class ObjectPermissionsTestCase(TestCase):
@@ -421,11 +437,15 @@ class ObjectPermissionsTestCase(TestCase):
 
 class PermissionRequiredDecoratorTestCase(TestCase):
     
+    #
+    # The impact of altering the DJEM_DEFAULT_403 setting cannot be tested as
+    # it is read at time of import of permission_required, so any test-based
+    # setting override is not recognised.
+    #
+    
     def setUp(self):
         
         user = get_user_model().objects.create_user('test1')
-        user.set_password('blahblahblah')
-        user.save()
         
         # Grant user permission to view, change and delete OPTest records, but
         # not add them
@@ -440,6 +460,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         self.user = user
         self.optest_with_access = OPTest.objects.create(user=user)
         self.optest_without_access = OPTest.objects.create()
+        self.factory = RequestFactory()
     
     def test_unauthenticated(self):
         """
@@ -447,12 +468,15 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly redirects to the login url.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__string__delete', args=(optest.pk,))
+        view = permission_required('app.view_optest')(_test_view)
         
-        response = self.client.get(url, follow=True)
+        request = self.factory.get('/test/')
+        request.user = AnonymousUser()
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        response = view(request, obj=self.optest_with_access.pk)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_string_arg__access(self):
         """
@@ -462,15 +486,15 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has been granted that permission at the model level.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__string__delete', args=(optest.pk,))
+        view = permission_required('app.view_optest')(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, 'success')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'success')
     
     def test_string_arg__no_access__redirect(self):
         """
@@ -481,50 +505,51 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to the login page.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__string__add', args=(optest.pk,))
+        view = permission_required('app.add_optest')(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_string_arg__no_access__redirect__custom(self):
         """
         Test the permission_required decorator with a valid permission as a
-        single string argument.
+        single string argument and a custom ``login_url`` given.
         Ensure the decorator correctly denies access to the view for a user
         that has not been granted that permission at the model level, by
         redirecting to a custom page specified by the decorator.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__string__add__custom_redir', args=(optest.pk,))
+        view = permission_required('app.add_optest', login_url='/custom/login/')(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request)
         
-        self.assertRedirects(response, '/custom/?next={0}'.format(url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/custom/login/?next=/test/'.format(settings.LOGIN_URL))
     
-    def test_string_arg__no_access__403(self):
+    def test_string_arg__no_access__raise(self):
         """
         Test the permission_required decorator with a valid permission as a
-        single string argument.
+        single string argument and ``raise_exception`` given as True.
         Ensure the decorator correctly denies access to the view for a user
         that has not been granted that permission at the model level, by
-        displaying a 403 error page.
+        raising PermissionDenied (which would be translated into a 403 error page).
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__string__add__raise', args=(optest.pk,))
+        view = permission_required('app.add_optest', raise_exception=True)(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
-        
-        self.assertEquals(response.status_code, 403)
+        with self.assertRaises(PermissionDenied):
+            view(request)
     
     def test_string_arg__invalid_perm(self):
         """
@@ -533,14 +558,15 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly denies access to the view.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__string__invalid', args=(optest.pk,))
+        view = permission_required('fail')(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_tuple_arg__access(self):
         """
@@ -550,15 +576,15 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has been granted that permission at the object level.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__tuple', args=(optest.pk,))
+        view = permission_required(('app.delete_optest', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, 'success')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'success')
     
     def test_tuple_arg__no_access__redirect(self):
         """
@@ -569,50 +595,51 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to the login page.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_decorator__tuple', args=(optest.pk,))
+        view = permission_required(('app.delete_optest', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_without_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_tuple_arg__no_access__redirect__custom(self):
         """
         Test the permission_required decorator with a valid permission as a
-        single tuple argument.
+        single tuple argument and a custom ``login_url`` given.
         Ensure the decorator correctly denies access to the view for a user
         that has not been granted that permission at the object level, by
         redirecting to a custom page specified by the decorator.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_decorator__tuple__custom_redir', args=(optest.pk,))
+        view = permission_required(('app.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_without_access.pk)
         
-        self.assertRedirects(response, '/custom/?next={0}'.format(url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/custom/login/?next=/test/')
     
-    def test_tuple_arg__no_access__403(self):
+    def test_tuple_arg__no_access__raise(self):
         """
         Test the permission_required decorator with a valid permission as a
-        single tuple argument.
+        single tuple argument and ``raise_exception`` given as True.
         Ensure the decorator correctly denies access to the view for a user
         that has not been granted that permission at the object level, by
-        displaying a 403 error page.
+        raising PermissionDenied (which would be translated into a 403 error page).
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_decorator__tuple__raise', args=(optest.pk,))
+        view = permission_required(('app.delete_optest', 'obj'), raise_exception=True)(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
-        
-        self.assertEquals(response.status_code, 403)
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.optest_without_access.pk)
     
     def test_tuple_arg__invalid_perm(self):
         """
@@ -621,30 +648,32 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly denies access to the view.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__tuple__invalid', args=(optest.pk,))
+        view = permission_required(('fail', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_tuple_arg__invalid_object(self):
         """
         Test the permission_required decorator with a valid permission as a
         single tuple argument.
-        Ensure the decorator correctly returns a 404 error page when an invalid
-        object primary key is provided in the URL.
+        Ensure the decorator correctly raises a Http404 exception when an
+        invalid object primary key is provided (which would be translated into
+        a 404 error page).
         """
         
-        url = reverse('perm_decorator__tuple', args=(0,))
+        view = permission_required(('app.delete_optest', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
-        
-        self.assertEquals(response.status_code, 404)
+        with self.assertRaises(Http404):
+            view(request, obj=0)
     
     def test_multiple_args__access_all(self):
         """
@@ -654,15 +683,15 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has all appropriate permissions.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__multiple__view_delete', args=(optest.pk,))
+        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, 'success')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'success')
     
     def test_multiple_args__no_access__model(self):
         """
@@ -673,14 +702,15 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to the login page.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_decorator__multiple__add_delete', args=(optest.pk,))
+        view = permission_required('app.add_optest', ('app.delete_optest', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_multiple_args__no_access__object(self):
         """
@@ -691,50 +721,52 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to the login page.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_decorator__multiple__view_delete', args=(optest.pk,))
+        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_without_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
-    def test_multiple_args__no_access__redir__custom(self):
+    def test_multiple_args__no_access__custom_redirect(self):
         """
         Test the permission_required decorator with multiple valid permissions
-        as a mixture of string and tuple arguments.
+        as a mixture of string and tuple arguments, and a custom ``login_url``
+        given.
         Ensure the decorator correctly denies access to the view for a user
         that has is missing one of the object-level permissions, by redirecting
         to a custom page specified by the decorator.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_decorator__multiple__view_delete__custom_redir', args=(optest.pk,))
+        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_without_access.pk)
         
-        self.assertRedirects(response, '/custom/?next={0}'.format(url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/custom/login/?next=/test/')
     
-    def test_multiple_args__no_access__403(self):
+    def test_multiple_args__no_access__raise(self):
         """
         Test the permission_required decorator with multiple valid permissions
         as a mixture of string and tuple arguments.
         Ensure the decorator correctly denies access to the view for a user
-        that has is missing one of the object-level permissions, by displaying
-        a 403 error page.
+        that has is missing one of the object-level permissions, by raising
+        PermissionDenied (which would be translated into a 403 error page).
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_decorator__multiple__view_delete__raise', args=(optest.pk,))
+        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'), raise_exception=True)(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
-        
-        self.assertEquals(response.status_code, 403)
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.optest_without_access.pk)
     
     def test_multiple_args__invalid_perm(self):
         """
@@ -743,45 +775,45 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly denies access to the view.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_decorator__multiple__view_delete', args=(optest.pk,))
+        view = permission_required('app.view_optest', ('fail', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_multiple_args__invalid_object(self):
         """
         Test the permission_required decorator with multiple valid permissions
         as a mixture of string and tuple arguments.
         Ensure the decorator correctly returns a 404 error page when an invalid
-        object primary key is provided in the URL.
+        object primary key is provided (which would be translated into a 404
+        error page).
         """
         
-        url = reverse('perm_decorator__multiple__view_delete', args=(0,))
+        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'))(_test_view)
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
-        
-        self.assertEquals(response.status_code, 404)
+        with self.assertRaises(Http404):
+            view(request, obj=0)
 
 
 class PermissionRequiredMixinTestCase(TestCase):
     
     #
-    # Note: Unlike the permission_required decorator tests, these mixin tests
-    # do not test raise_exception or changing the login_url, as the mixin
-    # doesn't actually contain any of the implementation for this.
+    # The impact of altering the DJEM_DEFAULT_403 setting cannot be tested as
+    # it is read at time of import of PermissionRequiredMixin, so any test-based
+    # setting override is not recognised.
     #
     
     def setUp(self):
         
         user = get_user_model().objects.create_user('test1')
-        user.set_password('blahblahblah')
-        user.save()
         
         # Grant user permission to view, change and delete OPTest records, but
         # not add them
@@ -796,6 +828,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         self.user = user
         self.optest_with_access = OPTest.objects.create(user=user)
         self.optest_without_access = OPTest.objects.create()
+        self.factory = RequestFactory()
     
     def test_no_permissions(self):
         """
@@ -803,11 +836,13 @@ class PermissionRequiredMixinTestCase(TestCase):
         Ensure the mixin raises ImproperlyConfigured.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__unconfigured', args=(optest.pk,))
+        view = _TestView.as_view()
+        
+        request = self.factory.get('/test/')
+        request.user = AnonymousUser()
         
         with self.assertRaises(ImproperlyConfigured):
-            self.client.get(url, follow=True)
+            view(request)
     
     def test_unauthenticated(self):
         """
@@ -816,215 +851,375 @@ class PermissionRequiredMixinTestCase(TestCase):
         unauthenticated user having no permissions).
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__string__delete', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required='app.view_optest'
+        )
         
-        response = self.client.get(url, follow=True)
+        request = self.factory.get('/test/')
+        request.user = AnonymousUser()
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        response = view(request, obj=self.optest_with_access.pk)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_string_arg__access(self):
         """
         Test the PermissionRequiredMixin with a valid permission as a single
-        string argument.
+        string.
         Ensure the mixin correctly allows access to the view for a user that
         has been granted that permission at the model level.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__string__delete', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required='app.view_optest'
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, 'success')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'success')
     
-    def test_string_arg__no_access(self):
+    def test_string_arg__no_access__redirect(self):
         """
         Test the PermissionRequiredMixin with a valid permission as a single
-        string argument.
+        string.
         Ensure the mixin correctly denies access to the view for a user that
         has not been granted that permission at the model level, by redirecting
         to the login page.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__string__add', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required='app.add_optest'
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+    
+    def test_string_arg__no_access__redirect__custom(self):
+        """
+        Test the PermissionRequiredMixin with a valid permission as a single
+        string and a custom ``login_url``.
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the model level, by redirecting
+        to a custom page specified by ``login_url``.
+        """
+        
+        view = _TestView.as_view(
+            permission_required='app.add_optest',
+            login_url='/custom/login/'
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        response = view(request)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/custom/login/?next=/test/'.format(settings.LOGIN_URL))
+    
+    def test_string_arg__no_access__raise(self):
+        """
+        Test the PermissionRequiredMixin with a valid permission as a single
+        string and a ``raise_exception`` set to True.
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the model level, by raising
+        PermissionDenied (which would be translated into a 403 error page).
+        """
+        
+        view = _TestView.as_view(
+            permission_required='app.add_optest',
+            raise_exception=True
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request)
     
     def test_string_arg__invalid_perm(self):
         """
         Test the PermissionRequiredMixin with an invalid permission as a single
-        string argument.
+        string.
         Ensure the mixin correctly denies access to the view.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__string__invalid', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required='fail'
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_tuple_arg__access(self):
         """
-        Test the PermissionRequiredMixin with a valid permission as a single
-        tuple argument.
+        Test the PermissionRequiredMixin with a valid permission as a tuple.
         Ensure the mixin correctly allows access to the view for a user that
         has been granted that permission at the object level.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__tuple', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required=[('app.delete_optest', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, 'success')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'success')
     
-    def test_tuple_arg__no_access(self):
+    def test_tuple_arg__no_access__redirect(self):
         """
-        Test the PermissionRequiredMixin with a valid permission as a single
-        tuple argument.
+        Test the PermissionRequiredMixin with a valid permission as a tuple.
         Ensure the mixin correctly denies access to the view for a user that
         has not been granted that permission at the object level, by
         redirecting to the login page.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_mixin__tuple', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required=[('app.delete_optest', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_without_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+    
+    def test_tuple_arg__no_access__redirect__custom(self):
+        """
+        Test the PermissionRequiredMixin with a valid permission as a tuple and
+        a custom ``login_url``.
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the object level, by
+        to a custom page specified by ``login_url``.
+        """
+        
+        view = _TestView.as_view(
+            permission_required=[('app.delete_optest', 'obj')],
+            login_url='/custom/login/'
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        response = view(request, obj=self.optest_without_access.pk)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/custom/login/?next=/test/')
+    
+    def test_tuple_arg__no_access__raise(self):
+        """
+        Test the PermissionRequiredMixin with a valid permission as a tuple and
+        ``raise_exception`` set to True.
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the object level, by raising
+        PermissionDenied (which would be translated into a 403 error page).
+        """
+        
+        view = _TestView.as_view(
+            permission_required=[('app.delete_optest', 'obj')],
+            raise_exception=True
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.optest_without_access.pk)
     
     def test_tuple_arg__invalid_perm(self):
         """
-        Test the PermissionRequiredMixin with an invalid permission as a single
-        tuple argument.
+        Test the PermissionRequiredMixin with an invalid permission as a tuple.
         Ensure the mixin correctly denies access to the view.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__tuple__invalid', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required=[('fail', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_tuple_arg__invalid_object(self):
         """
-        Test the PermissionRequiredMixin with a valid permission as a single
-        tuple argument.
-        Ensure the mixin correctly returns a 404 error page when an invalid
-        object primary key is provided in the URL.
+        Test the PermissionRequiredMixin with a valid permission as a tuple.
+        Ensure the mixin correctly raises a Http404 exception when an
+        invalid object primary key is provided (which would be translated into
+        a 404 error page).
         """
         
-        url = reverse('perm_mixin__tuple', args=(0,))
+        view = _TestView.as_view(
+            permission_required=[('app.delete_optest', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
-        
-        self.assertEquals(response.status_code, 404)
+        with self.assertRaises(Http404):
+            view(request, obj=0)
     
     def test_multiple_args__access_all(self):
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
-        mixture of string and tuple arguments.
+        mixture of strings and tuples.
         Ensure the mixin correctly allows access to the view for a user that
         has all appropriate permissions.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__multiple__view_delete', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required=['app.view_optest', ('app.delete_optest', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, 'success')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'success')
     
     def test_multiple_args__no_access__model(self):
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
-        mixture of string and tuple arguments.
+        mixture of strings and tuples.
         Ensure the mixin correctly denies access to the view for a user that
-        has is missing one of the model-level permissions, by redirecting to
-        the login page.
+        is missing one of the model-level permissions, by redirecting to the
+        login page.
         """
         
-        optest = self.optest_with_access
-        url = reverse('perm_mixin__multiple__add_delete', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required=['app.add_optest', ('app.delete_optest', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_multiple_args__no_access__object(self):
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
         mixture of string and tuple arguments.
         Ensure the mixin correctly denies access to the view for a user that
-        has is missing one of the object-level permissions, by redirecting to
-        the login page.
+        is missing one of the object-level permissions, by redirecting to the
+        login page.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_mixin__multiple__view_delete', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required=['app.view_optest', ('app.delete_optest', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_without_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+    
+    def test_multiple_args__no_access__custom_redirect(self):
+        """
+        Test the PermissionRequiredMixin with multiple valid permissions as a
+        mixture of string and tuple arguments, and a custom ``login_url``.
+        Ensure the mixin correctly denies access to the view for a user that
+        is missing one of the object-level permissions, by redirecting to a
+        custom page specified by ``login_url``.
+        """
+        
+        view = _TestView.as_view(
+            permission_required=['app.view_optest', ('app.delete_optest', 'obj')],
+            login_url='/custom/login/'
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        response = view(request, obj=self.optest_without_access.pk)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/custom/login/?next=/test/')
+    
+    def test_multiple_args__no_access__raise(self):
+        """
+        Test the PermissionRequiredMixin with multiple valid permissions as a
+        mixture of string and tuple arguments, and ``raise_exception`` set to True.
+        Ensure the mixin correctly denies access to the view for a user that is
+        missing one of the object-level permissions, by raising PermissionDenied
+        (which would be translated into a 403 error page).
+        """
+        
+        view = _TestView.as_view(
+            permission_required=['app.view_optest', ('app.delete_optest', 'obj')],
+            raise_exception=True
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.optest_without_access.pk)
     
     def test_multiple_args__invalid_perm(self):
         """
-        Test the PermissionRequiredMixin with multiple arguments, one of which
-        contains an invalid permission.
+        Test the PermissionRequiredMixin with multiple permissions as a mixture
+        of strings and tuples, one of which is invalid.
         Ensure the mixin correctly denies access to the view.
         """
         
-        optest = self.optest_without_access
-        url = reverse('perm_mixin__multiple__view_delete', args=(optest.pk,))
+        view = _TestView.as_view(
+            permission_required=['app.view_optest', ('fail', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
+        response = view(request, obj=self.optest_with_access.pk)
         
-        self.assertRedirects(response, '{0}?next={1}'.format(settings.LOGIN_URL, url))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
     
     def test_multiple_args__invalid_object(self):
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
-        mixture of string and tuple arguments.
-        Ensure the mixin correctly returns a 404 error page when an invalid
-        object primary key is provided in the URL.
+        mixture of strings and tuples.
+        Ensure the mixin correctly raises a Http404 exception when an
+        invalid object primary key is provided (which would be translated into
+        a 404 error page).
         """
         
-        url = reverse('perm_mixin__multiple__view_delete', args=(0,))
+        view = _TestView.as_view(
+            permission_required=['app.view_optest', ('app.delete_optest', 'obj')]
+        )
         
-        self.client.login(username='test1', password='blahblahblah')
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
         
-        response = self.client.get(url, follow=True)
-        
-        self.assertEquals(response.status_code, 404)
+        with self.assertRaises(Http404):
+            view(request, obj=0)

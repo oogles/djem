@@ -10,6 +10,7 @@ API Reference
     model_fields
     forms
     form_fields
+    auth
     pagination
     ajax
     template_tags

@@ -38,4 +38,19 @@ Setting ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "requ
 
 Default: None
 
-The default page length to use for the :func:`get_page` helper function. Adding this setting removes the need to provide a page length argument to every :func:`get_page` call. See :ref:`pagination-page-length` for more details.
+The default page length to use for the :func:`djem.pagination.get_page` helper function. Adding this setting removes the need to provide a page length argument to every :func:`djem.pagination.get_page` call. See :ref:`pagination-page-length` for more details.
+
+
+
+.. setting:: DJEM_DEFAULT_403
+
+``DJEM_DEFAULT_403``
+====================
+
+.. versionadded:: 0.5
+
+Default: False
+
+Specifies the default behaviour of the :func:`~djem.auth.permission_required` decorator and :class:`djem.auth.PermissionRequired` class-based view mixin when a user does not have the specified permission/s. If ``True``, the ``PermissionDenied`` exception will be raised, invoking the 403 handler. If ``False``, the user will be redirected to the appropriate login url.
+
+This affects default behaviour only - individual uses of :func:`~djem.auth.permission_required` and :class:`djem.auth.PermissionRequired` can customise it.
