@@ -16,7 +16,7 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         tz = 'Australia/Sydney'
         helper = TimeZoneHelper(tz)
         
-        self.assertEquals(helper.tz.zone, tz)
+        self.assertEqual(helper.tz.zone, tz)
     
     def test_init__bad_string(self):
         """
@@ -53,9 +53,9 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         timezones.
         """
         
-        self.assertEquals(TimeZoneHelper(pytz.UTC).name, 'UTC')
-        self.assertEquals(TimeZoneHelper('Australia/Sydney').name, 'Australia/Sydney')
-        self.assertEquals(TimeZoneHelper('US/Eastern').name, 'US/Eastern')
+        self.assertEqual(TimeZoneHelper(pytz.UTC).name, 'UTC')
+        self.assertEqual(TimeZoneHelper('Australia/Sydney').name, 'Australia/Sydney')
+        self.assertEqual(TimeZoneHelper('US/Eastern').name, 'US/Eastern')
     
     def test_now__utc(self):
         """
@@ -74,7 +74,7 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         now = timezone.now()
         helper_now = TimeZoneHelper(pytz.UTC).now()
         
-        self.assertEquals(helper_now.strftime(fmt), now.strftime(fmt))
+        self.assertEqual(helper_now.strftime(fmt), now.strftime(fmt))
     
     def test_now__local(self):
         """
@@ -96,7 +96,7 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         local = pytz.timezone('Australia/Sydney')
         local_now = local.normalize(now.astimezone(local))
         
-        self.assertEquals(helper_now.strftime(fmt), local_now.strftime(fmt))
+        self.assertEqual(helper_now.strftime(fmt), local_now.strftime(fmt))
     
     def test_today__utc(self):
         """
@@ -111,7 +111,7 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         today = timezone.now().date()
         helper_today = TimeZoneHelper(pytz.UTC).today()
         
-        self.assertEquals(helper_today, today)
+        self.assertEqual(helper_today, today)
     
     def test_today__local(self):
         """
@@ -129,4 +129,4 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         
         helper_today = TimeZoneHelper('Australia/Sydney').today()
         
-        self.assertEquals(helper_today, local_today)
+        self.assertEqual(helper_today, local_today)

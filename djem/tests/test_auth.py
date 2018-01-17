@@ -252,12 +252,13 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create(group=self.group1)
         
         perms1 = self.user1.get_group_permissions(obj)
-        self.assertEquals(perms1, set((
-            'tests.view_optest', 'tests.delete_optest'
-        )))
+        self.assertEqual(perms1, {
+            'tests.view_optest',
+            'tests.delete_optest'
+        })
         
         perms2 = self.user2.get_group_permissions(obj)
-        self.assertEquals(perms2, set(('tests.view_optest',)))
+        self.assertEqual(perms2, {'tests.view_optest'})
     
     def test_get_group_permissions__inactive_user(self):
         """
@@ -276,7 +277,7 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create()
         
         perms = user.get_group_permissions(obj)
-        self.assertEquals(perms, set())
+        self.assertEqual(perms, set())
     
     def test_get_group_permissions__super_user(self):
         """
@@ -294,9 +295,12 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create()
         
         perms = user.get_group_permissions(obj)
-        self.assertEquals(perms, set((
-            'tests.view_optest', 'tests.add_optest', 'tests.change_optest', 'tests.delete_optest'
-        )))
+        self.assertEqual(perms, {
+            'tests.view_optest',
+            'tests.add_optest',
+            'tests.change_optest',
+            'tests.delete_optest'
+        })
     
     def test_get_group_permissions__cache(self):
         """
@@ -346,12 +350,14 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create(group=self.group1)
         
         perms1 = self.user1.get_all_permissions(obj)
-        self.assertEquals(perms1, set((
-            'tests.view_optest', 'tests.change_optest', 'tests.delete_optest'
-        )))
+        self.assertEqual(perms1, {
+            'tests.view_optest',
+            'tests.change_optest',
+            'tests.delete_optest'
+        })
         
         perms2 = self.user2.get_all_permissions(obj)
-        self.assertEquals(perms2, set(('tests.view_optest', 'tests.change_optest')))
+        self.assertEqual(perms2, {'tests.view_optest', 'tests.change_optest'})
     
     def test_get_all_permissions__inactive_user(self):
         """
@@ -370,7 +376,7 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create()
         
         perms = user.get_all_permissions(obj)
-        self.assertEquals(perms, set())
+        self.assertEqual(perms, set())
     
     def test_get_all_permissions__super_user(self):
         """
@@ -388,9 +394,12 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create()
         
         perms = user.get_all_permissions(obj)
-        self.assertEquals(perms, set((
-            'tests.view_optest', 'tests.add_optest', 'tests.change_optest', 'tests.delete_optest'
-        )))
+        self.assertEqual(perms, {
+            'tests.view_optest',
+            'tests.add_optest',
+            'tests.change_optest',
+            'tests.delete_optest'
+        })
     
     def test_get_all_permissions__cache(self):
         """

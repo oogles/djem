@@ -112,7 +112,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, '')
+        self.assertEqual(output, '')
     
     def test_ifperm__invalid_permission__else(self):
         """
@@ -136,7 +136,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'ELSE')
+        self.assertEqual(output, 'ELSE')
     
     def test_ifperm__with_permission(self):
         """
@@ -160,7 +160,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifperm__with_permission__else(self):
         """
@@ -186,7 +186,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifperm__without_permission(self):
         """
@@ -212,7 +212,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, '')
+        self.assertEqual(output, '')
     
     def test_ifperm__without_permission__else(self):
         """
@@ -239,7 +239,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'ELSE')
+        self.assertEqual(output, 'ELSE')
     
     def test_ifperm__complex_user_arg(self):
         """
@@ -270,7 +270,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifperm__complex_permission_arg(self):
         """
@@ -301,7 +301,7 @@ class IfPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifperm__complex_object_arg(self):
         """
@@ -331,7 +331,7 @@ class IfPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifperm__view__anonymous(self):
         """
@@ -469,7 +469,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifnotperm__invalid_permission__else(self):
         """
@@ -493,7 +493,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifnotperm__with_permission(self):
         """
@@ -518,7 +518,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, '')
+        self.assertEqual(output, '')
     
     def test_ifnotperm__with_permission__else(self):
         """
@@ -544,7 +544,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'ELSE')
+        self.assertEqual(output, 'ELSE')
     
     def test_ifnotperm__without_permission(self):
         """
@@ -570,7 +570,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifnotperm__without_permission__else(self):
         """
@@ -598,7 +598,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'IF')
+        self.assertEqual(output, 'IF')
     
     def test_ifperm__complex_user_arg(self):
         """
@@ -629,7 +629,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj
         })
         
-        self.assertEquals(output, 'ELSE')
+        self.assertEqual(output, 'ELSE')
     
     def test_ifnotperm__complex_permission_arg(self):
         """
@@ -660,7 +660,7 @@ class IfNotPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(output, 'ELSE')
+        self.assertEqual(output, 'ELSE')
     
     def test_ifnotperm__complex_object_arg(self):
         """
@@ -690,7 +690,7 @@ class IfNotPermTestCase(PermTagTestCase):
             }
         })
         
-        self.assertEquals(output, 'ELSE')
+        self.assertEqual(output, 'ELSE')
     
     def test_ifnotperm__view__anonymous(self):
         """
@@ -778,8 +778,8 @@ class CsrfifyAjaxTestCase(TestCase):
         request = RequestFactory().get('/test/')
         response = view(request)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertRegexpMatches(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+        self.assertEqual(response.status_code, 200)
+        self.assertRegex(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
     
     def test_valid__implicit(self):
         """
@@ -799,8 +799,8 @@ class CsrfifyAjaxTestCase(TestCase):
         request = RequestFactory().get('/test/')
         response = view(request)
         
-        self.assertEquals(response.status_code, 200)
-        self.assertRegexpMatches(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
+        self.assertEqual(response.status_code, 200)
+        self.assertRegex(response.content, b"('X-CSRFToken', '[a-zA-Z0-9]{64}')")
     
     def test_invalid(self):
         """

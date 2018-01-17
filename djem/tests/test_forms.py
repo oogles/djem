@@ -57,7 +57,7 @@ class CommonInfoFormTestCase(TestCase):
         
         form = CommonInfoTestForm({'test': True}, user=self.user)
         
-        self.assertEquals(form.user, self.user)
+        self.assertEqual(form.user, self.user)
     
     def test_bound_init__no_user(self):
         """
@@ -76,7 +76,7 @@ class CommonInfoFormTestCase(TestCase):
         
         form = CommonInfoTestForm(user=self.user)
         
-        self.assertEquals(form.user, self.user)
+        self.assertEqual(form.user, self.user)
     
     def test_unbound_init__no_user(self):
         """
@@ -100,8 +100,8 @@ class CommonInfoFormTestCase(TestCase):
         
         # Test correct insertion into database, with appropriate user fields
         self.assertIsNotNone(instance.pk)
-        self.assertEquals(instance.user_created_id, self.user.pk)
-        self.assertEquals(instance.user_modified_id, self.user.pk)
+        self.assertEqual(instance.user_created_id, self.user.pk)
+        self.assertEqual(instance.user_modified_id, self.user.pk)
         
         # Test save_m2m method is inaccessible, as it should be after a
         # commit=True save
@@ -128,8 +128,8 @@ class CommonInfoFormTestCase(TestCase):
         form.save_m2m()
         
         self.assertIsNotNone(instance.pk)
-        self.assertEquals(instance.user_created_id, self.user.pk)
-        self.assertEquals(instance.user_modified_id, self.user.pk)
+        self.assertEqual(instance.user_created_id, self.user.pk)
+        self.assertEqual(instance.user_modified_id, self.user.pk)
         
         self.assertNumQueries(0)
 
@@ -147,7 +147,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertTrue(form.is_valid())
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
-        self.assertEquals(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
+        self.assertEqual(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
     
     def test_submit__modelform_invalid(self):
         """
@@ -159,7 +159,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm1({'timezone': 'fail'})
         
         self.assertFalse(form.is_valid())
-        self.assertEquals(form.errors['timezone'], [
+        self.assertEqual(form.errors['timezone'], [
             'Select a valid choice. fail is not one of the available choices.'
         ])
     
@@ -173,7 +173,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertTrue(form.is_valid())
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
-        self.assertEquals(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
+        self.assertEqual(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
     
     def test_submit__form__invalid(self):
         """
@@ -184,7 +184,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm2({'timezone': 'fail'})
         
         self.assertFalse(form.is_valid())
-        self.assertEquals(form.errors['timezone'], [
+        self.assertEqual(form.errors['timezone'], [
             'Select a valid choice. fail is not one of the available choices.'
         ])
     
@@ -197,7 +197,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm3({})
         
         self.assertTrue(form.is_valid())
-        self.assertEquals(form.cleaned_data['timezone'], '')
+        self.assertEqual(form.cleaned_data['timezone'], '')
     
     def test_submit__form__empty_valid__blank_string(self):
         """
@@ -208,7 +208,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm3({'timezone': ''})
         
         self.assertTrue(form.is_valid())
-        self.assertEquals(form.cleaned_data['timezone'], '')
+        self.assertEqual(form.cleaned_data['timezone'], '')
     
     def test_submit__form__empty_valid__none(self):
         """
@@ -219,7 +219,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm3({'timezone': None})
         
         self.assertTrue(form.is_valid())
-        self.assertEquals(form.cleaned_data['timezone'], '')
+        self.assertEqual(form.cleaned_data['timezone'], '')
     
     def test_submit__form__empty_invalid__no_input(self):
         """
@@ -230,7 +230,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm2({})
         
         self.assertFalse(form.is_valid())
-        self.assertEquals(form.errors['timezone'], [
+        self.assertEqual(form.errors['timezone'], [
             'This field is required.'
         ])
     
@@ -243,7 +243,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm2({'timezone': ''})
         
         self.assertFalse(form.is_valid())
-        self.assertEquals(form.errors['timezone'], [
+        self.assertEqual(form.errors['timezone'], [
             'This field is required.'
         ])
     
@@ -256,7 +256,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm2({'timezone': None})
         
         self.assertFalse(form.is_valid())
-        self.assertEquals(form.errors['timezone'], [
+        self.assertEqual(form.errors['timezone'], [
             'This field is required.'
         ])
     
@@ -273,7 +273,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertTrue(form.is_valid())
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
-        self.assertEquals(form.cleaned_data['timezone'].tz.zone, tz)
+        self.assertEqual(form.cleaned_data['timezone'].tz.zone, tz)
     
     def test_custom_choices__invalid(self):
         """
@@ -285,6 +285,6 @@ class TimeZoneFieldFormTestCase(TestCase):
         form = TimeZoneFieldTestForm4({'timezone': 'Australia/Sydney'})
         
         self.assertFalse(form.is_valid())
-        self.assertEquals(form.errors['timezone'], [
+        self.assertEqual(form.errors['timezone'], [
             'Select a valid choice. Australia/Sydney is not one of the available choices.'
         ])
