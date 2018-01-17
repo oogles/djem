@@ -48,8 +48,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'djem'
-copyright = u'2017, Alex Church'
+project = 'djem'
+copyright = '2017, Alex Church'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -210,8 +210,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'djem.tex', u'djem Documentation',
-   u'Alex Church', 'manual'),
+  ('index', 'djem.tex', 'djem Documentation',
+   'Alex Church', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -240,8 +240,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'djem', u'djem Documentation',
-     [u'Alex Church'], 1)
+    ('index', 'djem', 'djem Documentation',
+     ['Alex Church'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -254,8 +254,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'djem', u'djem Documentation',
-   u'Alex Church', 'djem', 'One line description of project.',
+  ('index', 'djem', 'djem Documentation',
+   'Alex Church', 'djem', 'One line description of project.',
    'Miscellaneous'),
 ]
 
