@@ -3,10 +3,9 @@
 
 SECRET_KEY = 'abcde12345'
 
-# For testing. If djem ever includes real views that also need testing,
-# this should point to that urlconf and the test app's urls should be tested
-# by overriding the setting.
-ROOT_URLCONF = 'djem.tests.app.urls'
+# Needs to point to something to allow tests to perform url resolving. The file
+# doesn't actually need to contain any urls (but does need to define "urlpatterns").
+ROOT_URLCONF = 'djem.tests'
 
 # For TimeZoneHelper/TimeZoneField tests
 USE_TZ = True
@@ -17,17 +16,24 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware'  # add request.user
 )
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.contenttypes',  # for django.contrib.auth
     'django.contrib.sessions',      # for django.contrib.auth, at least when actually logging in
     'django.contrib.auth',          # for various tests
     'django.contrib.messages',      # for AjaxResponse tests
     
-    'django_extensions',  # for dev tools, e.g. shell_plus
-    
     'djem',
-    'djem.tests.app',
-)
+    'djem.tests',
+]
+
+# Add django-extensions to INSTAPPED_APPS if it is present. This provides extra
+# dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
+try:
+    import django_extensions
+except ImportError:
+    pass
+else:
+    INSTALLED_APPS.append('django_extensions')
 
 DATABASES = {
     'default': {

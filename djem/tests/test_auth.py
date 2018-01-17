@@ -8,7 +8,7 @@ from django.views import View
 
 from djem.auth import PermissionRequiredMixin, permission_required
 
-from .app.models import ArchivableTest, OPTest
+from .models import ArchivableTest, OPTest
 
 
 def _test_view(request, obj=None):
@@ -38,7 +38,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         # Grant both users and both groups all permissions for OPTest
         permissions = Permission.objects.filter(
-            content_type__app_label='app',
+            content_type__app_label='tests',
             content_type__model='optest'
         )
         
@@ -80,12 +80,12 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create()
         
         user1 = get_user_model().objects.create_user('useless')
-        perm1 = user1.has_perm('app.view_optest', obj)
+        perm1 = user1.has_perm('tests.view_optest', obj)
         self.assertFalse(perm1)
         
         user2 = get_user_model().objects.create_user('useful')
         user2.user_permissions.add(Permission.objects.get(codename='view_optest'))
-        perm2 = user2.has_perm('app.view_optest', obj)
+        perm2 = user2.has_perm('tests.view_optest', obj)
         self.assertTrue(perm2)
     
     def test_has_perm__inactive_user(self):
@@ -104,7 +104,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create()
         
-        perm = user.has_perm('app.change_optest', obj)
+        perm = user.has_perm('tests.change_optest', obj)
         
         self.assertFalse(perm)
     
@@ -123,7 +123,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create()
         
-        perm = user.has_perm('app.change_optest', obj)
+        perm = user.has_perm('tests.change_optest', obj)
         
         self.assertTrue(perm)
     
@@ -135,7 +135,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create()
         
-        perm = self.user1.has_perm('app.add_optest', obj)
+        perm = self.user1.has_perm('tests.add_optest', obj)
         
         self.assertFalse(perm)
     
@@ -147,7 +147,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = ArchivableTest.objects.create()
         
-        perm = self.user1.has_perm('app.change_optest', obj)
+        perm = self.user1.has_perm('tests.change_optest', obj)
         
         self.assertFalse(perm)
     
@@ -160,8 +160,8 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create(user=self.user1)
         
-        perm1 = self.user1.has_perm('app.delete_optest', obj)
-        perm2 = self.user2.has_perm('app.delete_optest', obj)
+        perm1 = self.user1.has_perm('tests.delete_optest', obj)
+        perm2 = self.user2.has_perm('tests.delete_optest', obj)
         
         self.assertTrue(perm1)
         self.assertFalse(perm2)
@@ -175,8 +175,8 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create(group=self.group1)
         
-        perm1 = self.user1.has_perm('app.delete_optest', obj)
-        perm2 = self.user2.has_perm('app.delete_optest', obj)
+        perm1 = self.user1.has_perm('tests.delete_optest', obj)
+        perm2 = self.user2.has_perm('tests.delete_optest', obj)
         
         self.assertTrue(perm1)
         self.assertFalse(perm2)
@@ -189,8 +189,8 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create()
         
-        perm1 = self.user1.has_perm('app.delete_optest', obj)
-        perm2 = self.user2.has_perm('app.delete_optest', obj)
+        perm1 = self.user1.has_perm('tests.delete_optest', obj)
+        perm2 = self.user2.has_perm('tests.delete_optest', obj)
         
         self.assertFalse(perm1)
         self.assertFalse(perm2)
@@ -203,7 +203,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         user = self.user1
         obj = OPTest.objects.create()
-        perm_cache_name = 'perm_cache_app.delete_optest_{0}'.format(obj.pk)
+        perm_cache_name = 'perm_cache_tests.delete_optest_{0}'.format(obj.pk)
         user_perm_cache_name = '_user_{0}'.format(perm_cache_name)
         group_perm_cache_name = '_group_{0}'.format(perm_cache_name)
         
@@ -214,7 +214,7 @@ class ObjectPermissionsTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, group_perm_cache_name)
         
-        user.has_perm('app.delete_optest', obj)
+        user.has_perm('tests.delete_optest', obj)
         
         # Test cache has been set
         self.assertFalse(getattr(user, user_perm_cache_name))
@@ -237,10 +237,10 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create(user=self.user1)
         
-        perm1 = self.user1.has_perms(('app.change_optest', 'app.add_optest'), obj)
+        perm1 = self.user1.has_perms(('tests.change_optest', 'tests.add_optest'), obj)
         self.assertFalse(perm1)
         
-        perm2 = self.user1.has_perms(('app.change_optest', 'app.delete_optest'), obj)
+        perm2 = self.user1.has_perms(('tests.change_optest', 'tests.delete_optest'), obj)
         self.assertTrue(perm2)
     
     def test_get_group_permissions(self):
@@ -253,11 +253,11 @@ class ObjectPermissionsTestCase(TestCase):
         
         perms1 = self.user1.get_group_permissions(obj)
         self.assertEquals(perms1, set((
-            'app.view_optest', 'app.delete_optest'
+            'tests.view_optest', 'tests.delete_optest'
         )))
         
         perms2 = self.user2.get_group_permissions(obj)
-        self.assertEquals(perms2, set(('app.view_optest',)))
+        self.assertEquals(perms2, set(('tests.view_optest',)))
     
     def test_get_group_permissions__inactive_user(self):
         """
@@ -295,7 +295,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         perms = user.get_group_permissions(obj)
         self.assertEquals(perms, set((
-            'app.view_optest', 'app.add_optest', 'app.change_optest', 'app.delete_optest'
+            'tests.view_optest', 'tests.add_optest', 'tests.change_optest', 'tests.delete_optest'
         )))
     
     def test_get_group_permissions__cache(self):
@@ -309,10 +309,10 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create()
         
         expected_caches = (
-            '_group_perm_cache_app.view_optest_{0}',
-            '_group_perm_cache_app.add_optest_{0}',
-            '_group_perm_cache_app.change_optest_{0}',
-            '_group_perm_cache_app.delete_optest_{0}',
+            '_group_perm_cache_tests.view_optest_{0}',
+            '_group_perm_cache_tests.add_optest_{0}',
+            '_group_perm_cache_tests.change_optest_{0}',
+            '_group_perm_cache_tests.delete_optest_{0}',
         )
         
         expected_caches = [s.format(obj.pk) for s in expected_caches]
@@ -347,11 +347,11 @@ class ObjectPermissionsTestCase(TestCase):
         
         perms1 = self.user1.get_all_permissions(obj)
         self.assertEquals(perms1, set((
-            'app.view_optest', 'app.change_optest', 'app.delete_optest'
+            'tests.view_optest', 'tests.change_optest', 'tests.delete_optest'
         )))
         
         perms2 = self.user2.get_all_permissions(obj)
-        self.assertEquals(perms2, set(('app.view_optest', 'app.change_optest')))
+        self.assertEquals(perms2, set(('tests.view_optest', 'tests.change_optest')))
     
     def test_get_all_permissions__inactive_user(self):
         """
@@ -389,7 +389,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         perms = user.get_all_permissions(obj)
         self.assertEquals(perms, set((
-            'app.view_optest', 'app.add_optest', 'app.change_optest', 'app.delete_optest'
+            'tests.view_optest', 'tests.add_optest', 'tests.change_optest', 'tests.delete_optest'
         )))
     
     def test_get_all_permissions__cache(self):
@@ -403,12 +403,12 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create()
         
         expected_caches = (
-            '_user_perm_cache_app.view_optest_{0}',  # group won't need checking
-            '_user_perm_cache_app.add_optest_{0}',
-            '_group_perm_cache_app.add_optest_{0}',
-            '_user_perm_cache_app.change_optest_{0}',  # group won't need checking
-            '_user_perm_cache_app.delete_optest_{0}',
-            '_group_perm_cache_app.delete_optest_{0}',
+            '_user_perm_cache_tests.view_optest_{0}',  # group won't need checking
+            '_user_perm_cache_tests.add_optest_{0}',
+            '_group_perm_cache_tests.add_optest_{0}',
+            '_user_perm_cache_tests.change_optest_{0}',  # group won't need checking
+            '_user_perm_cache_tests.delete_optest_{0}',
+            '_group_perm_cache_tests.delete_optest_{0}',
         )
         
         expected_caches = [s.format(obj.pk) for s in expected_caches]
@@ -449,7 +449,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         # Grant user permission to view, change and delete OPTest records, but
         # not add them
         permissions = Permission.objects.filter(
-            content_type__app_label='app',
+            content_type__app_label='tests',
             content_type__model='optest',
             codename__in=('view_optest', 'change_optest', 'delete_optest')
         )
@@ -467,7 +467,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly redirects to the login url.
         """
         
-        view = permission_required('app.view_optest')(_test_view)
+        view = permission_required('tests.view_optest')(_test_view)
         
         request = self.factory.get('/test/')
         request.user = AnonymousUser()
@@ -485,7 +485,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has been granted that permission at the model level.
         """
         
-        view = permission_required('app.view_optest')(_test_view)
+        view = permission_required('tests.view_optest')(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -503,7 +503,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to the login page.
         """
         
-        view = permission_required('app.add_optest')(_test_view)
+        view = permission_required('tests.add_optest')(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -522,7 +522,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to a custom page specified by the decorator.
         """
         
-        view = permission_required('app.add_optest', login_url='/custom/login/')(_test_view)
+        view = permission_required('tests.add_optest', login_url='/custom/login/')(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -541,7 +541,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         raising PermissionDenied (which would be translated into a 403 error page).
         """
         
-        view = permission_required('app.add_optest', raise_exception=True)(_test_view)
+        view = permission_required('tests.add_optest', raise_exception=True)(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -574,7 +574,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has been granted that permission at the object level.
         """
         
-        view = permission_required(('app.delete_optest', 'obj'))(_test_view)
+        view = permission_required(('tests.delete_optest', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -592,7 +592,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to the login page.
         """
         
-        view = permission_required(('app.delete_optest', 'obj'))(_test_view)
+        view = permission_required(('tests.delete_optest', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -611,7 +611,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to a custom page specified by the decorator.
         """
         
-        view = permission_required(('app.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
+        view = permission_required(('tests.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -630,7 +630,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         raising PermissionDenied (which would be translated into a 403 error page).
         """
         
-        view = permission_required(('app.delete_optest', 'obj'), raise_exception=True)(_test_view)
+        view = permission_required(('tests.delete_optest', 'obj'), raise_exception=True)(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -664,7 +664,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         a 404 error page).
         """
         
-        view = permission_required(('app.delete_optest', 'obj'))(_test_view)
+        view = permission_required(('tests.delete_optest', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -680,7 +680,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has all appropriate permissions.
         """
         
-        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'))(_test_view)
+        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -698,7 +698,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to the login page.
         """
         
-        view = permission_required('app.add_optest', ('app.delete_optest', 'obj'))(_test_view)
+        view = permission_required('tests.add_optest', ('tests.delete_optest', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -717,7 +717,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to the login page.
         """
         
-        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'))(_test_view)
+        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -737,7 +737,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to a custom page specified by the decorator.
         """
         
-        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
+        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -756,7 +756,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         PermissionDenied (which would be translated into a 403 error page).
         """
         
-        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'), raise_exception=True)(_test_view)
+        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'), raise_exception=True)(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -771,7 +771,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly denies access to the view.
         """
         
-        view = permission_required('app.view_optest', ('fail', 'obj'))(_test_view)
+        view = permission_required('tests.view_optest', ('fail', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -790,7 +790,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         error page).
         """
         
-        view = permission_required('app.view_optest', ('app.delete_optest', 'obj'))(_test_view)
+        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'))(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -814,7 +814,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         # Grant user permission to view, change and delete OPTest records, but
         # not add them
         permissions = Permission.objects.filter(
-            content_type__app_label='app',
+            content_type__app_label='tests',
             content_type__model='optest',
             codename__in=('view_optest', 'change_optest', 'delete_optest')
         )
@@ -848,7 +848,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='app.view_optest'
+            permission_required='tests.view_optest'
         )
         
         request = self.factory.get('/test/')
@@ -868,7 +868,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='app.view_optest'
+            permission_required='tests.view_optest'
         )
         
         request = self.factory.get('/test/')
@@ -888,7 +888,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='app.add_optest'
+            permission_required='tests.add_optest'
         )
         
         request = self.factory.get('/test/')
@@ -909,7 +909,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='app.add_optest',
+            permission_required='tests.add_optest',
             login_url='/custom/login/'
         )
         
@@ -931,7 +931,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='app.add_optest',
+            permission_required='tests.add_optest',
             raise_exception=True
         )
         
@@ -968,7 +968,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('app.delete_optest', 'obj')]
+            permission_required=[('tests.delete_optest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -987,7 +987,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('app.delete_optest', 'obj')]
+            permission_required=[('tests.delete_optest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1008,7 +1008,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('app.delete_optest', 'obj')],
+            permission_required=[('tests.delete_optest', 'obj')],
             login_url='/custom/login/'
         )
         
@@ -1030,7 +1030,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('app.delete_optest', 'obj')],
+            permission_required=[('tests.delete_optest', 'obj')],
             raise_exception=True
         )
         
@@ -1067,7 +1067,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('app.delete_optest', 'obj')]
+            permission_required=[('tests.delete_optest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1085,7 +1085,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['app.view_optest', ('app.delete_optest', 'obj')]
+            permission_required=['tests.view_optest', ('tests.delete_optest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1105,7 +1105,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['app.add_optest', ('app.delete_optest', 'obj')]
+            permission_required=['tests.add_optest', ('tests.delete_optest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1126,7 +1126,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['app.view_optest', ('app.delete_optest', 'obj')]
+            permission_required=['tests.view_optest', ('tests.delete_optest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1147,7 +1147,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['app.view_optest', ('app.delete_optest', 'obj')],
+            permission_required=['tests.view_optest', ('tests.delete_optest', 'obj')],
             login_url='/custom/login/'
         )
         
@@ -1169,7 +1169,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['app.view_optest', ('app.delete_optest', 'obj')],
+            permission_required=['tests.view_optest', ('tests.delete_optest', 'obj')],
             raise_exception=True
         )
         
@@ -1187,7 +1187,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['app.view_optest', ('fail', 'obj')]
+            permission_required=['tests.view_optest', ('fail', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1208,7 +1208,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['app.view_optest', ('app.delete_optest', 'obj')]
+            permission_required=['tests.view_optest', ('tests.delete_optest', 'obj')]
         )
         
         request = self.factory.get('/test/')

@@ -1,4 +1,5 @@
 import datetime
+import pytz
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
@@ -6,12 +7,10 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-import pytz
-
 from djem.models import TimeZoneField
 from djem.utils.dt import TimeZoneHelper
 
-from .app.models import (
+from .models import (
     ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
 )
 
@@ -437,8 +436,8 @@ class CommonInfoTestCase(TestCase):
         obj = CommonInfoTest()
         obj.save(user1)
         
-        self.assertTrue(user1.has_perm('app.change_commoninfotest', obj))
-        self.assertFalse(user2.has_perm('app.change_commoninfotest', obj))
+        self.assertTrue(user1.has_perm('tests.change_commoninfotest', obj))
+        self.assertFalse(user2.has_perm('tests.change_commoninfotest', obj))
     
     def test_object_permissions__delete(self):
         """
@@ -458,8 +457,8 @@ class CommonInfoTestCase(TestCase):
         obj = CommonInfoTest()
         obj.save(user1)
         
-        self.assertTrue(user1.has_perm('app.delete_commoninfotest', obj))
-        self.assertFalse(user2.has_perm('app.delete_commoninfotest', obj))
+        self.assertTrue(user1.has_perm('tests.delete_commoninfotest', obj))
+        self.assertFalse(user2.has_perm('tests.delete_commoninfotest', obj))
 
 
 class ArchivableTestCase(TestCase):
@@ -991,8 +990,8 @@ class StaticTestCase(TestCase):
         # False. user2 should not. See StaticTest._user_can_change_statictest.
         obj.field1 = False
         obj.save(user1)
-        self.assertTrue(user1.has_perm('app.change_statictest', obj))
-        self.assertFalse(user2.has_perm('app.change_statictest', obj))
+        self.assertTrue(user1.has_perm('tests.change_statictest', obj))
+        self.assertFalse(user2.has_perm('tests.change_statictest', obj))
         
         # user2 should get access when "field1" is True, even though it is not
         # the owner. See StaticTest._user_can_change_statictest.
@@ -1001,7 +1000,7 @@ class StaticTestCase(TestCase):
         
         # Re-query for the user to clear the permissions cache stored on the instance.
         user2 = get_user_model().objects.get(pk=user2.pk)
-        self.assertTrue(user2.has_perm('app.change_statictest', obj))
+        self.assertTrue(user2.has_perm('tests.change_statictest', obj))
     
     def test_object_permissions__delete(self):
         """
@@ -1029,8 +1028,8 @@ class StaticTestCase(TestCase):
         # user2 should get access because of group permissions, even though it
         # is not the owner. See StaticTest._group_can_delete_statictest.
         obj.save(user1)
-        self.assertTrue(user1.has_perm('app.delete_statictest', obj))
-        self.assertTrue(user2.has_perm('app.delete_statictest', obj))
+        self.assertTrue(user1.has_perm('tests.delete_statictest', obj))
+        self.assertTrue(user2.has_perm('tests.delete_statictest', obj))
         
         # user2 should lose access when "field1" is False, even though they have
         # groups. See StaticTest._group_can_delete_statictest.
@@ -1039,7 +1038,7 @@ class StaticTestCase(TestCase):
         
         # Re-query for the user to clear the permissions cache stored on the instance.
         user2 = get_user_model().objects.get(pk=user2.pk)
-        self.assertFalse(user2.has_perm('app.delete_statictest', obj))
+        self.assertFalse(user2.has_perm('tests.delete_statictest', obj))
 
 
 class TimeZoneFieldTest(TestCase):

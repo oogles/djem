@@ -1,10 +1,10 @@
-from django.core.paginator import EmptyPage
 from django.contrib.auth import get_user_model
+from django.core.paginator import EmptyPage
 from django.test import TestCase
 
 from djem.pagination import get_page
 
-from .app.models import CommonInfoTest
+from .models import CommonInfoTest
 
 
 class GetPageTestCase(TestCase):
