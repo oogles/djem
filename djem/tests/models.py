@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core.exceptions import PermissionDenied
 from django.db import models
 
 from djem.models import (
@@ -85,30 +86,46 @@ class OPTest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
     group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)
     
-    def _user_can_view_optest(self, user):
+    def _user_can_open_perm(self, user):
         
         return True
     
-    def _group_can_view_optest(self, groups):
+    def _group_can_open_perm(self, groups):
         
         return True
     
-    def _user_can_change_optest(self, user):
+    def _user_can_user_only_perm(self, user):
         
         # For tests using inactive and super users (neither should reach this point)
         assert user.is_active or not user.is_superuser, 'Not supposed to get here'
         
         return True
     
-    def _user_can_delete_optest(self, user):
+    def _group_can_group_only_perm(self, groups):
+        
+        return True
+    
+    def _user_can_conditional_perm(self, user):
         
         return user.pk == self.user_id
     
-    def _group_can_delete_optest(self, groups):
+    def _group_can_conditional_perm(self, groups):
         
         return groups.filter(pk=self.group_id).exists()
     
+    def _user_can_deny_perm(self, user):
+        
+        if user.pk != self.user_id:
+            raise PermissionDenied()
+        
+        return True
+    
     class Meta:
         permissions = (
-            ('view_optest', 'Can view an OPTest record.'),
+            ('open_perm', 'Completely open to anyone'),
+            ('closed_perm', 'Completely closed to everyone (except super users)'),
+            ('user_only_perm', 'Open to any user'),
+            ('group_only_perm', 'Open to any group'),
+            ('conditional_perm', 'Open to any user or group specified on the object'),
+            ('deny_perm', 'Denies permission by raising PermissionDenied'),
         )
