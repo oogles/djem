@@ -50,7 +50,7 @@ class TimeZoneHelper(object):
     
     def __str__(self):
         
-        return self.tz.zone
+        return self.name
     
     def __repr__(self):
         

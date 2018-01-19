@@ -130,3 +130,12 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         helper_today = TimeZoneHelper('Australia/Sydney').today()
         
         self.assertEqual(helper_today, local_today)
+    
+    def test_stringify(self):
+        """
+        Test coercing TimeZoneHelper to a string.
+        """
+        
+        self.assertEqual(str(TimeZoneHelper(pytz.UTC)), 'UTC')
+        self.assertEqual(str(TimeZoneHelper('Australia/Sydney')), 'Australia/Sydney')
+        self.assertEqual(str(TimeZoneHelper('US/Eastern')), 'US/Eastern')
