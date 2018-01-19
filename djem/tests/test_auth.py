@@ -332,7 +332,7 @@ class ObjectPermissionsTestCase(TestCase):
         for cache_attr in expected_caches:
             try:
                 getattr(user, cache_attr)
-            except AttributeError:
+            except AttributeError:  # pragma: no cover
                 self.fail('Cache not set: {0}'.format(cache_attr))
         
         # Test requerying for the user resets the cache
@@ -433,7 +433,7 @@ class ObjectPermissionsTestCase(TestCase):
         for cache_attr in expected_caches:
             try:
                 getattr(user, cache_attr)
-            except AttributeError:
+            except AttributeError:  # pragma: no cover
                 self.fail('Cache not set: {0}'.format(cache_attr))
         
         # Test requerying for the user resets the cache

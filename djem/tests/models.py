@@ -54,6 +54,10 @@ class StaticTest(StaticAbstract):
         
         return self.owned_by(user) or self.field1
     
+    def _user_can_delete_statictest(self, user):
+        
+        return self.owned_by(user) or self.field1
+    
     def _group_can_delete_statictest(self, groups):
         
         return groups.exists() and self.field1
@@ -67,6 +71,10 @@ class TimeZoneTest(models.Model):
     timezone = TimeZoneField()
     timezone2 = TimeZoneField(default='Australia/Sydney')
     timezone3 = TimeZoneField(null=True)
+    timezone4 = TimeZoneField(max_length=32, choices=(
+        ('Australia/Sydney', 'Australia/Sydney'),
+        ('Australia/Melbourne', 'Australia/Melbourne'),
+    ))
 
 
 class OPTest(models.Model):
@@ -87,9 +95,8 @@ class OPTest(models.Model):
     
     def _user_can_change_optest(self, user):
         
-        if not user.is_active or user.is_superuser:
-            # For tests using inactive and super users
-            raise AssertionError('Not supposed to get here')
+        # For tests using inactive and super users (neither should reach this point)
+        assert user.is_active or not user.is_superuser, 'Not supposed to get here'
         
         return True
     

@@ -3,6 +3,7 @@ import pytz
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
@@ -1072,12 +1073,6 @@ class TimeZoneFieldTest(TestCase):
         self.assertIsInstance(o.timezone2, TimeZoneHelper)
         self.assertEqual(o.timezone2.tz.zone, 'Australia/Sydney')
     
-    def test_left_null(self):
-        
-        o = TimeZoneTest()
-        
-        self.assertIsNone(o.timezone3)
-    
     def test_set__string(self):
         
         o = TimeZoneTest()
@@ -1094,6 +1089,19 @@ class TimeZoneFieldTest(TestCase):
         
         self.assertIsInstance(o.timezone, TimeZoneHelper)
         self.assertEqual(o.timezone.tz.zone, 'Australia/Sydney')
+    
+    def test_set__string__invalid_timezone(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone = 'fail'
+        
+        # Not being validated until the model instance is saved is consistent
+        # with the behaviour of fields like IntegerField, DecimalField, etc
+        self.assertEqual(o.timezone, 'fail')
+        
+        with self.assertRaisesRegex(ValidationError, 'Invalid timezone "fail"'):
+            o.save()
     
     def test_set__UTC(self):
         
@@ -1147,34 +1155,36 @@ class TimeZoneFieldTest(TestCase):
         self.assertIsInstance(o.timezone, TimeZoneHelper)
         self.assertEqual(o.timezone.tz.zone, 'Australia/Sydney')
     
-    def test_set__None(self):
+    def test_set__None__null_true(self):
         
         o = TimeZoneTest()
         
-        o.timezone = pytz.UTC  # required field
         o.timezone3 = pytz.UTC
         
         o.save()
         o.refresh_from_db()
         
-        self.assertIsInstance(o.timezone, TimeZoneHelper)
-        self.assertIs(o.timezone.tz, pytz.UTC)
+        self.assertIsInstance(o.timezone3, TimeZoneHelper)
+        self.assertIs(o.timezone3.tz, pytz.UTC)
         
         o.timezone3 = None
         o.save()
         
+        # The field's python value will be None and it will be stored in the
+        # database as a null
         self.assertIsNone(o.timezone3)
         
         o.refresh_from_db()
-        
         self.assertIsNone(o.timezone3)
+        
+        self.assertEqual(TimeZoneTest.objects.count(), 1)
+        self.assertEqual(TimeZoneTest.objects.filter(timezone3__isnull=True).count(), 1)
     
-    def test_set__empty_string(self):
+    def test_set__None__null_false(self):
         
         o = TimeZoneTest()
         
-        o.timezone = pytz.UTC  # required field
-        o.timezone3 = pytz.UTC
+        o.timezone = pytz.UTC
         
         o.save()
         o.refresh_from_db()
@@ -1182,14 +1192,74 @@ class TimeZoneFieldTest(TestCase):
         self.assertIsInstance(o.timezone, TimeZoneHelper)
         self.assertIs(o.timezone.tz, pytz.UTC)
         
+        o.timezone = None
+        o.save()
+        
+        # The field's python value will be None (as opposed to a TimeZoneHelper
+        # with a timezone of the empty string), but it will be stored in the
+        # database as an empty string
+        self.assertIsNone(o.timezone)
+        
+        o.refresh_from_db()
+        self.assertIsNone(o.timezone)
+        
+        self.assertEqual(TimeZoneTest.objects.count(), 1)
+        self.assertEqual(TimeZoneTest.objects.filter(timezone__isnull=True).count(), 0)
+        self.assertEqual(TimeZoneTest.objects.filter(timezone='').count(), 1)
+    
+    def test_set__empty_string__null_true(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone3 = pytz.UTC
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone3, TimeZoneHelper)
+        self.assertIs(o.timezone3.tz, pytz.UTC)
+        
         o.timezone3 = ''
         o.save()
         
+        # The field's python value will revert to None after being read back
+        # from the database (as opposed to a TimeZoneHelper with a timezone of
+        # the empty string) and it will be stored in the database as a null
         self.assertEqual(o.timezone3, '')
         
         o.refresh_from_db()
-        
         self.assertIsNone(o.timezone3)
+        
+        self.assertEqual(TimeZoneTest.objects.count(), 1)
+        self.assertEqual(TimeZoneTest.objects.filter(timezone3__isnull=True).count(), 1)
+    
+    def test_set__empty_string__null_false(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone = pytz.UTC
+        
+        o.save()
+        o.refresh_from_db()
+        
+        self.assertIsInstance(o.timezone, TimeZoneHelper)
+        self.assertIs(o.timezone.tz, pytz.UTC)
+        
+        o.timezone = ''
+        o.save()
+        
+        # The field's python value will revert to None after being read back
+        # from the database (as opposed to a TimeZoneHelper with a timezone of
+        # the empty string) and it will be stored in the database as an empty
+        # string
+        self.assertEqual(o.timezone, '')
+        
+        o.refresh_from_db()
+        self.assertIsNone(o.timezone)
+        
+        self.assertEqual(TimeZoneTest.objects.count(), 1)
+        self.assertEqual(TimeZoneTest.objects.filter(timezone__isnull=True).count(), 0)
+        self.assertEqual(TimeZoneTest.objects.filter(timezone='').count(), 1)
     
     def test_filter(self):
         

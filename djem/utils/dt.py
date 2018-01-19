@@ -7,7 +7,7 @@ from django.utils import six, timezone
 # to use TimeZoneHelper and other timezone-related functionality
 try:
     import pytz
-except ImportError:
+except ImportError:  # pragma: no cover
     pytz = None
     PYTZ_AVAILABLE = False
     TIMEZONE_CHOICES = []
@@ -20,7 +20,7 @@ class TimeZoneHelper(object):
     
     def __init__(self, tz):
         
-        if not PYTZ_AVAILABLE:
+        if not PYTZ_AVAILABLE:  # pragma: no cover
             raise RuntimeError('TimeZoneHelper requires pytz to be installed.')
         
         if isinstance(tz, six.string_types):

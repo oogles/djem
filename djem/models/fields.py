@@ -29,7 +29,7 @@ class TimeZoneField(models.Field):
     
     def __init__(self, **kwargs):
         
-        if not PYTZ_AVAILABLE:
+        if not PYTZ_AVAILABLE:  # pragma: no cover
             raise RuntimeError('TimeZoneField requires pytz to be installed.')
         
         kwargs.setdefault('choices', self.CHOICES)
@@ -76,7 +76,10 @@ class TimeZoneField(models.Field):
         helper = get_tz_helper(value)
         
         if helper is None:
-            return ''
+            if self.null:
+                return None
+            else:
+                return ''
         
         return helper.tz.zone
     
