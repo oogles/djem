@@ -476,7 +476,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly redirects to the login url.
         """
         
-        view = permission_required('tests.view_optest')(_test_view)
+        view = permission_required(
+            'tests.view_optest'
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = AnonymousUser()
@@ -494,7 +496,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has been granted that permission at the model level.
         """
         
-        view = permission_required('tests.view_optest')(_test_view)
+        view = permission_required(
+            'tests.view_optest'
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -512,7 +516,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to the login page.
         """
         
-        view = permission_required('tests.add_optest')(_test_view)
+        view = permission_required(
+            'tests.add_optest'
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -531,7 +537,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to a custom page specified by the decorator.
         """
         
-        view = permission_required('tests.add_optest', login_url='/custom/login/')(_test_view)
+        view = permission_required(
+            'tests.add_optest',
+            login_url='/custom/login/'
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -550,7 +559,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         raising PermissionDenied (which would be translated into a 403 error page).
         """
         
-        view = permission_required('tests.add_optest', raise_exception=True)(_test_view)
+        view = permission_required(
+            'tests.add_optest',
+            raise_exception=True
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -565,7 +577,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly denies access to the view.
         """
         
-        view = permission_required('fail')(_test_view)
+        view = permission_required(
+            'fail'
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -583,7 +597,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has been granted that permission at the object level.
         """
         
-        view = permission_required(('tests.delete_optest', 'obj'))(_test_view)
+        view = permission_required(
+            ('tests.delete_optest', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -601,7 +617,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to the login page.
         """
         
-        view = permission_required(('tests.delete_optest', 'obj'))(_test_view)
+        view = permission_required(
+            ('tests.delete_optest', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -620,7 +638,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         redirecting to a custom page specified by the decorator.
         """
         
-        view = permission_required(('tests.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
+        view = permission_required(
+            ('tests.delete_optest', 'obj'),
+            login_url='/custom/login/'
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -639,7 +660,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         raising PermissionDenied (which would be translated into a 403 error page).
         """
         
-        view = permission_required(('tests.delete_optest', 'obj'), raise_exception=True)(_test_view)
+        view = permission_required(
+            ('tests.delete_optest', 'obj'),
+            raise_exception=True
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -654,7 +678,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly denies access to the view.
         """
         
-        view = permission_required(('fail', 'obj'))(_test_view)
+        view = permission_required(
+            ('fail', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -673,7 +699,9 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         a 404 error page).
         """
         
-        view = permission_required(('tests.delete_optest', 'obj'))(_test_view)
+        view = permission_required(
+            ('tests.delete_optest', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -689,7 +717,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         that has all appropriate permissions.
         """
         
-        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'))(_test_view)
+        view = permission_required(
+            'tests.view_optest',
+            ('tests.delete_optest', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -707,7 +738,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to the login page.
         """
         
-        view = permission_required('tests.add_optest', ('tests.delete_optest', 'obj'))(_test_view)
+        view = permission_required(
+            'tests.add_optest',
+            ('tests.delete_optest', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -726,7 +760,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to the login page.
         """
         
-        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'))(_test_view)
+        view = permission_required(
+            'tests.view_optest',
+            ('tests.delete_optest', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -746,7 +783,11 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         to a custom page specified by the decorator.
         """
         
-        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'), login_url='/custom/login/')(_test_view)
+        view = permission_required(
+            'tests.view_optest',
+            ('tests.delete_optest', 'obj'),
+            login_url='/custom/login/'
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -765,7 +806,11 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         PermissionDenied (which would be translated into a 403 error page).
         """
         
-        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'), raise_exception=True)(_test_view)
+        view = permission_required(
+            'tests.view_optest',
+            ('tests.delete_optest', 'obj'),
+            raise_exception=True
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -780,7 +825,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         Ensure the decorator correctly denies access to the view.
         """
         
-        view = permission_required('tests.view_optest', ('fail', 'obj'))(_test_view)
+        view = permission_required(
+            'tests.view_optest',
+            ('fail', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
@@ -799,7 +847,10 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         error page).
         """
         
-        view = permission_required('tests.view_optest', ('tests.delete_optest', 'obj'))(_test_view)
+        view = permission_required(
+            'tests.view_optest',
+            ('tests.delete_optest', 'obj')
+        )(_test_view)
         
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login

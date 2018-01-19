@@ -9,7 +9,6 @@ from django.utils import six
 from django.utils.decorators import available_attrs
 from django.utils.six.moves.urllib.parse import urlparse
 
-
 DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
 

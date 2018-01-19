@@ -40,6 +40,7 @@ class CommonInfoQuerySet(models.QuerySet):
         
         return self.filter(user_created=user)
 
+
 # Implementation of a plain Manager providing access to CommonInfoQuerySet
 CommonInfoManager = models.Manager.from_queryset(CommonInfoQuerySet)
 
@@ -110,6 +111,7 @@ class VersioningQuerySet(models.QuerySet):
         kwargs['version'] = models.F('version') + 1
         
         return super(VersioningQuerySet, self).update(**kwargs)
+
 
 # Implementation of a plain Manager providing access to VersioningQuerySet
 VersioningManager = models.Manager.from_queryset(VersioningQuerySet)

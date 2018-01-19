@@ -1,13 +1,11 @@
 {
     "name": "djem",
     "version": "1.0.0",
-
     "devDependencies": {
         "watch": "latest"
     },
-
     "scripts": {
-        "lint": "isort -rc --diff . && flake8 . --max-complexity 10 || true",
+        "lint": "isort -rc --diff . && flake8 . || true",
         "watch": "watch 'npm run lint' djem"
     }
 }

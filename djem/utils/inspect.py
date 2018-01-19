@@ -6,8 +6,8 @@ import types
 
 from django.db.models import FieldDoesNotExist, Manager, Model, QuerySet
 from django.db.models.fields import NOT_PROVIDED
-from django.utils.encoding import force_text
 from django.utils import six
+from django.utils.encoding import force_text
 
 from djem.utils.table import Table
 

@@ -1,7 +1,7 @@
+import pytz
+
 from django.test import SimpleTestCase
 from django.utils import timezone
-
-import pytz
 
 from djem.utils.dt import TimeZoneHelper
 

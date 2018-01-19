@@ -29,7 +29,7 @@ INSTALLED_APPS = [
 # Add django-extensions to INSTAPPED_APPS if it is present. This provides extra
 # dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
 try:
-    import django_extensions
+    import django_extensions  # noqa: F401 (import unused)
 except ImportError:
     pass
 else:

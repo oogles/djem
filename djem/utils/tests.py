@@ -1,5 +1,5 @@
-from django.test import RequestFactory
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.test import RequestFactory
 
 
 class MessagingRequestFactory(RequestFactory):

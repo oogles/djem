@@ -10,9 +10,7 @@ from django.utils import timezone
 from djem.models import TimeZoneField
 from djem.utils.dt import TimeZoneHelper
 
-from .models import (
-    ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
-)
+from .models import ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
 
 
 def make_user(username):
