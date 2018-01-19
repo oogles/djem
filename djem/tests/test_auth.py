@@ -753,7 +753,12 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, 'https://example.com/custom/login/?next=http%3A//testserver/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(
+            response.url,
+            'https://example.com/custom/login/?next=http%3A//testserver/test/'.format(
+                settings.LOGIN_URL
+            )
+        )
     
     def test_string_arg__no_access__raise(self):
         """
