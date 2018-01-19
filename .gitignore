@@ -1,17 +1,22 @@
 *.pyc
 node_modules
 
-# Distribution / packaging
-dist/
-*.egg-info/
-
-# Sphinx documentation
-docs/_build/
+# Environment settings
+env.py
 
 # Vagrant
 .vagrant/
 provision/env.sh
 provision/conf/.gitconfig
 
-# Environment settings
-env.py
+# Sphinx documentation
+docs/_build/
+
+# Testing
+.tox
+.coverage
+htmlcov
+
+# Distribution/packaging
+dist/
+*.egg-info/
