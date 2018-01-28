@@ -30,7 +30,7 @@ setup(
     
     packages=find_packages(exclude=['docs']),
     
-    install_requires=['Django>=1.8'],
+    install_requires=['Django>=1.11'],
     
     url='https://github.com/oogles/djem',
     author='Alex Church',

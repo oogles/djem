@@ -5,6 +5,15 @@ Djem Documentation
 Djem is a collection of useful stuff for Django projects.
 
 
+Requirements
+============
+
+.. currentmodule:: djem
+
+* Django 1.11+
+* `pytz <http://pytz.sourceforge.net/>`_ is required to make use of :class:`models.TimeZoneField`, :class:`forms.TimeZoneField` and :class:`~utils.dt.TimeZoneHelper`.
+
+
 Installation
 ============
 
@@ -23,14 +32,6 @@ Features
 
     topics/index
     ref/index
-
-
-Dependencies
-============
-
-.. currentmodule:: djem
-
-* `pytz <http://pytz.sourceforge.net/>`_ is required to make use of :class:`models.TimeZoneField`, :class:`forms.TimeZoneField` and :class:`~utils.dt.TimeZoneHelper`.
 
 
 License
