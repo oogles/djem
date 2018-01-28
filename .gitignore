@@ -7,7 +7,7 @@ env.py
 # Vagrant
 .vagrant/
 provision/env.sh
-provision/conf/.gitconfig
+provision/conf/user/.gitconfig
 
 # Sphinx documentation
 docs/_build/
