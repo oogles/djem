@@ -1103,6 +1103,19 @@ class TimeZoneFieldTest(TestCase):
         with self.assertRaisesRegex(ValidationError, 'Invalid timezone "fail"'):
             o.save()
     
+    def test_set__string__invalid_timezone__in_choices(self):
+        
+        o = TimeZoneTest()
+        
+        o.timezone = 'invalid'
+        
+        # Not being validated until the model instance is saved is consistent
+        # with the behaviour of fields like IntegerField, DecimalField, etc
+        self.assertEqual(o.timezone, 'invalid')
+        
+        with self.assertRaisesRegex(ValidationError, 'Invalid timezone "invalid"'):
+            o.save()
+    
     def test_set__UTC(self):
         
         o = TimeZoneTest()

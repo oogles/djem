@@ -13,7 +13,7 @@ Model Fields
 
     .. versionadded:: 0.3
 
-    ``TimeZoneField`` is a model field that stores timezone name strings ('Australia/Sydney', 'US/Eastern', etc) in the database and provides access to :class:`~djem.utils.dt.TimeZoneHelper` instances for the stored timezones.
+    ``TimeZoneField`` is a model field that stores timezone name strings ('Australia/Sydney', 'US/Eastern', etc) in the database and provides access to :class:`~djem.utils.dt.TimeZoneHelper` instances for the stored timezones. ``TimeZoneField`` will only store valid timezone strings, or a null value if ``null=True``. It will not store arbitrary strings, including the empty string.
 
     The default form field is a ``TypedChoiceField`` with a ``Select`` widget.
 

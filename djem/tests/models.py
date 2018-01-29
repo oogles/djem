@@ -75,6 +75,7 @@ class TimeZoneTest(models.Model):
     timezone4 = TimeZoneField(max_length=32, choices=(
         ('Australia/Sydney', 'Australia/Sydney'),
         ('Australia/Melbourne', 'Australia/Melbourne'),
+        ('invalid', 'Invalid'),
     ))
 
 
