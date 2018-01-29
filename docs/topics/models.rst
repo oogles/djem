@@ -65,21 +65,21 @@ The :meth:`CommonInfoMixin.save` method is overridden to require a ``User`` inst
 
 .. code-block:: python
 
-    >>> bill = User.objects.get(username='bill')
-    >>> ben = User.objects.get(username='ben')
+    >>> alice = User.objects.get(username='alice')
+    >>> bob = User.objects.get(username='bob')
     >>> obj = ExampleModel(name='Awesome Example')
     >>> obj.user_created
     None
-    >>> obj.save(bill)
+    >>> obj.save(alice)
     >>> obj.user_created.username
-    "bill"
+    "alice"
     >>> obj.user_modified.username
-    "bill"
-    >>> obj.save(ben)
+    "alice"
+    >>> obj.save(bob)
     >>> obj.user_created.username
-    "bill"
+    "alice"
     >>> obj.user_modified.username
-    "ben"
+    "bob"
 
 .. note::
 
@@ -92,12 +92,12 @@ Like :meth:`CommonInfoMixin.save`, the ``CommonInfoMixin`` queryset's :meth:`~dj
 
 .. code-block:: python
 
-    >>> ben = User.objects.get(username='ben')
+    >>> bob = User.objects.get(username='bob')
     >>> ExampleModel.objects.values_list('name', 'user_created__username', 'user_modified__username')
-    [("Good Example", "bill", "bill")]
-    >>> obj = ExampleModel.objects.filter(name='Good Example').update(ben, name='Great Example')
+    [("Good Example", "alice", "alice")]
+    >>> obj = ExampleModel.objects.filter(name='Good Example').update(bob, name='Great Example')
     >>> ExampleModel.objects.values_list('name', 'user_created__username', 'user_modified__username')
-    [("Great Example", "bill", "ben")]
+    [("Great Example", "alice", "bob")]
 
 Using forms
 ~~~~~~~~~~~
@@ -181,24 +181,24 @@ Ownership checking
 
 .. code-block:: python
 
-    >>> bill = User.objects.get(username='bill')
-    >>> ben = User.objects.get(username='ben')
+    >>> alice = User.objects.get(username='alice')
+    >>> bob = User.objects.get(username='bob')
     >>> obj = ExampleModel(name='Awesome Example')
-    >>> obj.save(bill)
-    >>> obj.owned_by(bill)
+    >>> obj.save(alice)
+    >>> obj.owned_by(alice)
     True
-    >>> obj.owned_by(ben)
+    >>> obj.owned_by(bob)
     False
 
 Ownership checking is also available via a ``CommonInfoMixin`` model's manager and queryset. The queryset's :meth:`~djem.models.managers.CommonInfoQuerySet.owned_by` method also accepts a user as a ``User`` instance or as the primary key of a ``User`` record. It returns a queryset filtered to records where the ``user_created`` field matches the given user.
 
 .. code-block:: python
 
-    >>> ExampleModel.objects.owned_by(bill)
+    >>> ExampleModel.objects.owned_by(alice)
     [<ExampleModel: Awesome Example>]
-    >>> ExampleModel.objects.owned_by(ben)
+    >>> ExampleModel.objects.owned_by(bob)
     []
-    >>> ExampleModel.objects..filter(name__contains='Great').owned_by(bill)
+    >>> ExampleModel.objects.filter(name__contains='Great').owned_by(alice)
     []
 
 
@@ -213,13 +213,13 @@ Object-level permissions
 
 .. code-block:: python
 
-    >>> bill = User.objects.get(username='bill')
-    >>> ben = User.objects.get(username='ben')
+    >>> alice = User.objects.get(username='alice')
+    >>> bob = User.objects.get(username='bob')
     >>> obj = ExampleModel(name='Awesome Example')
-    >>> obj.save(bill)
-    >>> bill.has_perm('myapp.change_examplemodel', obj)
+    >>> obj.save(alice)
+    >>> alice.has_perm('myapp.change_examplemodel', obj)
     True
-    >>> ben.has_perm('myapp.change_examplemodel', obj)
+    >>> bob.has_perm('myapp.change_examplemodel', obj)
     False
 
 .. note::

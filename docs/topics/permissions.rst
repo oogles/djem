@@ -224,7 +224,7 @@ Continuing with the modified ``Question`` model defined above:
 
 .. code-block:: python
 
-    >>> user = User.objects.get(username='bill')
+    >>> user = User.objects.get(username='alice')
     >>> question = Question.objects.filter(voters=user).first()
     >>> user.has_perm('polls.vote_on_question', question)
     True
