@@ -336,7 +336,7 @@ class ModelTable(InspectTable):
         
         self.model = model
         self.field_filters = [f.lower() for f in field_filters]
-        self.only_concrete = kwargs.pop('only_concrete', True)
+        self.concrete_only = kwargs.pop('concrete_only', True)
         
         hierarchy, pk_hierarchy = self._get_hierarchies()
         
@@ -473,6 +473,9 @@ class ModelTable(InspectTable):
             
             return '{0}{1}'.format(prefix, field.name)
         
+        # Track fields considered valid
+        valid_fields = set()
+        
         for config in self.hierarchy:
             num_discovered_fields = 0
             matching_fields = []
@@ -481,14 +484,24 @@ class ModelTable(InspectTable):
             
             for field in sorted(all_fields, key=field_sort_key):
                 if getattr(field, 'primary_key', False):
-                    # Exclude primary key fields. Some automatic fields do not have
-                    # the primary_key attribute to check.
+                    # Exclude primary key fields. Some automatic fields do not
+                    # have the primary_key attribute to check.
                     continue
                 
-                if self.only_concrete and not field.concrete:
+                if self.concrete_only and not field.concrete:
                     # Exclude non-concrete fields unless they are explicitly
                     # specified to be included
                     continue
+                
+                if field.name in valid_fields:
+                    # This field has been processed before. Though the field
+                    # list will exclude fields from parent models, it only
+                    # excludes those from *concrete* parents. Fields from
+                    # abstract parents should also be excluded.
+                    continue
+                
+                # Consider "valid" before filtering out
+                valid_fields.add(field.name)
                 
                 # Count against total before filtering out
                 num_discovered_fields += 1
@@ -604,7 +617,9 @@ class ModelTable(InspectTable):
                 model_row = self._get_model_row(config)
                 
                 table.add_row(Table.HR)
+                table.add_row(Table.BR)
                 table.add_full_width_row(model_row)
+                table.add_row(Table.BR)
                 table.add_row(Table.HR)
                 
                 table.add_rows(matching_fields)
@@ -636,8 +651,7 @@ def pp(obj, *args, **kwargs):
         types.FunctionType,
         types.BuiltinFunctionType,
         types.MethodType,
-        types.BuiltinMethodType,
-        types.UnboundMethodType
+        types.BuiltinMethodType
     )
     
     if isinstance(obj, function_types):

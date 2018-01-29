@@ -26,15 +26,6 @@ INSTALLED_APPS = [
     'djem.tests',
 ]
 
-# Add django-extensions to INSTAPPED_APPS if it is present. This provides extra
-# dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
-try:
-    import django_extensions  # noqa: F401 (import unused)
-except ImportError:
-    pass
-else:
-    INSTALLED_APPS.append('django_extensions')
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -58,3 +49,18 @@ TEMPLATES = [{
         ],
     },
 }]
+
+# Add django-extensions to INSTAPPED_APPS if it is present. This provides extra
+# dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
+try:
+    import django_extensions  # noqa: F401 (import unused)
+except ImportError:
+    pass
+else:
+    INSTALLED_APPS.append('django_extensions')
+    
+    SHELL_PLUS_POST_IMPORTS = (
+        ('djem.utils.dev', 'Developer'),
+        ('djem.utils.mon', 'Mon'),
+        ('djem.utils.inspect', 'pp'),
+    )
