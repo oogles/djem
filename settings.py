@@ -10,17 +10,10 @@ ROOT_URLCONF = 'djem.tests'
 # For TimeZoneHelper/TimeZoneField tests
 USE_TZ = True
 
-MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',    # for AjaxResponse tests
-    'django.contrib.messages.middleware.MessageMiddleware',    # for AjaxResponse tests
-    'django.contrib.auth.middleware.AuthenticationMiddleware'  # add request.user
-)
-
 INSTALLED_APPS = [
     'django.contrib.contenttypes',  # for django.contrib.auth
-    'django.contrib.sessions',      # for django.contrib.auth, at least when actually logging in
-    'django.contrib.auth',          # for various tests
-    'django.contrib.messages',      # for AjaxResponse tests
+    'django.contrib.auth',          # for tests
+    'django.contrib.messages',      # for tests
     
     'djem',
     'djem.tests',

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.test import TestCase
 
 from djem.ajax import AjaxResponse
-from djem.utils.tests import MessagingRequestFactory
+from djem.utils.messages import MessagingRequestFactory
 
 
 class AjaxResponseTestCase(TestCase):
