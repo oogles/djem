@@ -19,6 +19,15 @@ class MemoryStorage(BaseStorage):
 
 
 class MessagingRequestFactory(RequestFactory):
+    """
+    An extension of Django's ``RequestFactory`` helper for tests that enables
+    the use of the messages framework within the generated request. It does not
+    use the standard message storage backend (as per the ``MESSAGE_STORAGE``
+    setting), but rather a memory-only backend that does not involve the use
+    of sessions, cookies or any other means of persistent storage of the
+    messages. Thus, messages need to be read in the same request they were
+    added, or they will be lost.
+    """
     
     def request(self, **request):
         

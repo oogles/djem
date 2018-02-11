@@ -9,3 +9,4 @@ Using Djem
     permissions
     pagination
     ajax
+    messages

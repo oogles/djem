@@ -2,8 +2,8 @@
 AJAX
 ====
 
-AJAX and CSRF
-=============
+CSRF
+====
 
 .. currentmodule:: djem.templatetags.djem
 
@@ -48,6 +48,54 @@ A default value of ``'jquery'`` is used when no argument is provided.
 
 These templates have access to the CSRF token via the ``{{ csrf_token }}`` template variable.
 
+
+.. _ajax-messages:
+
+The messages framework
+======================
+
+.. currentmodule:: djem.middleware
+
+Django's `builtin messages framework <https://docs.djangoproject.com/en/stable/ref/contrib/messages/>`_ makes it simple to store one-time notification messages throughout the lifecycle of a request, then display them together at some later point, typically when rendering a template. Importantly, the messages framework offers persistent storage of these messages, allowing them to be retrieved and displayed on a *later* request. This is particularly useful when issuing browser redirects to display subsequent pages, and needing the messages from the current request to be available after the redirect.
+
+As Django `notes in its documentation <https://docs.djangoproject.com/en/stable/ref/contrib/messages/#behavior-of-parallel-requests>`_, this persistence between requests can cause issues if multiple requests are issued in parallel. The wrong request can read from the persistent messages store, display the messages in the wrong context, and prevent the messages being shown where they were intended. When dealing with full requests for entire pages, this situation only occurs when a user is issuing requests from multiple browser tabs/windows at the same time, and thus is only a minor problem. But on a site using AJAX requests, the risk increases. Depending on the nature of the site and the AJAX requests it issues, the chances of multiple requests running simultaneously can increase dramatically, making the problem of requests stealing messages from one another much worse.
+
+One solution is to avoid using the messages framework in views used by AJAX requests. After all, an AJAX request doesn't require the same redirect hopping that might otherwise be required - any messages that it generates can be returned immediately, making the persistent storage offered by the framework unnecessary. But some views can be used by both AJAX and non-AJAX requests, plus a consistent method of handling message passing regardless of the view would be nice.
+
+Djem provides a :class:`MessageMiddleware` class that acts as a drop-in replacement for Django's own. Simply replace the ``django.contrib.messages.middleware.MessageMiddleware`` string in your ``MIDDLEWARE`` setting with ``djem.middleware.MessageMiddleware``.
+
+.. code-block:: python
+
+    # before
+    MIDDLEWARE = [
+        ...
+        'django.contrib.messages.middleware.MessageMiddleware'
+        ...
+    ]
+
+    # after
+    MIDDLEWARE = [
+        ...
+        'djem.middleware.MessageMiddleware'
+        ...
+    ]
+
+Djem's :class:`MessageMiddleware` is nearly identical to Django's, and usage of the messages framework itself is completely unchanged. The middleware has only one minor difference: it disables persistent message storage for AJAX requests. On standard requests, the storage backend configured via the ``MESSAGE_STORAGE`` setting is still used as per usual. But on AJAX requests, a separate storage backend is used - one that keeps the messages in memory only, making them inaccessible to simultaneous requests.
+
+.. important::
+
+    :class:`MessageMiddleware` uses the ``HttpRequest`` object's ``is_ajax()`` method to differentiate between AJAX and non-AJAX requests. Your ``XMLHttpRequest`` call must `use the appropriate headers <https://docs.djangoproject.com/en/stable/ref/request-response/#django.http.HttpRequest.is_ajax>`_ in order to be correctly detected. Most modern JavaScript libraries do so.
+
+.. note::
+
+    Using a memory-only storage backend for messages in AJAX requests also makes them unavailable to subsequent requests. If using Djem's :class:`MessageMiddleware`, be sure to read the messages from the storage as part of the same request and include them in the response. See :ref:`ajax-responding` below for information on the :class:`~djem.ajax.AjaxResponse` class, which can do this automatically.
+
+.. note::
+
+    Using Djem's :class:`MessageMiddleware` doesn't change any of the other requirements for using the messages framework. For instance, ``django.contrib.messages`` still needs to be listed in the ``INSTALLED_APPS`` setting and, if using ``SessionStorage``, ``SessionMiddleware`` still needs to be listed before ``MessageMiddleware`` in the ``MIDDLEWARE`` setting.
+
+
+.. _ajax-responding:
 
 Responding to requests
 ======================

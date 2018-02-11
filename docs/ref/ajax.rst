@@ -22,3 +22,8 @@ AJAX
     * The optional argument ``success`` can be set to add a "success" key to the ``data`` dictionary. The "success" key will always be added as a boolean value, regardless of what was passed (though it will not be added at all if nothing was passed).
 
     With the exception of ``safe``, as noted above, ``AjaxResponse`` accepts and supports all arguments of ``JsonResponse``.
+
+.. seealso::
+
+    :class:`~djem.middleware.MessageMiddleware`
+        A replacement for Django's own ``MessageMiddleware`` that avoids simultaneous requests interfering with each other's message stores - an issue made more likely when making use of AJAX.

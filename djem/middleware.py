@@ -8,7 +8,7 @@ class MessageMiddleware:
     """
     Middleware that handles temporary messages, differentiating between those
     added as part of an AJAX request vs those that are not. Different storage
-    mechanisms are used for each.
+    backends are used for each.
     """
     
     def __init__(self, get_response):

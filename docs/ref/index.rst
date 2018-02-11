@@ -12,8 +12,10 @@ API Reference
     form_fields
     auth
     pagination
+    middleware
     ajax
     template_tags
     dateutils
+    messageutils
     settings
     exceptions

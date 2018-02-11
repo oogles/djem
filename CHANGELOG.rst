@@ -10,6 +10,8 @@ Change Log
 * Moved get_page() from djem.misc.get_page to djem.pagination.get_page. Also removed shortcut import djem.get_page.
 * Added csrfify_ajax template tag
 * Added paginate template tag
+* Added MessageMiddleware
+* Added MessagingRequestFactory
 
 0.5
 ===
