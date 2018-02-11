@@ -457,21 +457,21 @@ class ModelTable(InspectTable):
         
         return default_value
     
-    def _discover_fields(self):
+    def _get_field_sort_key(self, field):
         
-        def field_sort_key(field):
-            
-            prefix = 0
-            
-            if not field.concrete:
-                # E.g. Automatic reverse ForeignKey field
-                prefix = 3
-            elif field.many_to_many:
-                prefix = 2
-            elif field.is_relation:
-                prefix = 1
-            
-            return '{0}{1}'.format(prefix, field.name)
+        prefix = 0
+        
+        if not field.concrete:
+            # E.g. Automatic reverse ForeignKey field
+            prefix = 3
+        elif field.many_to_many:
+            prefix = 2
+        elif field.is_relation:
+            prefix = 1
+        
+        return '{0}{1}'.format(prefix, field.name)
+    
+    def _discover_fields(self):
         
         # Track fields considered valid
         valid_fields = set()
@@ -482,7 +482,7 @@ class ModelTable(InspectTable):
             
             all_fields = config['meta'].get_fields(include_parents=False)
             
-            for field in sorted(all_fields, key=field_sort_key):
+            for field in sorted(all_fields, key=self._get_field_sort_key):
                 if getattr(field, 'primary_key', False):
                     # Exclude primary key fields. Some automatic fields do not
                     # have the primary_key attribute to check.

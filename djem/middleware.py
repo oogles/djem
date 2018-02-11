@@ -26,11 +26,12 @@ class MessageMiddleware:
         
         #
         # The following is copied verbatim from Django's own MessageMiddleware
+        # (apart from the pragma)
         #
         
         # A higher middleware layer may return a request which does not contain
         # messages storage, so make no assumption that it will be there.
-        if hasattr(request, '_messages'):
+        if hasattr(request, '_messages'):  # pragma: no cover
             unstored_messages = request._messages.update(response)
             if unstored_messages and settings.DEBUG:
                 raise ValueError('Not all temporary messages could be stored.')

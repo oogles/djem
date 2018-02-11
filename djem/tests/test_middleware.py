@@ -79,11 +79,11 @@ class MemoryStorageTestCase(TestCase):
         self.assertEqual(len(messages), 2)
         
         # Read the message store
-        l = list(messages)
+        message_list = list(messages)
         
         messages.add(constants.INFO, 'A third test message')
         
-        self.assertEqual(len(l), 2)
+        self.assertEqual(len(message_list), 2)
         self.assertEqual(len(messages), 3)
 
 
@@ -139,9 +139,20 @@ class MessageMiddlewareTestCase(TestCase):
         
         self.assertEqual(response.content, b'STANDARD: no messages')
         
+        # Next, trigger an AJAX request that adds a message, but also doesn't
+        # read back the message store. This message should be lost once the
+        # request is completed.
+        response = self.client.get(
+            '/messages/add/',
+            {'msg': 'lost ajax message'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        
+        self.assertEqual(response.content, b'AJAX: no messages')
+        
         # Then trigger an AJAX request that adds a message and does read back
-        # the message store - it should only see the message it added, not the
-        # one added by the preceding request
+        # the message store - it should only see the message it added, not
+        # either of the two previous messages.
         response = self.client.get(
             '/messages/add/read/',
             {'msg': 'ajax message'},
@@ -152,7 +163,7 @@ class MessageMiddlewareTestCase(TestCase):
         
         # Finally, trigger another standard request that adds a message and
         # reads back the message store - it should see the two messages added
-        # as part of standard requests, and not the one added in the AJAX request
+        # as part of standard requests, and not those added in the AJAX request
         response = self.client.get(
             '/messages/add/read/',
             {'msg': 'second standard message'}
