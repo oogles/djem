@@ -12,6 +12,7 @@ Change Log
 * Added paginate template tag
 * Added MessageMiddleware
 * Added MessagingRequestFactory
+* Added form_field and checkbox template tags
 
 0.5
 ===

@@ -5,8 +5,9 @@ Using Djem
 .. toctree::
     :maxdepth: 2
 
-    models
     permissions
+    models
+    forms
     pagination
     ajax
     messages
