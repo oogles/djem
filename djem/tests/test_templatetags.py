@@ -1325,6 +1325,30 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
         
         self.assertEqual(output, expected_output)
     
+    def test_content__empty(self):
+        """
+        Test the checkbox template tag when no content in entered between the
+        start and end tags. It should use the field's own label.
+        """
+        
+        template_string = (
+            '{% load djem %}'
+            '{% checkbox form.field %}{% endcheckbox%}'
+        )
+        
+        output = self.render_template(template_string, {
+            'form': self.form()
+        })
+        
+        expected_output = (
+            '<div class="form-field" >'
+            '<input type="checkbox" name="field" id="id_field" />'
+            '<label class="check-label" for="id_field"> Test Field </label>'
+            '</div>'
+        )
+        
+        self.assertEqual(output, expected_output)
+    
     def test_errors(self):
         """
         Test the checkbox template tag when used with a field that contains

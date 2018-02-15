@@ -191,6 +191,8 @@ Also, unlike ``{% form_field %}``, ``{% checkbox %}`` is a *block tag*. It uses 
     {% endcheckbox %}
     ...
 
+If no content is entered between the start and end tags, the field's default label text is used. In this case, the ``<label>`` element will still be included after the field itself, instead of before, and will still receive the ``check-label`` class.
+
 .. note::
 
     Don't go too crazy with HTML in the label text. It is still rendered inside a ``<label>`` element, so should only contain markup that is valid within ``<label>``.
