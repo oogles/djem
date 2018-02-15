@@ -10,7 +10,6 @@ from django.test import RequestFactory, TestCase, override_settings
 
 from .models import CommonInfoTest
 
-
 BETWEEN_TAG_WHITESPACE_RE = re.compile(r'>\s+<')
 EXCESS_WHITESPACE_RE = re.compile(r'\s\s+')
 
@@ -964,7 +963,7 @@ class PaginateTestCase(TemplateRendererMixin, TestCase):
         should render without navigation links or valid page numbers.
         """
         
-        output = self.render_template(self.template_string, {'page': None})
+        output = self.render_template(self.template_string, {'page': None}, flatten=False)
         
         self.assertIn('Page  of ', output)
         
@@ -1058,10 +1057,14 @@ class FormFieldTestCase(TemplateRendererMixin, TestCase):
             'form': self.form()
         })
         
-        self.assertEqual(
-            output,
-            '<div class="form-field" ><label for="id_field">Test Field:</label><input type="text" name="field" id="id_field" /></div>'
+        expected_output = (
+            '<div class="form-field" >'
+            '<label for="id_field">Test Field:</label>'
+            '<input type="text" name="field" id="id_field" />'
+            '</div>'
         )
+        
+        self.assertEqual(output, expected_output)
     
     def test_errors(self):
         """
@@ -1184,14 +1187,14 @@ class FormFieldTestCase(TemplateRendererMixin, TestCase):
         
         template_string = (
             '{% load djem %}'
-            '{% form_field form.field style="color: red;" data_id="1234" %}'
+            '{% form_field form.field data_id="1234" %}'
         )
         
         output = self.render_template(template_string, {
             'form': self.form()
         })
         
-        self.assertIn('<div class="form-field" style="color: red;" data-id="1234" >', output)
+        self.assertIn('<div class="form-field" data-id="1234" >', output)
     
     def test_extra_attributes__variables(self):
         """
@@ -1203,16 +1206,15 @@ class FormFieldTestCase(TemplateRendererMixin, TestCase):
         
         template_string = (
             '{% load djem %}'
-            '{% form_field form.field style=style data_id=id %}'
+            '{% form_field form.field data_id=id %}'
         )
         
         output = self.render_template(template_string, {
             'form': self.form(),
-            'style': 'color: red;',
             'id': '1234'
         })
         
-        self.assertIn('<div class="form-field" style="color: red;" data-id="1234" >', output)
+        self.assertIn('<div class="form-field" data-id="1234" >', output)
 
 
 class CheckboxTestCase(TemplateRendererMixin, TestCase):
@@ -1314,10 +1316,14 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
             'form': self.form()
         })
         
-        self.assertEqual(
-            output,
-            '<div class="form-field" ><input type="checkbox" name="field" id="id_field" /><label class="check-label" for="id_field"> Click this </label></div>'
+        expected_output = (
+            '<div class="form-field" >'
+            '<input type="checkbox" name="field" id="id_field" />'
+            '<label class="check-label" for="id_field"> Click this </label>'
+            '</div>'
         )
+        
+        self.assertEqual(output, expected_output)
     
     def test_errors(self):
         """
@@ -1440,14 +1446,14 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
         
         template_string = (
             '{% load djem %}'
-            '{% checkbox form.field style="color: red;" data_id="1234" %}Click this{% endcheckbox%}'
+            '{% checkbox form.field data_id="1234" %}Click this{% endcheckbox%}'
         )
         
         output = self.render_template(template_string, {
             'form': self.form()
         })
         
-        self.assertIn('<div class="form-field" style="color: red;" data-id="1234" >', output)
+        self.assertIn('<div class="form-field" data-id="1234" >', output)
     
     def test_extra_attributes__variables(self):
         """
@@ -1459,13 +1465,12 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
         
         template_string = (
             '{% load djem %}'
-            '{% checkbox form.field style=style data_id=id %}Click this{% endcheckbox%}'
+            '{% checkbox form.field data_id=id %}Click this{% endcheckbox%}'
         )
         
         output = self.render_template(template_string, {
             'form': self.form(),
-            'style': 'color: red;',
             'id': '1234'
         })
         
-        self.assertIn('<div class="form-field" style="color: red;" data-id="1234" >', output)
+        self.assertIn('<div class="form-field" data-id="1234" >', output)
