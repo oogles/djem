@@ -20,6 +20,9 @@ Djem's :ttag:`csrfify_ajax` template tag does exactly that in a single line:
 
 The tag injects a ``<script>`` tag containing library-specific code to add ``X-CSRFToken`` headers to all outgoing requests that require it.
 
+.. versionadded:: 0.6
+    The :ttag:`csrfify_ajax` template tag.
+
 .. note::
 
     As with Django's standard ``{% csrf_token %}`` tag, to use ``{% csrfify_ajax %}`` the view must use ``RequestContext`` to render the template, e.g. using the ``render()`` shortcut function.
@@ -82,6 +85,9 @@ Djem provides a :class:`MessageMiddleware` class that acts as a drop-in replacem
 
 Djem's :class:`MessageMiddleware` is nearly identical to Django's, and usage of the messages framework itself is completely unchanged. The middleware has only one minor difference: it disables persistent message storage for AJAX requests. On standard requests, the storage backend configured via the ``MESSAGE_STORAGE`` setting is still used as per usual. But on AJAX requests, a separate storage backend is used - one that keeps the messages in memory only, making them inaccessible to simultaneous requests.
 
+.. versionadded:: 0.6
+    :class:`MessageMiddleware`
+
 .. important::
 
     :class:`MessageMiddleware` uses the ``HttpRequest`` object's ``is_ajax()`` method to differentiate between AJAX and non-AJAX requests. Your ``XMLHttpRequest`` call must `use the appropriate headers <https://docs.djangoproject.com/en/stable/ref/request-response/#django.http.HttpRequest.is_ajax>`_ in order to be correctly detected. Most modern JavaScript libraries do so.
@@ -123,10 +129,13 @@ Using :class:`AjaxResponse` differs from ``JsonResponse`` in the following ways:
 
 With the exception of ``safe``, as noted above, :class:`AjaxResponse` accepts and supports all arguments of ``JsonResponse``.
 
+.. versionadded:: 0.4
+    :class:`AjaxResponse`
+
 Usage
 -----
 
-This simple example demontrates how :class:`AjaxResponse` can be used with the messages framework:
+This simple example demonstrates how :class:`AjaxResponse` can be used with the messages framework:
 
 .. code-block:: python
 

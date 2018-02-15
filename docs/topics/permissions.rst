@@ -31,6 +31,9 @@ Use of object-level permissions is enabled simply by including the custom :class
 
 See the Django  `documentation on authentication backends <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#specifying-authentication-backends>`__ for more information.
 
+.. versionadded:: 0.4
+    :class:`ObjectPermissionsBackend`
+
 
 Supported permissions
 =====================
@@ -100,6 +103,9 @@ Protecting views that should only be accessed by users with certain object-level
 See the Django documentation for `the decorator <https://docs.djangoproject.com/en/stable/topics/auth/default/#the-permission-required-decorator>`_ and `the mixin <https://docs.djangoproject.com/en/stable/topics/auth/default/#the-permissionrequiredmixin-mixin>`_ for the basic functionality these helpers provide.
 
 Checking an object-level permission involves querying for an instance of the model the permission is for. If such an instance cannot be found, a ``Http404`` exception is raised.
+
+.. versionadded:: 0.5
+    The :func:`permission_required` decorator and the :class:`PermissionRequiredMixin` class-based view mixin.
 
 Basic usage
 ~~~~~~~~~~~
