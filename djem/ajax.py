@@ -1,6 +1,6 @@
 from django.contrib.messages import get_messages
 from django.http import JsonResponse
-from django.template.defaultfilters import escape
+from django.template.defaultfilters import conditional_escape
 
 
 class AjaxResponse(JsonResponse):
@@ -41,6 +41,6 @@ class AjaxResponse(JsonResponse):
         if messages:
             # "Serialise" messages. Escape the message string as it would be
             # if the messages were rendered by an auto-escaping Django template.
-            data['messages'] = [{'message': escape(m.message), 'tags': m.tags} for m in messages]
+            data['messages'] = [{'message': conditional_escape(m.message), 'tags': m.tags} for m in messages]
         
         super(AjaxResponse, self).__init__(data, **kwargs)

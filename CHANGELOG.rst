@@ -13,6 +13,7 @@ Change Log
 * Added MessageMiddleware
 * Added MessagingRequestFactory
 * Added form_field and checkbox template tags
+* Updated AjaxResponse to allow message strings marked as safe to skip being escaped
 
 0.5
 ===

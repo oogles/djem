@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import messages
+from django.template.defaultfilters import mark_safe
 from django.test import TestCase
 
 from djem.ajax import AjaxResponse
@@ -189,6 +190,31 @@ class AjaxResponseTestCase(TestCase):
         info = data['messages'][2]
         self.assertEqual(info['message'], 'This is an info message.')
         self.assertEqual(info['tags'], 'special info')
+    
+    def test_response__messages__xss(self):
+        """
+        Test that AjaxResponse escapes messages added to the response body from
+        Django's messages framework.
+        """
+        
+        def view(r):
+            
+            messages.error(r, 'This is a message <em>with bad HTML</em>.')
+            messages.success(r, mark_safe('This is a message <em>with safe HTML</em>.'))
+            
+            return AjaxResponse(r)
+        
+        request = self.factory.get('/test/')
+        response = view(request)
+        
+        self.assertEqual(response.status_code, 200)
+        
+        data = json.loads(response.content.decode())
+        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data['messages']), 2)
+        
+        self.assertEqual(data['messages'][0]['message'], 'This is a message &lt;em&gt;with bad HTML&lt;/em&gt;.')
+        self.assertEqual(data['messages'][1]['message'], 'This is a message <em>with safe HTML</em>.')
     
     def test_response__messages__data(self):
         """

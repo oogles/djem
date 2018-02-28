@@ -23,6 +23,8 @@ AJAX
 
     With the exception of ``safe``, as noted above, ``AjaxResponse`` accepts and supports all arguments of ``JsonResponse``.
 
+    To help prevent `XSS vulnerabilities <https://docs.djangoproject.com/en/stable/topics/security/#cross-site-scripting-xss-protection>`_, the messages from the Django messages framework that are included in the response are automatically escaped. If a message should legitimately contain HTML, it can be `marked as safe <https://docs.djangoproject.com/en/stable/ref/utils/#module-django.utils.safestring>`_ to prevent it being escaped.
+
 .. seealso::
 
     :class:`~djem.middleware.MessageMiddleware`
