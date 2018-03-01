@@ -799,9 +799,7 @@ class CsrfifyAjaxTestCase(TemplateRendererMixin, TestCase):
             
             template_string = "{% load djem %}\n{% csrfify_ajax 'invalid' %}"
             
-            output = self.render_template(template_string, {}, r)
-            
-            return HttpResponse(output)
+            self.render_template(template_string, {}, r)
         
         request = RequestFactory().get('/test/')
         
