@@ -3,31 +3,21 @@
 
 SECRET_KEY = 'abcde12345'
 
-# For testing. If django-goodies ever includes real views that also need testing,
-# this should point to that urlconf and the test app's urls should be tested
-# by overriding the setting.
-ROOT_URLCONF = 'django_goodies.tests.app.urls'
+# Needs to point to something to allow tests to perform url resolving. The file
+# doesn't actually need to contain any urls (but does need to define "urlpatterns").
+ROOT_URLCONF = 'djem.tests'
 
 # For TimeZoneHelper/TimeZoneField tests
 USE_TZ = True
 
-MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',    # for AjaxResponse tests
-    'django.contrib.messages.middleware.MessageMiddleware',    # for AjaxResponse tests
-    'django.contrib.auth.middleware.AuthenticationMiddleware'  # add request.user
-)
-
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.contenttypes',  # for django.contrib.auth
-    'django.contrib.sessions',      # for django.contrib.auth, at least when actually logging in
-    'django.contrib.auth',          # for various tests
-    'django.contrib.messages',      # for AjaxResponse tests
+    'django.contrib.auth',          # for tests
+    'django.contrib.messages',      # for tests
     
-    'django_extensions',  # for dev tools, e.g. shell_plus
-    
-    'django_goodies',
-    'django_goodies.tests.app',
-)
+    'djem',
+    'djem.tests',
+]
 
 DATABASES = {
     'default': {
@@ -39,7 +29,7 @@ DATABASES = {
 # For object-level permissions framework tests
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'django_goodies.auth.ObjectPermissionsBackend'
+    'djem.auth.ObjectPermissionsBackend'
 ]
 
 # For testing template tags
@@ -52,3 +42,18 @@ TEMPLATES = [{
         ],
     },
 }]
+
+# Add django-extensions to INSTAPPED_APPS if it is present. This provides extra
+# dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
+try:
+    import django_extensions  # noqa: F401 (import unused)
+except ImportError:
+    pass
+else:
+    INSTALLED_APPS.append('django_extensions')
+    
+    SHELL_PLUS_POST_IMPORTS = (
+        ('djem.utils.dev', 'Developer'),
+        ('djem.utils.mon', 'Mon'),
+        ('djem.utils.inspect', 'pp'),
+    )

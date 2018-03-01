@@ -1,10 +1,13 @@
-====================
-Using Django Goodies
-====================
+==========
+Using Djem
+==========
 
 .. toctree::
     :maxdepth: 2
-    
-    models
+
     permissions
-    helpers
+    models
+    forms
+    pagination
+    ajax
+    testing

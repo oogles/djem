@@ -1,9 +1,14 @@
-Django Goodies
-==============
+Djem
+====
 
 A collection of useful stuff for Django projects.
 
-Includes full test suite.
+
+Requirements
+------------
+
+* Django 1.11+
+* `pytz <http://pytz.sourceforge.net/>`_ is required to make use of ``TimeZoneField``
 
 
 Installation
@@ -12,11 +17,11 @@ Installation
 Install the latest stable version from PyPI:
 
 .. code-block:: bash
-    
-    pip install django-goodies
+
+    pip install djem
 
 
 Documentation
 -------------
 
-Full documentation can be found at: https://django-goodies.readthedocs.io.
+Full documentation can be found at: https://djem.readthedocs.io.

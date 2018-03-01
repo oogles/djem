@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# django-goodies documentation build configuration file, created by
+# djem documentation build configuration file, created by
 # sphinx-quickstart on Thu Sep  4 19:49:41 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -19,6 +19,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "_ext")))
 
 import django
 os.environ['DJANGO_SETTINGS_MODULE'] = 'rtd_settings'
@@ -32,7 +33,7 @@ django.setup()
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'djangodocs']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -47,8 +48,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'django-goodies'
-copyright = u'2016, Alex Church'
+project = 'djem'
+copyright = '2018, Alex Church'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -189,7 +190,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'django-goodiesdoc'
+htmlhelp_basename = 'djemdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -209,8 +210,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'django-goodies.tex', u'django-goodies Documentation',
-   u'Alex Church', 'manual'),
+  ('index', 'djem.tex', 'djem Documentation',
+   'Alex Church', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -239,8 +240,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'django-goodies', u'django-goodies Documentation',
-     [u'Alex Church'], 1)
+    ('index', 'djem', 'djem Documentation',
+     ['Alex Church'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -253,8 +254,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'django-goodies', u'django-goodies Documentation',
-   u'Alex Church', 'django-goodies', 'One line description of project.',
+  ('index', 'djem', 'djem Documentation',
+   'Alex Church', 'djem', 'One line description of project.',
    'Miscellaneous'),
 ]
 

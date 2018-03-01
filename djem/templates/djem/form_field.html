@@ -1,0 +1,16 @@
+<{{ wrapper_tag }}
+    class="form-field{% if field.css_classes %}  {{ field.css_classes }}{% endif %}{% if extra_classes %}  {{ extra_classes }}{% endif %}"
+    {% for key, value in kwargs.items %}
+        {{ key }}="{{ value }}"
+    {% endfor %}
+>
+    {% if field.label and not checkbox_label %}{{ field.label_tag }}{% endif %}
+    {{ field.errors }}
+    {{ field }}
+    {% if checkbox_label %}
+        <label class="check-label" for="{{ field.id_for_label }}">
+            {{ checkbox_label }}
+        </label>
+    {% endif %}
+    {% if field.help_text %}<div class="form-field__help">{{ field.help_text }}</div>{% endif %}
+</{{ wrapper_tag }}>
