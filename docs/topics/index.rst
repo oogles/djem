@@ -10,4 +10,4 @@ Using Djem
     forms
     pagination
     ajax
-    messages
+    testing

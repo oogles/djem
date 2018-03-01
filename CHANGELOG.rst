@@ -6,14 +6,15 @@ Change Log
 ===
 
 * Renamed project
-* Moved AjaxResponse from djem.misc.AjaxResponse to djem.ajax.AjaxResponse. Also removed shortcut import djem.AjaxResponse.
-* Moved get_page() from djem.misc.get_page to djem.pagination.get_page. Also removed shortcut import djem.get_page.
 * Added csrfify_ajax template tag
 * Added paginate template tag
+* Added form_field and checkbox template tags
 * Added MessageMiddleware
 * Added MessagingRequestFactory
-* Added form_field and checkbox template tags
+* Added TemplateRendererMixin
 * Updated AjaxResponse to allow message strings marked as safe to skip being escaped
+* Moved AjaxResponse from djem.misc.AjaxResponse to djem.ajax.AjaxResponse. Also removed shortcut import djem.AjaxResponse.
+* Moved get_page() from djem.misc.get_page to djem.pagination.get_page. Also removed shortcut import djem.get_page.
 
 0.5
 ===

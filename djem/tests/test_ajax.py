@@ -5,7 +5,7 @@ from django.template.defaultfilters import mark_safe
 from django.test import TestCase
 
 from djem.ajax import AjaxResponse
-from djem.utils.messages import MessagingRequestFactory
+from djem.utils.tests import MessagingRequestFactory
 
 
 class AjaxResponseTestCase(TestCase):

@@ -1,5 +1,3 @@
-import re
-
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -8,37 +6,9 @@ from django.http import HttpResponse
 from django.template import TemplateDoesNotExist, TemplateSyntaxError, engines
 from django.test import RequestFactory, TestCase, override_settings
 
+from djem.utils.tests import TemplateRendererMixin
+
 from .models import CommonInfoTest
-
-BETWEEN_TAG_WHITESPACE_RE = re.compile(r'>\s+<')
-EXCESS_WHITESPACE_RE = re.compile(r'\s\s+')
-
-
-class TemplateRendererMixin(object):
-    """
-    A helper for the following test cases, which render templates they provide
-    as strings (not paths to files).
-    
-    Adds "user" to the context if a ``user`` attribute is accessible on the class.
-    """
-    
-    def render_template(self, template_string, context, flatten=True):
-        
-        try:
-            context['user'] = self.user
-        except AttributeError:
-            pass
-        
-        output = engines['django'].from_string(template_string).render(context)
-        
-        if flatten:
-            # Remove whitespace between tags
-            output = re.sub(BETWEEN_TAG_WHITESPACE_RE, '><', output)
-            
-            # Replace instances of multiple whitespace characters with a single space
-            output = re.sub(EXCESS_WHITESPACE_RE, ' ', output)
-        
-        return output.strip()  # remove unnecessary whitespace
 
 
 class PermTagTestCase(TemplateRendererMixin, TestCase):

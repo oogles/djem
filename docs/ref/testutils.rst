@@ -1,8 +1,8 @@
-=============
-Message Utils
-=============
+==========
+Test Utils
+==========
 
-.. module:: djem.utils.messages
+.. module:: djem.utils.tests
 
 ``MessagingRequestFactory``
 ===========================
@@ -56,3 +56,47 @@ Message Utils
                 message_list = list(messages.get_messages(request))
                 self.assertEqual(len(message_list), 1)
                 self.assertEqual(message_list[0].message, 'An error occurred.')
+
+
+``TemplateRendererMixin``
+=========================
+
+.. class:: TemplateRendererMixin
+
+    .. versionadded:: 0.6
+
+    A mixin for ``TestCase`` classes whose tests render templates from strings (as opposed to rendering them from files), using the Django template engine.
+
+    .. automethod:: render_template
+
+    .. code-block:: python
+
+        from django.contrib.auth.models import User
+        from django.test import TestCase
+
+        from djem.utils.tests import TemplateRendererMixin
+
+
+        class SomeTestCase(TemplateRendererMixin, TestCase):
+
+            def setUp(self):
+
+                self.user = self.user = User.objects.create_user(
+                    username='test.user', email='test@…', password='top_secret'
+                )
+
+            def test_something(self):
+
+                template_string = (
+                    '{% if something %}'
+                    '    <p>'
+                    '        The user is: {{ user.username }}'
+                    '    </p>'
+                    '{% endif %}'
+                )
+
+                output = self.render_template(template_string, {
+                    'something': True
+                })
+
+                self.assertEqual(output, '<p> The user is: test.user </p>')

@@ -16,6 +16,6 @@ API Reference
     ajax
     template_tags
     dateutils
-    messageutils
+    testutils
     settings
     exceptions

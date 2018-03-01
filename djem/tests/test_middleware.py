@@ -6,7 +6,7 @@ from django.contrib.messages import constants
 from django.http import HttpRequest, HttpResponse
 from django.test import Client, TestCase, override_settings
 
-from djem.utils.messages import MemoryStorage
+from djem.middleware import MemoryStorage
 
 
 def add_message_view(request):

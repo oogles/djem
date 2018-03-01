@@ -179,8 +179,6 @@ Djem's :class:`AjaxResponse` class helps mitigate one potential vector for XSS -
     }
 
 
-.. _ajax-messages:
-
 The messages framework
 ======================
 
