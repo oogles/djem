@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.paginator import Paginator
 from django.http import HttpResponse
-from django.template import TemplateDoesNotExist, TemplateSyntaxError, engines
+from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import RequestFactory, TestCase, override_settings
 
 from djem.utils.tests import TemplateRendererMixin
@@ -337,7 +337,7 @@ class IfPermTestCase(PermTagTestCase):
                 '{% endifperm %}'
             )
             
-            output = engines['django'].from_string(template_string).render({
+            output = self.render_template(template_string, {
                 'obj': o
             }, r)
             
@@ -369,7 +369,7 @@ class IfPermTestCase(PermTagTestCase):
                 '{% endifperm %}'
             )
             
-            output = engines['django'].from_string(template_string).render({
+            output = self.render_template(template_string, {
                 'obj': o
             }, r)
             
@@ -696,7 +696,7 @@ class IfNotPermTestCase(PermTagTestCase):
                 '{% endifnotperm %}'
             )
             
-            output = engines['django'].from_string(template_string).render({
+            output = self.render_template(template_string, {
                 'obj': o
             }, r)
             
@@ -728,7 +728,7 @@ class IfNotPermTestCase(PermTagTestCase):
                 '{% endifnotperm %}'
             )
             
-            output = engines['django'].from_string(template_string).render({
+            output = self.render_template(template_string, {
                 'obj': o
             }, r)
             
@@ -744,7 +744,7 @@ class IfNotPermTestCase(PermTagTestCase):
         self.assertContains(response, 'ELSE', status_code=200)
 
 
-class CsrfifyAjaxTestCase(TestCase):
+class CsrfifyAjaxTestCase(TemplateRendererMixin, TestCase):
     
     def test_valid__explicit(self):
         """
@@ -755,11 +755,11 @@ class CsrfifyAjaxTestCase(TestCase):
         
         def view(r):
             
-            template = engines['django'].from_string(
-                "{% load djem %}\n{% csrfify_ajax 'jquery' %}"
-            )
+            template_string = "{% load djem %}\n{% csrfify_ajax 'jquery' %}"
             
-            return HttpResponse(template.render({}, r))
+            output = self.render_template(template_string, {}, r)
+            
+            return HttpResponse(output)
         
         request = RequestFactory().get('/test/')
         response = view(request)
@@ -776,11 +776,11 @@ class CsrfifyAjaxTestCase(TestCase):
         
         def view(r):
             
-            template = engines['django'].from_string(
-                "{% load djem %}\n{% csrfify_ajax %}"
-            )
+            template_string = "{% load djem %}\n{% csrfify_ajax %}"
             
-            return HttpResponse(template.render({}, r))
+            output = self.render_template(template_string, {}, r)
+            
+            return HttpResponse(output)
         
         request = RequestFactory().get('/test/')
         response = view(request)
@@ -797,11 +797,11 @@ class CsrfifyAjaxTestCase(TestCase):
         
         def view(r):
             
-            template = engines['django'].from_string(
-                "{% load djem %}\n{% csrfify_ajax 'invalid' %}"
-            )
+            template_string = "{% load djem %}\n{% csrfify_ajax 'invalid' %}"
             
-            return HttpResponse(template.render({}, r))
+            output = self.render_template(template_string, {}, r)
+            
+            return HttpResponse(output)
         
         request = RequestFactory().get('/test/')
         

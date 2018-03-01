@@ -124,7 +124,34 @@ Flattening makes comparing rendered template output easier. This is demonstrated
 
         self.assertEqual(output, '<p>        RENDER THIS    </p>    <p>        AND THIS    </p>')
 
-If the ``TestCase`` has a ``user`` attribute, e.g. defined in ``setUp()`` to be available to all tests, a "user" variable will be automatically added to the template context:
+:meth:`~TemplateRendererMixin.render_template` can optionally accept a ``request`` argument, which should be a ``HttpRequest`` instance if given. This enables it to be used to test templates that require being rendered with a ``RequestContext``. For example, it could be combined with the Django `request factory <https://docs.djangoproject.com/en/stable/topics/testing/advanced/#the-request-factory>`_:
+
+.. code-block:: python
+
+    from django.http import HttpResponse
+    from django.test import RequestFactory, TestCase
+
+    from djem.utils.tests import TemplateRendererMixin
+
+
+    class SomeTestCase(TemplateRendererMixin, TestCase):
+
+        def test_something(self):
+
+            def view(r):
+
+                template_string = '...'
+
+                output = self.render_template(template_string, {}, r)
+
+                return HttpResponse(output)
+
+            request = RequestFactory().get('/test/')
+            response = view(request)
+
+            self.assertContains(response, '...', status_code=200)
+
+If the ``TestCase`` has a ``user`` attribute, e.g. defined in ``setUp()`` to be available to all tests, a "user" variable will be added to the template context. This is done automatically unless ``request`` is provided.
 
 .. code-block:: python
 

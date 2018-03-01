@@ -37,11 +37,14 @@ class TemplateRendererMixin(object):
     opposed to rendering them from files), using the Django template engine.
     """
     
-    def render_template(self, template_string, context, flatten=True):
+    def render_template(self, template_string, context, request=None, flatten=True):
         """
-        Render the given string as a template, with the given context.
-        If a ``self.user`` attribute is available on the ``TestCase``, a "user"
-        variable will be added to the context.
+        Render the given string as a template, with the given context and
+        request (if provided).
+        
+        If ``request`` is NOT provided, and a ``self.user`` attribute is
+        available on the ``TestCase``, a "user" variable will be automatically
+        added to the context.
         
         The rendered output will be stripped of any leading or trailing
         whitespace, and can optionally have excess whitespace "flattened" by
@@ -51,17 +54,19 @@ class TemplateRendererMixin(object):
         
         :param template_string: The string to render as a template.
         :param context: The context with which to render the template.
+        :param request: The ``HttpRequest`` with which to render the template context.
         :param flatten: True to "flatten" the rendered output (default), False
             to return the output with all internal whitespace intact.
         :return: The rendered template output.
         """
         
-        try:
-            context['user'] = self.user
-        except AttributeError:
-            pass
+        if not request:
+            try:
+                context['user'] = self.user
+            except AttributeError:
+                pass
         
-        output = engines['django'].from_string(template_string).render(context)
+        output = engines['django'].from_string(template_string).render(context, request)
         
         if flatten:
             # Remove whitespace between tags
