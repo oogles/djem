@@ -1,4 +1,5 @@
 #!/bin/env/python
+# Based on https://stackoverflow.com/a/33012308/405174
 
 import os
 from subprocess import call

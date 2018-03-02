@@ -1,7 +1,7 @@
 Djem
 ====
 
-|build-status| |coverage| |docs| |pypi| |pyversion| |djversion| |license|
+|build| |coverage| |docs| |pypi| |pyversions| |djversions| |license|
 
 
 A collection of useful stuff for Django projects.
@@ -46,7 +46,7 @@ Full documentation can be found at: https://djem.readthedocs.io.
     :alt: Latest release version
     :target: https://pypi.python.org/pypi/djem/
 
-.. |pyversion| image:: https://img.shields.io/pypi/pyversions/djem.svg
+.. |pyversions| image:: https://img.shields.io/pypi/pyversions/djem.svg
     :alt: Supported Python versions
 
 .. |djversions| image:: https://img.shields.io/pypi/djversions/djem.svg
