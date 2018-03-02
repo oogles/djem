@@ -8,7 +8,7 @@ python:
   - "3.6"
 
 install:
-  - pip install tox-travis coverage coveralls-python
+  - pip install tox-travis coverage coveralls
 
 script:
   - tox
