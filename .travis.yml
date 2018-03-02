@@ -1,9 +1,21 @@
-sudo: false
+# sudo: false
 language: python
+
 python:
   - "2.7"
   - "3.4"
   - "3.5"
   - "3.6"
-install: pip install tox-travis
-script: tox
+
+install:
+  - pip install tox-travis coverage coveralls-python
+
+script:
+  - tox
+
+  # Run coverage outside of tox to enable coveralls access
+  - coverage run --branch manage.py test
+  - coverage report -m
+
+after_success:
+  -  coveralls
