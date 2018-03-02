@@ -28,11 +28,31 @@ setup(
     long_description=long_description,
     license='BSD',
     
+    url='https://github.com/oogles/djem',
+    author='Alex Church',
+    author_email='alex@church.id.au',
+    
     packages=find_packages(exclude=['docs']),
     
     install_requires=['Django>=1.11'],
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     
-    url='https://github.com/oogles/djem',
-    author='Alex Church',
-    author_email='alex@church.id.au'
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Framework :: Django :: 1.11',
+        'Framework :: Django :: 2.0',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        # 'Programming Language :: Python :: 3',
+        # 'Programming Language :: Python :: 3.4',
+        # 'Programming Language :: Python :: 3.5',
+        # 'Programming Language :: Python :: 3.6',
+        'Topic :: Utilities',
+    ]
 )
