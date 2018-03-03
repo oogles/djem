@@ -43,7 +43,7 @@ TEMPLATES = [{
     },
 }]
 
-# Add django-extensions to INSTAPPED_APPS if it is present. This provides extra
+# Add django-extensions to INSTALLED_APPS if it is present. This provides extra
 # dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
 try:
     import django_extensions  # noqa: F401 (import unused)

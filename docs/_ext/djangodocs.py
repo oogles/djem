@@ -4,6 +4,7 @@ Sphinx plugins for Django documentation.
 Adapted from Django itself.
 """
 
+
 def setup(app):
     
     app.add_crossref_type(
