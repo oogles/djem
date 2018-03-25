@@ -416,48 +416,6 @@ class CommonInfoTestCase(TestCase):
         self.assertEqual(CommonInfoTest.objects.owned_by(self.user2.pk).count(), 1)
         
         self.assertNumQueries(7)
-    
-    def test_object_permissions__change(self):
-        """
-        Test the out-of-the-box implementation of object-level "change"
-        permissions using ``owned_by``.
-        """
-        
-        user1 = self.user1
-        user2 = self.user2
-        
-        # Add model-level permission to ensure it is object-level permissions
-        # being granted/denied
-        permission = Permission.objects.get(codename='change_commoninfotest')
-        user1.user_permissions.add(permission)
-        user2.user_permissions.add(permission)
-        
-        obj = CommonInfoTest()
-        obj.save(user1)
-        
-        self.assertTrue(user1.has_perm('tests.change_commoninfotest', obj))
-        self.assertFalse(user2.has_perm('tests.change_commoninfotest', obj))
-    
-    def test_object_permissions__delete(self):
-        """
-        Test the out-of-the-box implementation of object-level "delete"
-        permissions using ``owned_by``.
-        """
-        
-        user1 = self.user1
-        user2 = self.user2
-        
-        # Add model-level permission to ensure it is object-level permissions
-        # being granted/denied
-        permission = Permission.objects.get(codename='delete_commoninfotest')
-        user1.user_permissions.add(permission)
-        user2.user_permissions.add(permission)
-        
-        obj = CommonInfoTest()
-        obj.save(user1)
-        
-        self.assertTrue(user1.has_perm('tests.delete_commoninfotest', obj))
-        self.assertFalse(user2.has_perm('tests.delete_commoninfotest', obj))
 
 
 class ArchivableTestCase(TestCase):

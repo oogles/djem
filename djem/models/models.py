@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models.base import ModelBase
-from django.utils import six, timezone
+from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
 from djem.exceptions import ModelAmbiguousVersionError
@@ -12,34 +11,7 @@ from djem.models.managers import (
 )
 
 
-class CommonInfoMixinBase(ModelBase):
-    """
-    Metaclass for adding appropriately named permission checking methods to
-    concrete subclasses of CommonInfoMixin.
-    As a reasonable default, "change" and "delete" permissions for such a
-    subclass can be mapped to the ``owned_by`` method, granting owners the
-    permissions and denying others.
-    The permissions themselves will contain the name of the subclass model, so
-    must be added dynamically once the name is known.
-    """
-    
-    def __init__(cls, *args, **kwargs):
-        
-        name = cls._meta.model_name
-        
-        if not cls._meta.abstract:
-            change_attr_name = '_user_can_change_{0}'.format(name)
-            if not hasattr(cls, change_attr_name):
-                setattr(cls, change_attr_name, lambda self, user: self.owned_by(user))
-            
-            delete_attr_name = '_user_can_delete_{0}'.format(name)
-            if not hasattr(cls, delete_attr_name):
-                setattr(cls, delete_attr_name, lambda self, user: self.owned_by(user))
-        
-        super(CommonInfoMixinBase, cls).__init__(*args, **kwargs)
-
-
-class CommonInfoMixin(six.with_metaclass(CommonInfoMixinBase, models.Model)):
+class CommonInfoMixin(models.Model):
     """
     Model mixin that provides standard user and datetime fields (``user_created``,
     ``user_modified``, ``date_created`` and ``date_modified``) and overridden

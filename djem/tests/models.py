@@ -17,6 +17,10 @@ class CommonInfoTest(CommonInfoMixin, models.Model):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
+    
+    def _user_can_change_commoninfotest(self, user):
+        
+        return user.pk == self.user_created_id
 
 
 class ArchivableTest(ArchivableMixin, models.Model):

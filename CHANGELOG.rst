@@ -2,6 +2,12 @@
 Change Log
 ==========
 
+0.7
+===
+
+* Removed default implementations of _user_can_change_*() and _user_can_delete_*() on CommonInfoMixin - this was far too specific a use-case to be the default
+
+
 0.6.1
 =====
 
