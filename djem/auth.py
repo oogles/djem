@@ -31,27 +31,30 @@ class ObjectPermissionsBackend(object):
         perm_cache_name = '_{0}_perm_cache_{1}_{2}'.format(from_name, perm, obj.pk)
         
         if not hasattr(user_obj, perm_cache_name):
-            access_fn = getattr(obj, '_{0}_can_{1}'.format(
-                from_name,
-                perm.split('.')[-1]
-            ), None)
-            
-            if not access_fn:
-                # No function defined on obj to determine access - assume no
-                # access
-                access = False
-            elif not user_obj.has_perm(perm):
+            if not user_obj.has_perm(perm):
                 # The User needs to have model-level permissions in order to
                 # get object-level permissions
                 access = False
             else:
-                try:
-                    if from_name == 'user':
-                        access = access_fn(user_obj)
-                    else:
-                        access = access_fn(user_obj.groups.all())
-                except PermissionDenied:
-                    access = False
+                access_fn_name = '_{0}_can_{1}'.format(
+                    from_name,
+                    perm.split('.')[-1]
+                )
+                access_fn = getattr(obj, access_fn_name, None)
+                
+                if not access_fn:
+                    # No function defined on obj to determine access - assume
+                    # access should be granted if no explicit object-level logic
+                    # exists to determine otherwise
+                    access = None
+                else:
+                    try:
+                        if from_name == 'user':
+                            access = access_fn(user_obj)
+                        else:
+                            access = access_fn(user_obj.groups.all())
+                    except PermissionDenied:
+                        access = False
             
             setattr(user_obj, perm_cache_name, access)
         
@@ -81,18 +84,22 @@ class ObjectPermissionsBackend(object):
         else:
             perms = set()
             for perm in perms_for_model:
-                access = False
+                user_access = None
+                group_access = None
                 
                 # Check user first, unless only checking for group
                 if from_name != 'group':
-                    access = self._get_object_permission(perm, user_obj, obj, 'user')
+                    user_access = self._get_object_permission(perm, user_obj, obj, 'user')
                 
                 # Check group if user didn't grant the permission, unless only
                 # checking for user
-                if not access and from_name != 'user':
-                    access = self._get_object_permission(perm, user_obj, obj, 'group')
+                if not user_access and from_name != 'user':
+                    group_access = self._get_object_permission(perm, user_obj, obj, 'group')
                 
-                if access:
+                # The permission is granted if either of the user or group
+                # checks grant it, or if neither of them have a defined
+                # object-level access method
+                if user_access or group_access or (user_access is None and group_access is None):
                     perms.add(perm)
         
         return perms
@@ -114,10 +121,17 @@ class ObjectPermissionsBackend(object):
         if not obj:
             return False  # not dealing with non-object permissions
         
-        return (
-            self._get_object_permission(perm, user_obj, obj, 'user') or
-            self._get_object_permission(perm, user_obj, obj, 'group')
-        )
+        user_access = self._get_object_permission(perm, user_obj, obj, 'user')
+        group_access = None
+        
+        # Check group if user didn't grant the permission
+        if not user_access:
+            group_access = self._get_object_permission(perm, user_obj, obj, 'group')
+        
+        # The permission is granted if either of the user or group
+        # checks grant it, or if neither of them have a defined
+        # object-level access method
+        return user_access or group_access or (user_access is None and group_access is None)
 
 
 def _check_perms(perms, user, view_kwargs):
