@@ -1,11 +1,14 @@
 {
-    "name": "djem",
-    "private": true,
-    "devDependencies": {
-        "watch": "latest"
-    },
-    "scripts": {
-        "lint": "isort -rc --diff . && flake8 . || true",
-        "watch": "watch 'npm run lint' djem"
-    }
+  "name": "djem",
+  "private": true,
+  "devDependencies": {
+    "onchange": "latest"
+  },
+  "scripts": {
+    "test": "coverage run --branch manage.py test; coverage report --skip-covered && coverage html",
+    "lint": "isort -rc --diff idave && flake8 idave || true",
+    "watch": "onchange 'idave' -- npm run lint",
+    "build:docs": "cd docs && make html",
+    "build": "npm run build:docs"
+  }
 }
