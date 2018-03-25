@@ -8,7 +8,7 @@ from django.views import View
 
 from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
 
-from .models import ArchivableTest, OPTest
+from .models import OPTest
 
 
 def _test_view(request, obj=None):
@@ -36,12 +36,12 @@ class ObjectPermissionsTestCase(TestCase):
         user2 = get_user_model().objects.create_user('test2')
         user2.groups.add(group2)
         
-        # Grant both users and both groups all permissions for OPTest (at
-        # the model level)
+        # Grant both users and both groups all permissions for OPTest, at
+        # the model level (except "closed_perm", only accessible to super users)
         permissions = Permission.objects.filter(
             content_type__app_label='tests',
             content_type__model='optest'
-        )
+        ).exclude(codename='closed_perm')
         
         user1.user_permissions.set(permissions)
         user2.user_permissions.set(permissions)
@@ -131,85 +131,100 @@ class ObjectPermissionsTestCase(TestCase):
     def test_has_perm__no_access_fn(self):
         """
         Test that the lack of defined permission access functions on the object
-        being tested denies access.
+        being tested does not deny access (checking a permission without passing
+        an object should be identical to checking a permission with passing an
+        object, if there is no object-level logic involved in granting/denying
+        the permission).
         """
         
         obj = OPTest.objects.create()
         
-        perm = self.user1.has_perm('tests.closed_perm', obj)
+        # Test without object
+        model_perm = self.user1.has_perm('tests.add_optest')
+        self.assertTrue(model_perm)
         
-        self.assertFalse(perm)
+        # Test with object
+        obj_perm = self.user1.has_perm('tests.add_optest', obj)
+        self.assertTrue(obj_perm)
     
-    def test_has_perm__wrong_object(self):
-        """
-        Test that checking a real permission but on the wrong object denies
-        access.
-        """
-        
-        obj = ArchivableTest.objects.create()
-        
-        perm = self.user1.has_perm('tests.open_perm', obj)
-        
-        self.assertFalse(perm)
-    
-    def test_has_perm__user_grants_permission(self):
+    def test_has_perm__user_only_logic(self):
         """
         Test that an object's user-based permission access method can be used
         to grant permissions to some users and not others, when all users have
-        the same permission at the model level, by returning True/False.
+        the same permission at the model level, by returning True/False, and
+        that the result is unaffected by having no group-based logic defined.
         """
         
         obj = OPTest.objects.create(user=self.user1)
         
-        perm1 = self.user1.has_perm('tests.conditional_perm', obj)
-        perm2 = self.user2.has_perm('tests.conditional_perm', obj)
+        perm1 = self.user1.has_perm('tests.user_only_perm', obj)
+        perm2 = self.user2.has_perm('tests.user_only_perm', obj)
         
         self.assertTrue(perm1)
         self.assertFalse(perm2)
     
-    def test_has_perm__user_denies_permission(self):
-        """
-        Test that an object's user-based permission access method can be used
-        to deny permissions to some users and not others, when all users have
-        the same permission at the model level, by raising PermissionDenied.
-        """
-        
-        obj = OPTest.objects.create(user=self.user1)
-        
-        perm1 = self.user1.has_perm('tests.deny_perm', obj)
-        perm2 = self.user2.has_perm('tests.deny_perm', obj)
-        
-        self.assertTrue(perm1)
-        self.assertFalse(perm2)
-    
-    def test_has_perm__group_grants_permission(self):
+    def test_has_perm__group_only_logic(self):
         """
         Test that an object's group-based permission access method can be used
         to grant permissions to some users and not others based on their
-        groups, when all groups have the same permission at the model level.
+        groups, when all groups have the same permission at the model level, and
+        that the result is unaffected by having no user-based logic defined.
         """
         
         obj = OPTest.objects.create(group=self.group1)
         
-        perm1 = self.user1.has_perm('tests.conditional_perm', obj)
-        perm2 = self.user2.has_perm('tests.conditional_perm', obj)
+        perm1 = self.user1.has_perm('tests.group_only_perm', obj)
+        perm2 = self.user2.has_perm('tests.group_only_perm', obj)
         
         self.assertTrue(perm1)
         self.assertFalse(perm2)
     
-    def test_has_perm__neither_grant_permission(self):
+    def test_has_perm__combined_logic(self):
         """
-        Test that an object's permission access methods can be used to deny
-        permissions to users that fail both the user-based and group-based tests.
+        Test that an object's user-based AND group-based permission access
+        methods can be used together to grant permissions to some users and not
+        others, with either one able to grant the permission if the other does
+        not.
         """
         
-        obj = OPTest.objects.create()
+        obj1 = OPTest.objects.create(user=self.user1, group=self.group2)
+        obj2 = OPTest.objects.create()
         
-        perm1 = self.user1.has_perm('tests.conditional_perm', obj)
-        perm2 = self.user2.has_perm('tests.conditional_perm', obj)
+        # User = True, Group untested
+        user_perm1 = self.user1.has_perm('tests.user_only_perm', obj1)
+        group_perm1 = self.user1.has_perm('tests.group_only_perm', obj1)
+        combined_perm1 = self.user1.has_perm('tests.combined_perm', obj1)
+        self.assertTrue(user_perm1)
+        self.assertFalse(group_perm1)
+        self.assertTrue(combined_perm1)
         
-        self.assertFalse(perm1)
-        self.assertFalse(perm2)
+        # User = False, Group = True
+        user_perm2 = self.user2.has_perm('tests.user_only_perm', obj1)
+        group_perm2 = self.user2.has_perm('tests.group_only_perm', obj1)
+        combined_perm2 = self.user2.has_perm('tests.combined_perm', obj1)
+        self.assertFalse(user_perm2)
+        self.assertTrue(group_perm2)
+        self.assertTrue(combined_perm2)
+        
+        # User = False, Group = False
+        user_perm3 = self.user1.has_perm('tests.user_only_perm', obj2)
+        group_perm3 = self.user1.has_perm('tests.group_only_perm', obj2)
+        combined_perm3 = self.user1.has_perm('tests.combined_perm', obj2)
+        self.assertFalse(user_perm3)
+        self.assertFalse(group_perm3)
+        self.assertFalse(combined_perm3)
+    
+    def test_has_perm__permissiondenied(self):
+        """
+        Test that an object's permission access methods can raise the
+        PermissionDenied exception and have it treated as returning False.
+        """
+        
+        obj = OPTest.objects.create(user=self.user1)
+        
+        perm = self.user1.has_perm('tests.deny_perm', obj)
+        
+        self.assertFalse(perm)
     
     def test_has_perm__cache(self):
         """
@@ -219,7 +234,7 @@ class ObjectPermissionsTestCase(TestCase):
         
         user = self.user1
         obj = OPTest.objects.create()
-        perm_cache_name = 'perm_cache_tests.conditional_perm_{0}'.format(obj.pk)
+        perm_cache_name = 'perm_cache_tests.combined_perm_{0}'.format(obj.pk)
         user_perm_cache_name = '_user_{0}'.format(perm_cache_name)
         group_perm_cache_name = '_group_{0}'.format(perm_cache_name)
         
@@ -230,7 +245,7 @@ class ObjectPermissionsTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, group_perm_cache_name)
         
-        user.has_perm('tests.conditional_perm', obj)
+        user.has_perm('tests.combined_perm', obj)
         
         # Test cache has been set
         self.assertFalse(getattr(user, user_perm_cache_name))
@@ -253,10 +268,10 @@ class ObjectPermissionsTestCase(TestCase):
         
         obj = OPTest.objects.create(user=self.user1)
         
-        perm1 = self.user1.has_perms(('tests.open_perm', 'tests.conditional_perm'), obj)
+        perm1 = self.user1.has_perms(('tests.open_perm', 'tests.combined_perm'), obj)
         self.assertTrue(perm1)
         
-        perm2 = self.user2.has_perms(('tests.open_perm', 'tests.conditional_perm'), obj)
+        perm2 = self.user2.has_perms(('tests.open_perm', 'tests.combined_perm'), obj)
         self.assertFalse(perm2)
     
     def test_get_user_permissions(self):
@@ -271,15 +286,19 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create(user=self.user1, group=self.group1)
         
         self.assertEqual(backend.get_user_permissions(self.user1, obj), {
+            'tests.delete_optest',
+            'tests.change_optest',
+            'tests.add_optest',
             'tests.open_perm',
             'tests.user_only_perm',
-            'tests.conditional_perm',
-            'tests.deny_perm'
+            'tests.combined_perm'
         })
         
         self.assertEqual(backend.get_user_permissions(self.user2, obj), {
-            'tests.open_perm',
-            'tests.user_only_perm'
+            'tests.delete_optest',
+            'tests.change_optest',
+            'tests.add_optest',
+            'tests.open_perm'
         })
     
     def test_get_user_permissions__inactive_user(self):
@@ -313,7 +332,7 @@ class ObjectPermissionsTestCase(TestCase):
         """
         
         backend = ObjectPermissionsBackend()
-        user = get_user_model().objects.create_user('inactive')
+        user = get_user_model().objects.create_user('super')
         user.is_superuser = True
         user.save()
         
@@ -331,13 +350,13 @@ class ObjectPermissionsTestCase(TestCase):
             'tests.closed_perm',
             'tests.user_only_perm',
             'tests.group_only_perm',
-            'tests.conditional_perm',
+            'tests.combined_perm',
             'tests.deny_perm'
         })
     
     def test_get_user_permissions__cache(self):
         """
-        Test that PermissionsMixin.get_group_permissions correctly creates a
+        Test that PermissionsMixin.get_user_permissions correctly creates a
         a cache on the User instance of the result of each permission test, for
         the permission and object tested.
         """
@@ -354,7 +373,8 @@ class ObjectPermissionsTestCase(TestCase):
             '_user_perm_cache_tests.closed_perm_{0}',
             '_user_perm_cache_tests.user_only_perm_{0}',
             '_user_perm_cache_tests.group_only_perm_{0}',
-            '_user_perm_cache_tests.conditional_perm_{0}',
+            '_user_perm_cache_tests.combined_perm_{0}',
+            '_user_perm_cache_tests.deny_perm_{0}'
         )
         
         expected_caches = [s.format(obj.pk) for s in expected_caches]
@@ -388,14 +408,21 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create(user=self.user1, group=self.group1)
         
         self.assertEqual(self.user1.get_group_permissions(obj), {
+            'tests.delete_optest',
+            'tests.change_optest',
+            'tests.add_optest',
             'tests.open_perm',
             'tests.group_only_perm',
-            'tests.conditional_perm',
+            'tests.combined_perm',
+            'tests.deny_perm'  # no group-based access method, defaults open
         })
         
         self.assertEqual(self.user2.get_group_permissions(obj), {
+            'tests.delete_optest',
+            'tests.change_optest',
+            'tests.add_optest',
             'tests.open_perm',
-            'tests.group_only_perm'
+            'tests.deny_perm'  # no group-based access method, defaults open
         })
     
     def test_get_group_permissions__inactive_user(self):
@@ -440,7 +467,7 @@ class ObjectPermissionsTestCase(TestCase):
             'tests.closed_perm',
             'tests.user_only_perm',
             'tests.group_only_perm',
-            'tests.conditional_perm',
+            'tests.combined_perm',
             'tests.deny_perm'
         })
     
@@ -462,7 +489,8 @@ class ObjectPermissionsTestCase(TestCase):
             '_group_perm_cache_tests.closed_perm_{0}',
             '_group_perm_cache_tests.user_only_perm_{0}',
             '_group_perm_cache_tests.group_only_perm_{0}',
-            '_group_perm_cache_tests.conditional_perm_{0}',
+            '_group_perm_cache_tests.combined_perm_{0}',
+            '_group_perm_cache_tests.deny_perm_{0}'
         )
         
         expected_caches = [s.format(obj.pk) for s in expected_caches]
@@ -496,17 +524,20 @@ class ObjectPermissionsTestCase(TestCase):
         obj = OPTest.objects.create(user=self.user1, group=self.group1)
         
         self.assertEqual(self.user1.get_all_permissions(obj), {
+            'tests.delete_optest',
+            'tests.change_optest',
+            'tests.add_optest',
             'tests.open_perm',
             'tests.user_only_perm',
             'tests.group_only_perm',
-            'tests.conditional_perm',
-            'tests.deny_perm'
+            'tests.combined_perm'
         })
         
         self.assertEqual(self.user2.get_all_permissions(obj), {
-            'tests.open_perm',
-            'tests.user_only_perm',
-            'tests.group_only_perm'
+            'tests.delete_optest',
+            'tests.change_optest',
+            'tests.add_optest',
+            'tests.open_perm'
         })
     
     def test_get_all_permissions__inactive_user(self):
@@ -551,7 +582,7 @@ class ObjectPermissionsTestCase(TestCase):
             'tests.closed_perm',
             'tests.user_only_perm',
             'tests.group_only_perm',
-            'tests.conditional_perm',
+            'tests.combined_perm',
             'tests.deny_perm'
         })
     
@@ -563,7 +594,7 @@ class ObjectPermissionsTestCase(TestCase):
         """
         
         user = self.user1
-        obj = OPTest.objects.create()
+        obj = OPTest.objects.create(user=user)
         
         expected_caches = (
             '_user_perm_cache_tests.add_optest_{0}',
@@ -585,8 +616,10 @@ class ObjectPermissionsTestCase(TestCase):
             '_user_perm_cache_tests.group_only_perm_{0}',
             '_group_perm_cache_tests.group_only_perm_{0}',
             
-            '_user_perm_cache_tests.conditional_perm_{0}',
-            '_group_perm_cache_tests.conditional_perm_{0}',
+            '_user_perm_cache_tests.combined_perm_{0}',  # group won't need checking
+            
+            '_user_perm_cache_tests.deny_perm_{0}',
+            '_group_perm_cache_tests.deny_perm_{0}'
         )
         
         expected_caches = [s.format(obj.pk) for s in expected_caches]
@@ -594,6 +627,7 @@ class ObjectPermissionsTestCase(TestCase):
         unexpected_caches = (
             '_group_perm_cache_tests.open_perm_{0}',
             '_group_perm_cache_tests.user_only_perm_{0}',
+            '_group_perm_cache_tests.combined_perm_{0}',
         )
         
         unexpected_caches = [s.format(obj.pk) for s in unexpected_caches]
@@ -641,7 +675,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         permissions = Permission.objects.filter(
             content_type__app_label='tests',
             content_type__model='optest',
-            codename__in=('open_perm', 'conditional_perm')
+            codename__in=('open_perm', 'combined_perm')
         )
         
         user.user_permissions.set(permissions)
@@ -808,7 +842,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.conditional_perm', 'obj')
+            ('tests.combined_perm', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -828,7 +862,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.conditional_perm', 'obj')
+            ('tests.combined_perm', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -849,7 +883,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.conditional_perm', 'obj'),
+            ('tests.combined_perm', 'obj'),
             login_url='/custom/login/'
         )(_test_view)
         
@@ -871,7 +905,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.conditional_perm', 'obj'),
+            ('tests.combined_perm', 'obj'),
             raise_exception=True
         )(_test_view)
         
@@ -910,7 +944,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.conditional_perm', 'obj')
+            ('tests.combined_perm', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -929,7 +963,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         view = permission_required(
             'tests.open_perm',
-            ('tests.conditional_perm', 'obj')
+            ('tests.combined_perm', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -950,7 +984,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         view = permission_required(
             'tests.add_optest',
-            ('tests.conditional_perm', 'obj')
+            ('tests.combined_perm', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -972,7 +1006,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         view = permission_required(
             'tests.open_perm',
-            ('tests.conditional_perm', 'obj')
+            ('tests.combined_perm', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -995,7 +1029,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         view = permission_required(
             'tests.open_perm',
-            ('tests.conditional_perm', 'obj'),
+            ('tests.combined_perm', 'obj'),
             login_url='/custom/login/'
         )(_test_view)
         
@@ -1018,7 +1052,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         view = permission_required(
             'tests.open_perm',
-            ('tests.conditional_perm', 'obj'),
+            ('tests.combined_perm', 'obj'),
             raise_exception=True
         )(_test_view)
         
@@ -1059,7 +1093,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         
         view = permission_required(
             'tests.open_perm',
-            ('tests.conditional_perm', 'obj')
+            ('tests.combined_perm', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1086,7 +1120,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         permissions = Permission.objects.filter(
             content_type__app_label='tests',
             content_type__model='optest',
-            codename__in=('open_perm', 'conditional_perm')
+            codename__in=('open_perm', 'combined_perm')
         )
         
         user.user_permissions.set(permissions)
@@ -1238,7 +1272,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.conditional_perm', 'obj')]
+            permission_required=[('tests.combined_perm', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1257,7 +1291,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.conditional_perm', 'obj')]
+            permission_required=[('tests.combined_perm', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1278,7 +1312,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.conditional_perm', 'obj')],
+            permission_required=[('tests.combined_perm', 'obj')],
             login_url='/custom/login/'
         )
         
@@ -1300,7 +1334,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.conditional_perm', 'obj')],
+            permission_required=[('tests.combined_perm', 'obj')],
             raise_exception=True
         )
         
@@ -1337,7 +1371,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.conditional_perm', 'obj')]
+            permission_required=[('tests.combined_perm', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1355,7 +1389,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_perm', ('tests.conditional_perm', 'obj')]
+            permission_required=['tests.open_perm', ('tests.combined_perm', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1375,7 +1409,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.add_optest', ('tests.conditional_perm', 'obj')]
+            permission_required=['tests.add_optest', ('tests.combined_perm', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1396,7 +1430,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_perm', ('tests.conditional_perm', 'obj')]
+            permission_required=['tests.open_perm', ('tests.combined_perm', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -1417,7 +1451,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_perm', ('tests.conditional_perm', 'obj')],
+            permission_required=['tests.open_perm', ('tests.combined_perm', 'obj')],
             login_url='/custom/login/'
         )
         
@@ -1439,7 +1473,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_perm', ('tests.conditional_perm', 'obj')],
+            permission_required=['tests.open_perm', ('tests.combined_perm', 'obj')],
             raise_exception=True
         )
         
@@ -1478,7 +1512,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_perm', ('tests.conditional_perm', 'obj')]
+            permission_required=['tests.open_perm', ('tests.combined_perm', 'obj')]
         )
         
         request = self.factory.get('/test/')

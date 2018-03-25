@@ -89,6 +89,9 @@ class OPTest(models.Model):
     
     def _user_can_open_perm(self, user):
         
+        # For tests using inactive and super users (neither should reach this point)
+        assert user.is_active or not user.is_superuser, 'Not supposed to get here'
+        
         return True
     
     def _group_can_open_perm(self, groups):
@@ -97,36 +100,38 @@ class OPTest(models.Model):
     
     def _user_can_user_only_perm(self, user):
         
-        # For tests using inactive and super users (neither should reach this point)
-        assert user.is_active or not user.is_superuser, 'Not supposed to get here'
+        return user.pk == self.user_id
+    
+    def _group_can_user_only_perm(self, groups):
         
-        return True
+        return False
+    
+    def _user_can_group_only_perm(self, groups):
+        
+        return False
     
     def _group_can_group_only_perm(self, groups):
         
-        return True
+        return groups.filter(pk=self.group_id).exists()
     
-    def _user_can_conditional_perm(self, user):
+    def _user_can_combined_perm(self, user):
         
         return user.pk == self.user_id
     
-    def _group_can_conditional_perm(self, groups):
+    def _group_can_combined_perm(self, groups):
         
         return groups.filter(pk=self.group_id).exists()
     
     def _user_can_deny_perm(self, user):
         
-        if user.pk != self.user_id:
-            raise PermissionDenied()
-        
-        return True
+        raise PermissionDenied()
     
     class Meta:
         permissions = (
             ('open_perm', 'Completely open to anyone'),
             ('closed_perm', 'Completely closed to everyone (except super users)'),
-            ('user_only_perm', 'Open to any user'),
-            ('group_only_perm', 'Open to any group'),
-            ('conditional_perm', 'Open to any user or group specified on the object'),
-            ('deny_perm', 'Denies permission by raising PermissionDenied'),
+            ('user_only_perm', 'Open to the user specified on the object'),
+            ('group_only_perm', 'Open to the group specified on the object'),
+            ('combined_perm', 'Open to any user OR group specified on the object'),
+            ('deny_perm', 'Denies permission by raising PermissionDenied for the user'),
         )

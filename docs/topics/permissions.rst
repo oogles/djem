@@ -38,7 +38,7 @@ See the Django  `documentation on authentication backends <https://docs.djangopr
 Supported permissions
 =====================
 
-Any existing permission can be used with the object-level permissions system, though it may not make sense for all of them. For example, Django provides default "add" permissions for all models. It doesn't make sense for adding to involve object-level permissions, as no object would yet exists on which to *check* for an "add" permission. That being said, the object-level permissions system contains no logic preventing you from using *any* permission at the object level.
+Any existing permission can be used with the object-level permissions system, though it may not make sense for all of them. For example, Django provides default "add" permissions for all models. It doesn't make sense for adding to involve object-level permissions, as no object would yet exist on which to *check* for an "add" permission. That being said, the object-level permissions system contains no logic preventing you from using *any* permission at the object level.
 
 If the default Django-provided permissions ("add", "change" and "delete") aren't enough, you can add custom permissions via the ``permissions`` attribute of a model's inner ``Meta`` class, as per the `Django documentation <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#custom-permissions>`_.
 
@@ -57,7 +57,7 @@ Object-level permissions are ultimately determined by specially-named methods on
 
 For the Django default "change" permission on the ``polls.Question`` model, the method names would be: ``_user_can_change_question()`` and ``_group_can_change_question()``.
 
-When defining custom permissions, the permission name used in the method names must be the same as that provided in the ``permissions`` attribute of the model's ``Meta`` class.
+When defining custom permissions, the permission name used in the method names must be the same as that provided in the ``permissions`` attribute of the model's ``Meta`` class. If *either* of the methods returns ``True``, the user is granted the permission.
 
 The following example demonstrates how to define a model that uses object-level permissions for a custom permission. It uses a modified version of the ``Question`` model `created in the Django tutorial <https://docs.djangoproject.com/en/stable/intro/tutorial02/#creating-models>`_ that only allows voting by explicitly defined users.
 
@@ -83,17 +83,34 @@ The following example demonstrates how to define a model that uses object-level 
 
     The :class:`ObjectPermissionsBackend` handles calling these methods when necessary - they should never need to be called manually.
 
+.. note::
+
+    These object-level access methods can raise ``PermissionDenied`` and it will be treated as if they returned ``False``. Regardless of whether the user-based or group-based check raises the exception, the other could still grant the permission.
+
+.. _permissions-default:
+
+Permissions default open
+------------------------
+
+An important concept in Djem's object-level permissions system is that permissions default *open* at the object level. That is to say, unless explicit logic is given to dictate how an object-level permission should be granted/denied, it is assumed to be granted. As such, an object-level permission check on an object with no defined object-level access methods is equivalent to a model-level permission check for the same permission.
+
+This makes the system interchangeable with the existing Django permissions system. Common code can check permissions at the object level and will be unaffected if no object-level access control exists for a given model - it doesn't need to pick and choose whether to use object-level or model-level permission checking.
+
 
 Checking permissions
 ====================
 
-The two main ways of using the object-level permissions system to check a user's permissions on a specific object are:
+The main ways of using the object-level permissions system to check a user's permissions on a specific object are:
 
 * the ``permission_required`` decorator for function-based views or ``PermissionRequiredMixin`` mixin for class-based views
 * the ``ifperm`` and ``ifnotperm`` template tags
 * the ``has_perm()`` method on a ``User`` instance
 
 All of these approaches use the standard Django permissions framework and rely on the custom :class:`ObjectPermissionsBackend` to call the appropriate ``_user_can_<permission_name>``/``_group_can_<permission_name>`` methods. In the examples below, each permission check will result in ``_user_can_<permission_name>`` being called and provided the ``User`` instance involved in the check, and ``_group_can_<permission_name>`` being called and provided with a queryset of all ``Groups`` to which that user belongs. Either method can return ``True`` to grant the user permission.
+
+.. warning::
+
+    The object on which a permission is checked *is not verified*. That is, you could check the ``polls.vote_on_question`` permission on an instance of *any* random model and no warning would be given (checking validity would add unnecessary overhead to such a common operation). This is important because, if the instance provided does not define the appropriate object-level access methods (such as ``_user_can_vote_on_question()``), the permission is assumed to be *granted* at the object level, since :ref:`permissions default open <permissions-default>`.
 
 Protecting views
 ----------------
@@ -252,3 +269,21 @@ Caching
 Like ``ModelBackend`` `does for model-level permissions <https://docs.djangoproject.com/en/stable/topics/auth/default/#permission-caching>`_, the :class:`ObjectPermissionsBackend` caches object-level permissions on the ``User`` object after the first time they are checked. Unlike ``ModelBackend``, the user's entire set of object-level permissions are not determined and cached on this first access, only the specific permission being tested, for the specific object given.
 
 This caching system has the same advantages and disadvantages as that used for model-level permissions. Multiple checks of the same permission (on the same object) in the same request will only need to execute the (possibly expensive) logic in your ``_user_can_<permission_name>()``/``_group_can_<permission_name>()`` methods once. However, that means that if something changes within the request that would alter the state of a permission, and that permission has already been checked, the ``User`` object will not immediately reflect the new state of the permission - a new instance of the ``User`` would need to be queried from the database. Exactly what *might* affect the state of a permission depends entirely upon the logic implemented in the ``_user_can_<permission_name>()``/``_group_can_<permission_name>()`` methods, so this is something to be aware of both while writing these methods and while using them.
+
+
+Other ``PermissionsMixin`` methods
+==================================
+
+The object-level permissions system is fully compatible with Django's ``PermissionsMixin``, meaning it supports more than just the ``has_perm()`` method. Other supported methods include:
+
+* ``has_perms()``: For checking multiple permissions against a ``User`` instance at once.
+* ``get_all_permissions()``: To obtain a list of all permissions accessible to the user, either directly or via their groups, with all necessary object-level logic applied.
+* ``get_group_permissions()``: To obtain a list of all permissions accessible to the user via their groups only, with all necessary object-level logic applied.
+
+While ``has_perms()`` is a simple extension of ``has_perm()`` to allow checking multiple permissions at once, some care should be taken with ``get_all_permissions()`` and ``get_group_permissions()``.
+
+Firstly, depending on the number of permissions your project uses, the amount that have object-level access methods defined, and the complexity of the logic used by those access methods, obtaining a list of available permissions could involve a lot of processing (compared to testing one at a time).
+
+More subtly, ``get_group_permissions()`` can potentially list permissions that would not actually be granted to the user via a standard permissions checking. This is a side-effect of the fact that :ref:`object-level permissions default open <permissions-default>`. If a user-based object-level access method denied a certain permission, and no group-based access method was defined, a normal permissions check would return ``False``, on account of the user-based check. But a group-only check, such as performed by ``get_group_permissions()`` would *grant* the permission, due to there being no object-level access method to indicate otherwise.
+
+While not accessible via ``PermissionsMixin``, :class:`ObjectPermissionsBackend` also contains a ``get_user_permissions()`` method which suffers from the same side-effect due to ignoring group-based access methods.

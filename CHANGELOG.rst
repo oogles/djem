@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.6.1
+=====
+
+* Fixed #2: Object level access now defaults open when no model method exists to define it explicitly
+
 0.6
 ===
 

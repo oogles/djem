@@ -21,7 +21,7 @@ Test Utils
         from django.contrib import messages
         from django.test import TestCase
 
-        from djem.utils.messages import MessagingRequestFactory
+        from djem.utils.tests import MessagingRequestFactory
 
         # Views expected to set messages
         from .views import MyView, my_view
