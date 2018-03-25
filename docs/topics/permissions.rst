@@ -38,7 +38,7 @@ See the Django  `documentation on authentication backends <https://docs.djangopr
 Supported permissions
 =====================
 
-Any existing permission can be used with the object-level permissions system, though it may not make sense for all of them. For example, Django provides default "add" permissions for all models. It doesn't make sense for adding to involve object-level permissions, as no object would yet exists on which to *check* for an "add" permission. That being said, the object-level permissions system contains no logic preventing you from using *any* permission at the object level.
+Any existing permission can be used with the object-level permissions system, though it may not make sense for all of them. For example, Django provides default "add" permissions for all models. It doesn't make sense for adding to involve object-level permissions, as no object would yet exist on which to *check* for an "add" permission. That being said, the object-level permissions system contains no logic preventing you from using *any* permission at the object level.
 
 If the default Django-provided permissions ("add", "change" and "delete") aren't enough, you can add custom permissions via the ``permissions`` attribute of a model's inner ``Meta`` class, as per the `Django documentation <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#custom-permissions>`_.
 
@@ -87,7 +87,7 @@ The following example demonstrates how to define a model that uses object-level 
 Checking permissions
 ====================
 
-The two main ways of using the object-level permissions system to check a user's permissions on a specific object are:
+The main ways of using the object-level permissions system to check a user's permissions on a specific object are:
 
 * the ``permission_required`` decorator for function-based views or ``PermissionRequiredMixin`` mixin for class-based views
 * the ``ifperm`` and ``ifnotperm`` template tags
