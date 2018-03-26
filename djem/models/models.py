@@ -112,8 +112,6 @@ class ArchivableMixin(models.Model):
     is_archived = models.BooleanField(default=False, db_index=True)
     
     objects = ArchivableManager()
-    live = ArchivableManager(archived=False)
-    archived = ArchivableManager(archived=True)
     
     class Meta:
         abstract = True

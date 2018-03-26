@@ -424,82 +424,62 @@ class ArchivableTestCase(TestCase):
     model.
     """
     
-    def setUp(self):
-        
-        self.obj1 = ArchivableTest.objects.create(is_archived=True)
-        self.obj2 = ArchivableTest.objects.create(is_archived=False, field1=False, field2=False)
-    
-    def test_managers_archived_flag(self):
-        """
-        Test the ``archived`` flag for the three managers - ``objects``,
-        ``live`` and ``archived`` - behaves properly and the managers
-        return the correct initial querysets.
-        """
-        
-        self.assertEqual(ArchivableTest.objects.count(), 2)
-        self.assertEqual(ArchivableTest.live.count(), 1)
-        self.assertEqual(ArchivableTest.archived.count(), 1)
-        
-        self.assertNumQueries(3)
-    
     def test_object_archive__no_args(self):
         """
-        Test the ``archive`` method of an instance, when called with no
+        Test the ``archive()`` method of an instance, when called with no
         arguments.
         """
         
-        obj = self.obj2
+        obj = ArchivableTest.objects.create(is_archived=False)
         
         self.assertFalse(obj.is_archived)
-        self.assertFalse(obj.field1)
-        self.assertFalse(obj.field2)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
         
         # Change the fields and archive the record - the changes to the fields
         # should not be saved
-        obj.field1 = True
-        obj.field2 = True
-        obj.archive()
+        with self.assertNumQueries(1):
+            obj.field1 = False
+            obj.field2 = False
+            obj.archive()
         
         obj.refresh_from_db()
         self.assertTrue(obj.is_archived)
-        self.assertFalse(obj.field1)
-        self.assertFalse(obj.field2)
-        
-        self.assertNumQueries(2)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
     
     def test_object_archive__args(self):
         """
-        Test the ``archive`` method of an instance, when called with the
+        Test the ``archive()`` method of an instance, when called with the
         ``update_fields`` argument. It should pass the argument through to its
-        internal call to ``save``.
+        internal call to ``save()``.
         """
         
-        obj = self.obj2
+        obj = ArchivableTest.objects.create(is_archived=False)
         
         self.assertFalse(obj.is_archived)
-        self.assertFalse(obj.field1)
-        self.assertFalse(obj.field2)
+        self.assertTrue(obj.field1)
+        self.assertTrue(obj.field2)
         
         # Change the fields and archive the record - only the to "field1" should
         # be saved
-        obj.field1 = True
-        obj.field2 = True
-        obj.archive(update_fields=('field1',))
+        with self.assertNumQueries(1):
+            obj.field1 = False
+            obj.field2 = False
+            obj.archive(update_fields=('field1',))
         
         obj.refresh_from_db()
         self.assertTrue(obj.is_archived)
-        self.assertTrue(obj.field1)
-        self.assertFalse(obj.field2)
-        
-        self.assertNumQueries(2)
+        self.assertFalse(obj.field1)
+        self.assertTrue(obj.field2)
     
     def test_object_unarchive__no_args(self):
         """
-        Test the ``unarchive`` method of an instance, when called with no
+        Test the ``unarchive()`` method of an instance, when called with no
         arguments.
         """
         
-        obj = self.obj1
+        obj = ArchivableTest.objects.create(is_archived=True)
         
         self.assertTrue(obj.is_archived)
         self.assertTrue(obj.field1)
@@ -507,25 +487,24 @@ class ArchivableTestCase(TestCase):
         
         # Change the fields and archive the record - the changes to the fields
         # should not be saved
-        obj.field1 = False
-        obj.field2 = False
-        obj.unarchive()
+        with self.assertNumQueries(1):
+            obj.field1 = False
+            obj.field2 = False
+            obj.unarchive()
         
         obj.refresh_from_db()
         self.assertFalse(obj.is_archived)
         self.assertTrue(obj.field1)
         self.assertTrue(obj.field2)
-        
-        self.assertNumQueries(2)
     
     def test_object_unarchive__args(self):
         """
-        Test the ``unarchive`` method of an instance, when called with the
+        Test the ``unarchive()`` method of an instance, when called with the
         ``update_fields`` argument. It should pass the argument through to its
-        internal call to ``save``.
+        internal call to ``save()``.
         """
         
-        obj = self.obj1
+        obj = ArchivableTest.objects.create(is_archived=True)
         
         self.assertTrue(obj.is_archived)
         self.assertTrue(obj.field1)
@@ -533,76 +512,55 @@ class ArchivableTestCase(TestCase):
         
         # Change the fields and archive the record - only the to "field1" should
         # be saved
-        obj.field1 = False
-        obj.field2 = False
-        obj.unarchive(update_fields=('field1',))
+        with self.assertNumQueries(1):
+            obj.field1 = False
+            obj.field2 = False
+            obj.unarchive(update_fields=('field1',))
         
         obj.refresh_from_db()
         self.assertFalse(obj.is_archived)
         self.assertFalse(obj.field1)
         self.assertTrue(obj.field2)
-        
-        self.assertNumQueries(2)
     
-    def test_queryset_archive(self):
+    def test_queryset_archived(self):
         """
-        Test the custom queryset ``archive`` method correctly archives all
-        records in the queryset.
+        Test the custom queryset ``archived()`` method correctly filters to
+        archived records, both when called directly from the manager and when
+        called on the queryset.
         """
         
-        self.assertEqual(ArchivableTest.objects.count(), 2)
-        self.assertEqual(ArchivableTest.live.count(), 1)
-        self.assertEqual(ArchivableTest.archived.count(), 1)
+        ArchivableTest.objects.create(is_archived=True, field1=True)
+        ArchivableTest.objects.create(is_archived=True, field1=True)
+        ArchivableTest.objects.create(is_archived=True, field1=False)
         
-        ArchivableTest.objects.all().archive()
+        ArchivableTest.objects.create(is_archived=False, field1=True)
+        ArchivableTest.objects.create(is_archived=False, field1=False)
         
-        self.assertEqual(ArchivableTest.objects.count(), 2)
-        self.assertEqual(ArchivableTest.live.count(), 0)
-        self.assertEqual(ArchivableTest.archived.count(), 2)
+        with self.assertNumQueries(1):
+            self.assertEqual(ArchivableTest.objects.archived().count(), 3)
         
-        self.assertNumQueries(7)
+        with self.assertNumQueries(1):
+            self.assertEqual(ArchivableTest.objects.filter(field1=True).archived().count(), 2)
     
     def test_queryset_unarchive(self):
         """
-        Test the custom queryset ``unarchive`` method correctly unarchives all
-        records in the queryset.
+        Test the custom queryset ``unarchived()`` method correctly filters to
+        non-archived records, both when called directly from the manager and
+        when called on the queryset.
         """
         
-        self.assertEqual(ArchivableTest.objects.count(), 2)
-        self.assertEqual(ArchivableTest.live.count(), 1)
-        self.assertEqual(ArchivableTest.archived.count(), 1)
+        ArchivableTest.objects.create(is_archived=True, field1=True)
+        ArchivableTest.objects.create(is_archived=True, field1=False)
         
-        ArchivableTest.objects.all().unarchive()
+        ArchivableTest.objects.create(is_archived=False, field1=True)
+        ArchivableTest.objects.create(is_archived=False, field1=True)
+        ArchivableTest.objects.create(is_archived=False, field1=False)
         
-        self.assertEqual(ArchivableTest.objects.count(), 2)
-        self.assertEqual(ArchivableTest.live.count(), 2)
-        self.assertEqual(ArchivableTest.archived.count(), 0)
+        with self.assertNumQueries(1):
+            self.assertEqual(ArchivableTest.objects.unarchived().count(), 3)
         
-        self.assertNumQueries(7)
-    
-    def test_manager_archive_access(self):
-        """
-        Test that the custom ``ArchivableManager`` used by ``ArchivableMixin``
-        does not provide direct access to the custom ``archive`` method
-        defined on the ``ArchivableQuerySet`` the manager is based on.
-        """
-        
-        with self.assertRaises(AttributeError):
-            ArchivableTest.objects.archive()
-        
-        self.assertNumQueries(0)
-    
-    def test_manager_unarchive_access(self):
-        """
-        Test that the custom ``ArchivableManager`` used by ``ArchivableMixin``
-        does not provide direct access to the custom ``unarchive`` method
-        defined on the ``ArchivableQuerySet`` the manager is based on.
-        """
-        
-        with self.assertRaises(AttributeError):
-            ArchivableTest.objects.unarchive()
-        
-        self.assertNumQueries(0)
+        with self.assertNumQueries(1):
+            self.assertEqual(ArchivableTest.objects.filter(field1=True).unarchived().count(), 2)
 
 
 class VersioningTestCase(TestCase):

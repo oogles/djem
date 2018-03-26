@@ -51,50 +51,17 @@ class ArchivableQuerySet(models.QuerySet):
     provided by ``ArchivableMixin``.
     """
     
-    def archive(self):
-        """
-        Archive all records in the current queryset.
-        """
+    def archived(self):
         
-        return self.update(is_archived=True)
+        return self.filter(is_archived=True)
     
-    def unarchive(self):
-        """
-        Unarchive all records in the current queryset.
-        """
+    def unarchived(self):
         
-        return self.update(is_archived=False)
+        return self.filter(is_archived=False)
 
 
-class ArchivableManager(models.Manager):
-    """
-    Accepts the keyword argument ``archived`` on instantiation which controls
-    the ``is_archived`` filter applied to the initial queryset used by the
-    manager. If given as ``None``, no filter will be applied.
-    
-    Example usage:
-        class MyModel(ArchivableMixin, models.Model):
-            name = models.CharField(max_length=50)
-            
-            objects = ArchivableManager()
-            live = ArchivableManager(archived=False)
-            archived = ArchivableManager(archived=True)
-    """
-    
-    def __init__(self, *args, **kwargs):
-        
-        self.archived = kwargs.pop('archived', None)
-        
-        super(ArchivableManager, self).__init__(*args, **kwargs)
-    
-    def get_queryset(self):
-        
-        qs = ArchivableQuerySet(self.model, using=self._db)
-        
-        if self.archived is not None:
-            qs = qs.filter(is_archived=self.archived)
-        
-        return qs
+# Implementation of a plain Manager providing access to ArchivableQuerySet
+ArchivableManager = models.Manager.from_queryset(ArchivableQuerySet)
 
 
 class VersioningQuerySet(models.QuerySet):
@@ -143,6 +110,12 @@ class StaticAbstractManager(ArchivableManager, CommonInfoManager, VersioningMana
     Combination of CommonInfoManager, ArchivableManager and VersioningManager
     for use by models that want the functionality of all three.
     """
+    
+    def __init__(self, *args, **kwargs):
+        
+        self.archived = kwargs.pop('archived', None)
+        
+        super(StaticAbstractManager, self).__init__(*args, **kwargs)
     
     def get_queryset(self):
         
