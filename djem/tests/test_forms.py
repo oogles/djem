@@ -96,7 +96,8 @@ class CommonInfoFormTestCase(TestCase):
         
         form = CommonInfoTestForm({'test': True}, user=self.user)
         
-        instance = form.save()
+        with self.assertNumQueries(1):
+            instance = form.save()
         
         # Test correct insertion into database, with appropriate user fields
         self.assertIsNotNone(instance.pk)
@@ -107,8 +108,6 @@ class CommonInfoFormTestCase(TestCase):
         # commit=True save
         with self.assertRaises(AttributeError):
             form.save_m2m
-        
-        self.assertNumQueries(1)
     
     def test_save_commit__false(self):
         """
@@ -118,7 +117,8 @@ class CommonInfoFormTestCase(TestCase):
         
         form = CommonInfoTestForm({'test': True}, user=self.user)
         
-        instance = form.save(commit=False)
+        with self.assertNumQueries(0):
+            instance = form.save(commit=False)
         
         # Test instance is not saved
         self.assertIsNone(instance.pk)
@@ -130,8 +130,6 @@ class CommonInfoFormTestCase(TestCase):
         self.assertIsNotNone(instance.pk)
         self.assertEqual(instance.user_created_id, self.user.pk)
         self.assertEqual(instance.user_modified_id, self.user.pk)
-        
-        self.assertNumQueries(0)
 
 
 class TimeZoneFieldFormTestCase(TestCase):

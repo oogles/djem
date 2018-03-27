@@ -71,7 +71,9 @@ class CommonInfoTestCase(TestCase):
         """
         
         obj = self.model()
-        obj.save(self.user1)
+        
+        with self.assertNumQueries(1):
+            obj.save(self.user1)
         
         # Test the object attributes are updated
         self.assertEqual(obj.user_created_id, self.user1.pk)
@@ -88,8 +90,6 @@ class CommonInfoTestCase(TestCase):
         
         self.assertIsNotNone(obj.date_created)
         self.assertEqual(obj.date_created, obj.date_modified)
-        
-        self.assertNumQueries(2)
     
     def test_object_create__user__not_required(self):
         """
@@ -112,7 +112,8 @@ class CommonInfoTestCase(TestCase):
         obj = self.model(user_created=user, user_modified=user)
         
         with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
-            obj.save()
+            with self.assertNumQueries(1):
+                obj.save()
         
         # Test the object attributes are updated/not updated as necessary
         self.assertEqual(obj.user_created_id, user.pk)
@@ -129,8 +130,6 @@ class CommonInfoTestCase(TestCase):
         
         self.assertIsNotNone(obj.date_created)
         self.assertEqual(obj.date_created, obj.date_modified)
-        
-        self.assertNumQueries(2)
     
     def test_object_create__existing_date_created(self):
         """
@@ -141,7 +140,9 @@ class CommonInfoTestCase(TestCase):
         d = timezone.now() - datetime.timedelta(days=5)
         
         obj = self.model(date_created=d)
-        obj.save(self.user1)
+        
+        with self.assertNumQueries(1):
+            obj.save(self.user1)
         
         # Test the object attributes are updated
         self.assertEqual(obj.date_created, d)
@@ -149,8 +150,6 @@ class CommonInfoTestCase(TestCase):
         # Test the changes are correctly written to the database
         obj.refresh_from_db()
         self.assertEqual(obj.date_created, d)
-        
-        self.assertNumQueries(1)
     
     def test_object_create__existing_user_created(self):
         """
@@ -159,7 +158,9 @@ class CommonInfoTestCase(TestCase):
         """
         
         obj = self.model(user_created=self.user2)
-        obj.save(self.user1)
+        
+        with self.assertNumQueries(1):
+            obj.save(self.user1)
         
         # Test the object attributes are updated
         self.assertEqual(obj.user_created_id, self.user2.pk)
@@ -169,8 +170,6 @@ class CommonInfoTestCase(TestCase):
         obj.refresh_from_db()
         self.assertEqual(obj.user_created_id, self.user2.pk)
         self.assertEqual(obj.user_modified_id, self.user1.pk)
-        
-        self.assertNumQueries(1)
     
     def test_object_update__user__required(self):
         """
@@ -194,7 +193,9 @@ class CommonInfoTestCase(TestCase):
         obj2 = self.model.objects.get(pk=obj1.pk)
         obj2.field1 = False
         obj2.field2 = False
-        obj2.save(self.user2, update_fields=('field1',))
+        
+        with self.assertNumQueries(1):
+            obj2.save(self.user2, update_fields=('field1',))
         
         # Test the object attributes are updated
         self.assertEqual(obj2.user_created_id, self.user1.pk)
@@ -215,8 +216,6 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEqual(obj2.date_created, obj1.date_created)
         self.assertGreater(obj2.date_modified, obj1.date_modified)
-        
-        self.assertNumQueries(3)
     
     def test_object_update__user__not_required(self):
         """
@@ -251,7 +250,8 @@ class CommonInfoTestCase(TestCase):
         obj2.field2 = False
         
         with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
-            obj2.save(update_fields=('field1',))
+            with self.assertNumQueries(1):
+                obj2.save(update_fields=('field1',))
         
         # Test the object attributes are updated/not updated as necessary
         self.assertEqual(obj2.user_created_id, user.pk)
@@ -272,8 +272,6 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEqual(obj2.date_created, obj1.date_created)
         self.assertGreater(obj2.date_modified, obj1.date_modified)
-        
-        self.assertNumQueries(3)
     
     def test_queryset_update__user__required(self):
         """
@@ -288,12 +286,11 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEqual(self.model.objects.filter(user_modified=self.user1).count(), 1)
         
-        self.model.objects.all().update(self.user2, field1=False)
+        with self.assertNumQueries(1):
+            self.model.objects.all().update(self.user2, field1=False)
         
         self.assertEqual(self.model.objects.filter(user_modified=self.user2).count(), 1)
         self.assertGreater(self.model.objects.first().date_modified, date_modified)
-        
-        self.assertNumQueries(5)
     
     def test_queryset_update__user__not_required(self):
         """
@@ -316,10 +313,9 @@ class CommonInfoTestCase(TestCase):
         obj = self.model()
         obj.save(self.user1)
         
-        with self.assertRaises(TypeError):
-            self.model.objects.all().update(field1=False)
-        
-        self.assertNumQueries(1)
+        with self.assertNumQueries(0):
+            with self.assertRaises(TypeError):
+                self.model.objects.all().update(field1=False)
     
     def test_queryset_update__no_user__not_required(self):
         """
@@ -337,12 +333,11 @@ class CommonInfoTestCase(TestCase):
         self.assertEqual(self.model.objects.filter(user_modified=user).count(), 1)
         
         with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
-            self.model.objects.all().update(field1=False)
+            with self.assertNumQueries(1):
+                self.model.objects.all().update(field1=False)
         
         self.assertEqual(self.model.objects.filter(user_modified=user).count(), 1)
         self.assertGreater(self.model.objects.first().date_modified, date_modified)
-        
-        self.assertNumQueries(5)
     
     def test_manager_update(self):
         """
@@ -356,12 +351,11 @@ class CommonInfoTestCase(TestCase):
         
         self.assertEqual(self.model.objects.filter(user_modified=self.user1).count(), 1)
         
-        self.model.objects.update(self.user2, field1=False)
+        with self.assertNumQueries(1):
+            self.model.objects.update(self.user2, field1=False)
         
         self.assertEqual(self.model.objects.filter(user_modified=self.user2).count(), 1)
         self.assertGreater(self.model.objects.first().date_modified, date_modified)
-        
-        self.assertNumQueries(5)
     
     def test_object_owned_by(self):
         """
@@ -374,15 +368,14 @@ class CommonInfoTestCase(TestCase):
         obj2 = self.model()
         obj2.save(self.user2)
         
-        self.assertTrue(obj1.owned_by(self.user1))
-        self.assertTrue(obj1.owned_by(self.user1.pk))
-        self.assertFalse(obj1.owned_by(self.user2))
-        
-        self.assertTrue(obj2.owned_by(self.user2))
-        self.assertTrue(obj2.owned_by(self.user2.pk))
-        self.assertFalse(obj2.owned_by(self.user1))
-        
-        self.assertNumQueries(2)
+        with self.assertNumQueries(0):
+            self.assertTrue(obj1.owned_by(self.user1))
+            self.assertTrue(obj1.owned_by(self.user1.pk))
+            self.assertFalse(obj1.owned_by(self.user2))
+            
+            self.assertTrue(obj2.owned_by(self.user2))
+            self.assertTrue(obj2.owned_by(self.user2.pk))
+            self.assertFalse(obj2.owned_by(self.user1))
     
     def test_queryset_owned_by(self):
         """
@@ -396,12 +389,17 @@ class CommonInfoTestCase(TestCase):
         
         qs = self.model.objects.all()
         
-        self.assertEqual(qs.owned_by(self.user1).count(), 1)
-        self.assertEqual(qs.owned_by(self.user1.pk).count(), 1)
-        self.assertEqual(qs.filter(field1=False).owned_by(self.user1).count(), 0)
-        self.assertEqual(qs.owned_by(self.user1).owned_by(self.user2).count(), 0)
+        with self.assertNumQueries(1):
+            self.assertEqual(qs.owned_by(self.user1).count(), 1)
         
-        self.assertNumQueries(7)
+        with self.assertNumQueries(1):
+            self.assertEqual(qs.owned_by(self.user1.pk).count(), 1)
+        
+        with self.assertNumQueries(1):
+            self.assertEqual(qs.filter(field1=False).owned_by(self.user1).count(), 0)
+        
+        with self.assertNumQueries(1):
+            self.assertEqual(qs.owned_by(self.user1).owned_by(self.user2).count(), 0)
     
     def test_manager_owned_by(self):
         """
@@ -415,14 +413,18 @@ class CommonInfoTestCase(TestCase):
         self.assertEqual(self.model.objects.count(), 2)
         
         # Test owned_by with user object
-        self.assertEqual(self.model.objects.owned_by(self.user1).count(), 1)
-        self.assertEqual(self.model.objects.owned_by(self.user2).count(), 1)
+        with self.assertNumQueries(1):
+            self.assertEqual(self.model.objects.owned_by(self.user1).count(), 1)
+        
+        with self.assertNumQueries(1):
+            self.assertEqual(self.model.objects.owned_by(self.user2).count(), 1)
         
         # Test owned_by with user id
-        self.assertEqual(self.model.objects.owned_by(self.user1.pk).count(), 1)
-        self.assertEqual(self.model.objects.owned_by(self.user2.pk).count(), 1)
+        with self.assertNumQueries(1):
+            self.assertEqual(self.model.objects.owned_by(self.user1.pk).count(), 1)
         
-        self.assertNumQueries(7)
+        with self.assertNumQueries(1):
+            self.assertEqual(self.model.objects.owned_by(self.user2.pk).count(), 1)
 
 
 class ArchivableTestCase(TestCase):
@@ -641,16 +643,15 @@ class VersioningTestCase(TestCase):
         self.assertTrue(obj.field2)
         
         # Make a change and test it was saved correctly
-        obj.field1 = False
-        obj.field2 = False
-        obj.save(update_fields=('field1',))
+        with self.assertNumQueries(1):
+            obj.field1 = False
+            obj.field2 = False
+            obj.save(update_fields=('field1',))
         
         obj.refresh_from_db()
         self.assertEqual(obj.version, 2)  # should be incremented
-        self.assertFalse(obj.field1)       # should be modified
-        self.assertTrue(obj.field2)        # should not be modified (not listed in update_fields)
-        
-        self.assertNumQueries(4)
+        self.assertFalse(obj.field1)      # should be modified
+        self.assertTrue(obj.field2)       # should not be modified (not listed in update_fields)
     
     @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
     def test_multiple_save_version_increment(self):
@@ -660,14 +661,16 @@ class VersioningTestCase(TestCase):
         """
         
         obj = self.create_instance()  # version 1
-        obj.save()  # version 2
-        obj.save()  # version 3
+        
+        with self.assertNumQueries(1):
+            obj.save()  # version 2
+        
+        with self.assertNumQueries(1):
+            obj.save()  # version 3
         
         # Test incremented value correctly saved to the database
         obj.refresh_from_db()
         self.assertEqual(obj.version, 3)
-        
-        self.assertNumQueries(4)
     
     @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
     def test_version_inaccessible_after_increment(self):
@@ -679,14 +682,13 @@ class VersioningTestCase(TestCase):
         obj = self.create_instance()
         
         # Increment value
-        obj.save()
+        with self.assertNumQueries(1):
+            obj.save()
         
         # New version cannot be known on the same instance - it has to be
         # requeried
         with self.assertRaises(self.model.AmbiguousVersionError):
             bool(obj.version)  # bool() used purely to force evaluation of SimpleLazyObject
-        
-        self.assertNumQueries(2)
     
     @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
     def test_manager_update_version_increment(self):
@@ -701,13 +703,12 @@ class VersioningTestCase(TestCase):
         self.assertEqual(obj.version, 1)
         
         # Increment value
-        self.model.objects.update(field1=False)
+        with self.assertNumQueries(1):
+            self.model.objects.update(field1=False)
         
         # Test value incremented correctly
         obj.refresh_from_db()
         self.assertEqual(obj.version, 2)
-        
-        self.assertNumQueries(3)
     
     @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
     def test_queryset_update_version_increment(self):
@@ -722,13 +723,12 @@ class VersioningTestCase(TestCase):
         self.assertEqual(obj.version, 1)
         
         # Increment value
-        self.model.objects.all().update(field1=False)
+        with self.assertNumQueries(1):
+            self.model.objects.all().update(field1=False)
         
         # Test value incremented correctly
         obj.refresh_from_db()
         self.assertEqual(obj.version, 2)
-        
-        self.assertNumQueries(3)
 
 
 class StaticTestCase(CommonInfoTestCase, ArchivableTestCase, VersioningTestCase):
