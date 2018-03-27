@@ -90,38 +90,8 @@ class StaticAbstractQuerySet(CommonInfoQuerySet, ArchivableQuerySet, VersioningQ
     for use by managers of models that want the functionality of all three.
     """
     
-    def archive(self, user):
-        """
-        Archive all records in the current queryset.
-        """
-        
-        self.update(user, is_archived=True)
-    
-    def unarchive(self, user):
-        """
-        Unarchive all records in the current queryset.
-        """
-        
-        self.update(user, is_archived=False)
+    pass
 
 
-class StaticAbstractManager(ArchivableManager, CommonInfoManager, VersioningManager):
-    """
-    Combination of CommonInfoManager, ArchivableManager and VersioningManager
-    for use by models that want the functionality of all three.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        
-        self.archived = kwargs.pop('archived', None)
-        
-        super(StaticAbstractManager, self).__init__(*args, **kwargs)
-    
-    def get_queryset(self):
-        
-        qs = StaticAbstractQuerySet(self.model, using=self._db)
-        
-        if self.archived is not None:
-            qs = qs.filter(is_archived=self.archived)
-        
-        return qs
+# Implementation of a plain Manager providing access to StaticAbstractQuerySet
+StaticAbstractManager = models.Manager.from_queryset(StaticAbstractQuerySet)

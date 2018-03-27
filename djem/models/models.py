@@ -221,8 +221,6 @@ class StaticAbstract(CommonInfoMixin, ArchivableMixin, VersioningMixin, models.M
     """
     
     objects = StaticAbstractManager()
-    live = StaticAbstractManager(archived=False)
-    archived = StaticAbstractManager(archived=True)
     
     class Meta:
         abstract = True

@@ -53,6 +53,7 @@ class StaticTest(StaticAbstract):
     """
     
     field1 = models.BooleanField(default=True)
+    field2 = models.BooleanField(default=True)
     
     # Customise permission access functions for testing
     def _user_can_change_statictest(self, user):
