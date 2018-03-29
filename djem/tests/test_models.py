@@ -737,14 +737,10 @@ class StaticTestCase(CommonInfoTestCase, ArchivableTestCase, VersioningTestCase)
     
     def create_instance(self, **kwargs):
         
-        # Automatically add the required user created/modified values, and
-        # perform the save without requiring the user argument, to enable the
-        # tests inherited from ArchivableTestCase and VersioningTestCase
-        if 'user_created' not in kwargs:
-            kwargs['user_created'] = self.user1
-        
-        if 'user_modified' not in kwargs:
-            kwargs['user_modified'] = self.user1
+        # Automatically add the required user created/modified values, to
+        # enable the tests inherited from ArchivableTestCase and VersioningTestCase
+        kwargs['user_created'] = self.user1
+        kwargs['user_modified'] = self.user1
         
         obj = self.model(**kwargs)
         obj.save()

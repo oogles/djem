@@ -54,19 +54,6 @@ class StaticTest(StaticAbstract):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
-    
-    # Customise permission access functions for testing
-    def _user_can_change_statictest(self, user):
-        
-        return self.owned_by(user) or self.field1
-    
-    def _user_can_delete_statictest(self, user):
-        
-        return self.owned_by(user) or self.field1
-    
-    def _group_can_delete_statictest(self, groups):
-        
-        return groups.exists() and self.field1
 
 
 class TimeZoneTest(models.Model):
