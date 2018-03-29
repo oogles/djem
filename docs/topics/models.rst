@@ -17,17 +17,16 @@ The :class:`CommonInfoMixin` class is designed as a mixin for Django models, pro
 * Standard user and datetime fields: ``user_created``, ``user_modified``, ``date_created``, ``date_modified``.
 * Support for :ref:`ensuring these fields remain accurate <commoninfomixin-maintaining-accuracy>` as records are updated over time.
 * Support for :ref:`ownership checking <commoninfomixin-ownership-checking>`.
-* A simple :ref:`default implementation <commoninfomixin-object-permissions>` of :doc:`permissions` via ownership checking.
-* A custom manager to assist with maintaining accuracy and checking ownership.
+* A custom manager/queryset to assist with maintaining accuracy and checking ownership.
 
 .. warning::
 
-    Using :class:`CommonInfoMixin` can break code that automatically calls methods such as the model's :meth:`~CommonInfoMixin.save` method, or the queryset's :meth:`~djem.models.managers.CommonInfoQuerySet.update` method. See :ref:`commoninfomixin-maintaining-accuracy` for a description of the caveats of ``CommonInfoMixin``, and workarounds.
+    Using :class:`CommonInfoMixin` can break code that automatically calls methods such as the model's :meth:`~CommonInfoMixin.save` method, or the queryset's :meth:`~CommonInfoQuerySet.update` method. See :ref:`commoninfomixin-maintaining-accuracy` for a description of the caveats of ``CommonInfoMixin``, and workarounds.
 
 Usage
 -----
 
-To make use of :class:`CommonInfoMixin`, simply include it among your model's parent classes:
+To make use of :class:`CommonInfoMixin`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
 
 .. code-block:: python
 
@@ -45,7 +44,7 @@ The ``date_created`` and ``date_modified`` fields will default to ``django.utils
 
 The ``user_created`` and ``user_modified`` fields will require a ``User`` instance in order to populate their values. However, they do not need to be populated manually. Djem provides various mechanisms to both make it easy to populate these fields automatically, and to ensure they are populated any time a record is updated. See :ref:`commoninfomixin-maintaining-accuracy`.
 
-If any of the fields *are* populated manually, their values will not be overwritten.
+If any of the fields *are* populated manually, those values will take precedence.
 
 .. _commoninfomixin-maintaining-accuracy:
 
@@ -88,7 +87,7 @@ The :meth:`CommonInfoMixin.save` method is overridden to require a ``User`` inst
 Calling ``update()`` on the queryset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like :meth:`CommonInfoMixin.save`, the ``CommonInfoMixin`` queryset's :meth:`~djem.models.managers.CommonInfoQuerySet.update` method is also overridden to require a ``User`` instance as the first argument. Again, this allows the method to keep ``user_modified`` up to date as changes are made.
+Like :meth:`CommonInfoMixin.save`, the ``CommonInfoMixin`` queryset's :meth:`~CommonInfoQuerySet.update` method is also overridden to require a ``User`` instance as the first argument. Again, this allows the method to keep ``user_modified`` up to date as changes are made.
 
 .. code-block:: python
 
@@ -136,7 +135,7 @@ If it is not feasible to customise code that calls these methods, it *is* possib
 
     DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE = False
 
-This allows the use of ``CommonInfoMixin`` and all related functionality without the strict requirement of passing the ``user`` argument to methods that save/update the record. If passed, it will still be used as usual, but not providing it will not raise an exception. Of course, the methods won't automatically populate the appropriate fields, either. This means that ``user_created`` and ``user_modified`` will need to be manually populated when creating, and ``user_modified`` will need to be manually populated when updating.
+This allows the use of ``CommonInfoMixin`` and all related functionality without the strict requirement of passing the ``user`` argument to methods that save/update the record. If passed, it will still be used as described above, but not providing it will not raise an exception. Of course, the methods won't automatically populate the appropriate fields, either. This means that ``user_created`` and ``user_modified`` will need to be manually populated when creating, and ``user_modified`` will need to be manually populated when updating.
 
 .. versionadded:: 0.4
     The :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` setting
@@ -190,7 +189,7 @@ Ownership checking
     >>> obj.owned_by(bob)
     False
 
-Ownership checking is also available via a ``CommonInfoMixin`` model's manager and queryset. The queryset's :meth:`~djem.models.managers.CommonInfoQuerySet.owned_by` method also accepts a user as a ``User`` instance or as the primary key of a ``User`` record. It returns a queryset filtered to records where the ``user_created`` field matches the given user.
+Ownership checking is also available via a ``CommonInfoMixin`` model's manager and queryset. The queryset's :meth:`~CommonInfoQuerySet.owned_by` method also accepts a user as a ``User`` instance or as the primary key of a ``User`` record. It returns a queryset filtered to records where the ``user_created`` field matches the given user.
 
 .. code-block:: python
 
@@ -202,31 +201,6 @@ Ownership checking is also available via a ``CommonInfoMixin`` model's manager a
     []
 
 
-.. _commoninfomixin-object-permissions:
-
-Object-level permissions
-------------------------
-
-.. versionadded:: 0.4
-
-:class:`CommonInfoMixin` comes with a default, simple implementation of :doc:`permissions`, using :ref:`ownership checking <commoninfomixin-ownership-checking>`, for the default Django permissions of "change" and "delete". That is, a user will be granted object-level "change" or "delete" permissions if they are the owner of the object. If they are not the owner, they will be denied the permissions.
-
-.. code-block:: python
-
-    >>> alice = User.objects.get(username='alice')
-    >>> bob = User.objects.get(username='bob')
-    >>> obj = ExampleModel(name='Awesome Example')
-    >>> obj.save(alice)
-    >>> alice.has_perm('myapp.change_examplemodel', obj)
-    True
-    >>> bob.has_perm('myapp.change_examplemodel', obj)
-    False
-
-.. note::
-
-    As per the implementation of object-level permissions, the object-level permission check is only performed if the model-level permission has also been granted to the user in question. In the above example, the given user would need to have the "change_examplemodel" permission at the model level. Otherwise, they would fail the object-level check, even if they were the owner.
-
-
 .. _archivablemixin:
 
 ArchivableMixin
@@ -235,13 +209,13 @@ ArchivableMixin
 The :class:`ArchivableMixin` class is designed as a mixin for Django models, providing:
 
 * An ``is_archived`` Boolean field, defaulting to ``False``.
-* :ref:`Three different managers <archivablemixin-managers>` (``objects``, ``live`` and ``archived``) for accessing data with various states of ``is_archived``.
-* Support for :ref:`archiving and unarchiving <archivablemixin-archiving-unarchiving>`, both at the instance level and the queryset level.
+* A custom manager/queryset with shortcuts for filtering on the ``is_archived`` field.
+* Support for easily :ref:`archiving and unarchiving <archivablemixin-archiving-unarchiving>` an instance.
 
 Usage
 -----
 
-To make use of :class:`ArchivableMixin`, simply include it among your model's parent classes:
+To make use of :class:`ArchivableMixin`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
 
 .. code-block:: python
 
@@ -251,30 +225,6 @@ To make use of :class:`ArchivableMixin`, simply include it among your model's pa
     class ExampleModel(ArchivableMixin, models.Model):
 
         name = models.CharField(max_length=64)
-
-.. _archivablemixin-managers:
-
-The managers
-------------
-
-:class:`ArchivableMixin` provides three managers: ``objects``, ``live`` and ``archived``.
-
-The three differ in the default querysets they provide:
-
-- ``objects`` provides access to all records, as per usual
-- ``live`` filters to records with the ``is_archived`` flag set to ``False``
-- ``archived`` filters to records with the ``is_archived`` flag set to ``True``
-
-.. code-block:: python
-
-    >>> ExampleModel(name='Example1', is_archived=True).save()
-    >>> ExampleModel(name='Example2', is_archived=False).save()
-    >>> ExampleModel.objects.count()
-    2
-    >>> ExampleModel.live.count()
-    1
-    >>> ExampleModel.archived.count()
-    1
 
 .. _archivablemixin-archiving-unarchiving:
 
@@ -296,34 +246,31 @@ Instances of :class:`~ArchivableMixin` have the :meth:`~ArchivableMixin.archive`
     >>> ExampleModel.objects.get(name='Awesome Example').is_archived
     False
 
-Archiving/unarchiving records in bulk is also possible via the queryset's :meth:`~djem.models.managers.ArchivableQuerySet.archive` and :meth:`~djem.models.managers.ArchivableQuerySet.unarchive` methods.
+.. versionchanged:: 7.0
+    Previous versions of Djem also provided ``archive()`` and ``unarchive()`` methods on :class:`ArchivableQuerySet`. These were removed due to the overhead they added to combining the functionality of :class:`ArchivableQuerySet` and :class:`CommonInfoQuerySet`, and because the naming was too similar after the introduction of the :meth:`~ArchivableQuerySet.archived` and :meth:`~ArchivableQuerySet.unarchived` methods. Using the ``update()`` method and passing ``is_archived`` is more explicit and safer.
+
+Filtering shortcuts
+-------------------
+
+:class:`ArchivableMixin` uses the custom :class:`ArchivableQuerySet`, which provides the :meth:`~ArchivableQuerySet.archived` and :meth:`~ArchivableQuerySet.unarchived` methods. These methods filter the queryset to records with ``is_archived=True`` or ``is_archived=False``, respectively. They are accessible both at the manager and queryset level.
 
 .. code-block:: python
 
     >>> ExampleModel(name='Example1', is_archived=True).save()
     >>> ExampleModel(name='Example2', is_archived=False).save()
-    >>> print(ExampleModel.live.count(), ExampleModel.archived.count())
-    1, 1
-    >>> ExampleModel.objects.all().archive()
-    1
-    >>> print(ExampleModel.live.count(), ExampleModel.archived.count())
-    0, 2
-    >>> ExampleModel.objects.all().unarchive()
+    >>> ExampleModel.objects.count()
     2
-    >>> print(ExampleModel.live.count(), ExampleModel.archived.count())
-    2, 0
+    >>> ExampleModel.objects.unarchived().count()
+    1
+    >>> ExampleModel.objects.filter(name='Example1').unarchived().count()
+    0
+    >>> ExampleModel.objects.archived().count()
+    1
+    >>> ExampleModel.objects.filter(name='Example2').archived().count()
+    0
 
-.. note::
-
-    The :ref:`managers <archivablemixin-managers>` do not provide access to the bulk :meth:`~djem.models.managers.ArchivableQuerySet.archive` and :meth:`~djem.models.managers.ArchivableQuerySet.unarchive` methods directly. Like ``delete()``, ``archive()`` and ``unarchive()`` are only accessible via a QuerySet.
-
-    .. code-block:: python
-
-        # invalid
-        >>> ExampleModel.objects.archive()
-
-        # valid
-        >>> ExampleModel.objects.all().archive()
+.. versionchanged:: 7.0
+    Previous versions of Djem used three different managers - ``objects``, ``live`` and ``archived`` - to provide access to querysets with various preset filters on the ``is_archived`` field. This didn't allow for applying the filters if a queryset was obtained by other means (e.g. via a ``ManyToManyField`` related manager) and made it more difficult to extend the manager (if the model inheriting from ``ArchivableMixin`` needed its own custom manager/queryset).
 
 
 .. _versioningmixin:
@@ -336,7 +283,7 @@ The :class:`VersioningMixin` class is designed as a mixin for Django models, pro
 Usage
 -----
 
-To make use of :class:`VersioningMixin`, simply include it among your model's parent classes:
+To make use of :class:`VersioningMixin`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
 
 .. code-block:: python
 
@@ -354,7 +301,7 @@ Incrementing ``version``
 
 Incrementation of the ``version`` field is done atomically, through the use of a Django ``F()`` expression, to avoid possible race conditions. See `Django documentation for F() expressions <https://docs.djangoproject.com/en/stable/ref/models/expressions/#django.db.models.F>`_.
 
-To ensure the ``version`` field is always kept current, :class:`VersioningMixin` overrides the :meth:`~VersioningMixin.save` method and the :meth:`~djem.models.managers.VersioningQuerySet.update` method of the custom manager/queryset.
+To ensure the ``version`` field is always kept current, :class:`VersioningMixin` overrides the :meth:`~VersioningMixin.save` method and the :meth:`~VersioningQuerySet.update` method of its custom queryset.
 
 .. note::
 
@@ -373,47 +320,29 @@ To ensure the ``version`` field is always kept current, :class:`VersioningMixin`
 Mixing Mixins
 =============
 
-A model can include any combination of the above mixins. However, since they all use custom managers to provide additional functionality unique to them, a model using multiple mixins will need to provide its own manager that incorporates the functionality of each. For most mixins, this is only necessary for ``objects``, but for :ref:`archivablemixin`, the ``live`` and ``archived`` managers will also need to be customised.
+A model can include any combination of the above mixins. However, since they all use custom managers/querysets to provide additional functionality unique to them, a model using multiple mixins will need to provide its own manager/queryset that incorporates the functionality of each. The custom querysets have been designed to make this as simple as possible, without any additional customisation necessary.
 
-The following is an example of a model using the :ref:`commoninfomixin` and :ref:`archivablemixin`.
+For a ready-made combination of all three mixins (:ref:`commoninfomixin`, :ref:`archivablemixin` and :ref:`versioningmixin`), see :ref:`staticabstract`.
+
+The following is an example of a model using the :ref:`commoninfomixin` and :ref:`archivablemixin`:
 
 .. code-block:: python
 
     from django.db import models
-    from djem.models import CommonInfoMixin, ArchivableMixin
-    from djem.managers import (
-        ArchivableManager, ArchivableQuerySet, CommonInfoManager, CommonInfoQuerySet
-    )
+    from djem.models import ArchivableMixin, CommonInfoMixin
+    from djem.managers import ArchivableQuerySet, CommonInfoQuerySet
 
     class ExampleQuerySet(CommonInfoQuerySet, ArchivableQuerySet):
 
-        # Need to override the "archive" and "unarchive" methods inherited from
-        # ArchivableQuerySet as they call "update", which requires a User
-        # argument thanks to CommonInfoQuerySet.
+        pass
 
-        def archive(self, user):
-
-            self.update(user, is_archived=True)
-
-        def unarchive(self, user):
-
-            self.update(user, is_archived=False)
-
-    class ExampleManager(CommonInfoManager, ArchivableManager):
-
-        def get_queryset(self):
-
-            return ExampleQuerySet(self.model, using=self._db)
+    ExampleManager = models.Manager.from_queryset(ExampleQuerySet)
 
     class ExampleModel(CommonInfoMixin, ArchivableMixin, models.Model):
 
         name = models.CharField(max_length=64)
 
         objects = ExampleManager()
-        live = ExampleManager(archived=False)
-        archived = ExampleManager(archived=True)
-
-For a ready-made combination of all three mixins (:ref:`commoninfomixin`, :ref:`archivablemixin` and :ref:`versioningmixin`), see :ref:`staticabstract`.
 
 
 .. _staticabstract:
@@ -421,13 +350,12 @@ For a ready-made combination of all three mixins (:ref:`commoninfomixin`, :ref:`
 StaticAbstract
 ==============
 
-:class:`StaticAbstract` is a combination of :ref:`commoninfomixin`, :ref:`archivablemixin` and :ref:`versioningmixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields, as well as custom ``objects``, ``live`` and ``archived`` managers, and provides access to all the functionality offered by each of the mixins, including:
+:class:`StaticAbstract` is a combination of :ref:`commoninfomixin`, :ref:`archivablemixin` and :ref:`versioningmixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins, including:
 
 * :ref:`Maintaining the accuracy <commoninfomixin-maintaining-accuracy>` of ``date_modified`` and ``user_modified`` as changes are made.
 * Automatically and :ref:`atomically incrementing <versioningmixin-incrementing-version>` ``version`` as changes are made.
 * Allowing :ref:`archiving and unarchiving <archivablemixin-archiving-unarchiving>`.
 * Providing :ref:`ownership checking <commoninfomixin-ownership-checking>`.
-* Providing basic :ref:`object-level permissions support <commoninfomixin-object-permissions>`.
 
 Usage
 -----
