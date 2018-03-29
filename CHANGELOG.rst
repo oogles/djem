@@ -6,6 +6,8 @@ Change Log
 ===
 
 * Removed default implementations of _user_can_change_*() and _user_can_delete_*() on CommonInfoMixin - this was far too specific a use-case to be the default
+* Removed explicit Manager classes for mixins
+* Moved custom QuerySet classes for mixins into djem.models.models
 
 
 0.6.1

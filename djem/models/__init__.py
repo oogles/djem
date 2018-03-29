@@ -1,4 +1,5 @@
 from djem.models.models import (  # NOQA
-    ArchivableMixin, CommonInfoMixin, StaticAbstract, VersioningMixin
+    ArchivableMixin, ArchivableQuerySet, CommonInfoMixin, CommonInfoQuerySet,
+    StaticAbstract, StaticAbstractQuerySet, VersioningMixin, VersioningQuerySet
 )
 from djem.models.fields import TimeZoneField  # NOQA

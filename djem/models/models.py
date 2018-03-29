@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -5,10 +7,42 @@ from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
 from djem.exceptions import ModelAmbiguousVersionError
-from djem.models.managers import (
-    ArchivableManager, CommonInfoManager, StaticAbstractManager,
-    VersioningManager
-)
+
+whitespace_regex = re.compile(r'\W+')
+
+
+class CommonInfoQuerySet(models.QuerySet):
+    """
+    Provides custom functionality pertaining to the fields provided by
+    ``CommonInfoMixin``.
+    """
+    
+    def update(self, user=None, **kwargs):
+        """
+        Overridden to ensure the ``user_modified`` and ``date_modified`` fields
+        are always updated. The ``user`` argument is required and must be passed
+        a ``User`` instance, unless the ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        setting is ``False``.
+        """
+        
+        require_user = getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
+        if require_user and not user:
+            raise TypeError("save() requires the 'user' argument")
+        
+        kwargs['date_modified'] = timezone.now()
+        
+        if user:
+            kwargs['user_modified'] = user
+        
+        return super(CommonInfoQuerySet, self).update(**kwargs)
+    
+    def owned_by(self, user):
+        """
+        Return a queryset of records "owned" by the given user, as per the
+        ``user_created`` field. ``user`` can be a ``User`` instance or an id.
+        """
+        
+        return self.filter(user_created=user)
 
 
 class CommonInfoMixin(models.Model):
@@ -42,7 +76,7 @@ class CommonInfoMixin(models.Model):
         on_delete=models.PROTECT
     )
     
-    objects = CommonInfoManager()
+    objects = models.Manager.from_queryset(CommonInfoQuerySet)()
     
     class Meta:
         abstract = True
@@ -102,6 +136,27 @@ class CommonInfoMixin(models.Model):
         return user_id == self.user_created_id
 
 
+class ArchivableQuerySet(models.QuerySet):
+    """
+    Provides custom functionality pertaining to the ``is_archived`` field
+    provided by ``ArchivableMixin``.
+    """
+    
+    def archived(self):
+        """
+        Filter the queryset to archived records (``is_archived=True``).
+        """
+        
+        return self.filter(is_archived=True)
+    
+    def unarchived(self):
+        """
+        Filter the queryset to unarchived records (``is_archived=False``).
+        """
+        
+        return self.filter(is_archived=False)
+
+
 class ArchivableMixin(models.Model):
     """
     Model mixin that provides an ``is_archived`` Boolean field, multiple
@@ -111,7 +166,7 @@ class ArchivableMixin(models.Model):
     
     is_archived = models.BooleanField(default=False, db_index=True)
     
-    objects = ArchivableManager()
+    objects = models.Manager.from_queryset(ArchivableQuerySet)()
     
     class Meta:
         abstract = True
@@ -155,6 +210,22 @@ class ArchivableMixin(models.Model):
         self.save(*args, **kwargs)
 
 
+class VersioningQuerySet(models.QuerySet):
+    """
+    Provides custom functionality pertaining to the ``version`` field
+    provided by ``VersioningMixin``.
+    """
+    
+    def update(self, **kwargs):
+        """
+        Overridden to ensure the ``version`` field is always updated.
+        """
+        
+        kwargs['version'] = models.F('version') + 1
+        
+        return super(VersioningQuerySet, self).update(**kwargs)
+
+
 class VersioningMixin(models.Model):
     """
     Model mixin that provides a ``version`` field that is automatically
@@ -174,7 +245,7 @@ class VersioningMixin(models.Model):
     
     version = models.PositiveIntegerField(editable=False, default=1)
     
-    objects = VersioningManager()
+    objects = models.Manager.from_queryset(VersioningQuerySet)()
     
     class Meta:
         abstract = True
@@ -214,13 +285,22 @@ class VersioningMixin(models.Model):
             self.version = SimpleLazyObject(self.AmbiguousVersionError._raise)
 
 
+class StaticAbstractQuerySet(CommonInfoQuerySet, ArchivableQuerySet, VersioningQuerySet):
+    """
+    Combination of CommonInfoQuerySet, ArchivableQuerySet and VersioningQuerySet
+    for use by managers of models that want the functionality of all three.
+    """
+    
+    pass
+
+
 class StaticAbstract(CommonInfoMixin, ArchivableMixin, VersioningMixin, models.Model):
     """
     Useful abstract base model combining the functionality of CommonInfoMixin,
     ArchivableMixing and VersioningMixin.
     """
     
-    objects = StaticAbstractManager()
+    objects = models.Manager.from_queryset(StaticAbstractQuerySet)()
     
     class Meta:
         abstract = True
