@@ -11,3 +11,4 @@ Using Djem
     pagination
     ajax
     testing
+    utils

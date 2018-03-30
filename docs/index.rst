@@ -37,4 +37,4 @@ Features
 License
 =======
 
-The project is licensed under the BSD license.
+Djem is released under the `BSD license <https://github.com/oogles/djem/blob/master/LICENSE>`_.

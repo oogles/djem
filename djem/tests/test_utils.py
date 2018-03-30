@@ -3,7 +3,19 @@ import pytz
 from django.test import SimpleTestCase
 from django.utils import timezone
 
+from djem import UNDEFINED
 from djem.utils.dt import TimeZoneHelper
+
+
+class UndefinedTestCase(SimpleTestCase):
+    
+    def test_falsey(self):
+        
+        self.assertFalse(UNDEFINED)
+    
+    def test_print(self):
+        
+        self.assertEqual(str(UNDEFINED), '<undefined>')
 
 
 class TimeZoneHelperTestCase(SimpleTestCase):

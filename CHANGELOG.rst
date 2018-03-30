@@ -5,6 +5,7 @@ Change Log
 0.7
 ===
 
+* Added ``UNDEFINED`` constant
 * Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``CommonInfoMixin`` - this was far too specific a use-case to be the default
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods
 * Removed ``ArchivableQuerySet``'s ``archive()`` and ``unarchive()`` methods

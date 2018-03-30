@@ -14,7 +14,6 @@ API Reference
     middleware
     ajax
     template_tags
-    dateutils
-    testutils
+    utils/index
     settings
     exceptions
