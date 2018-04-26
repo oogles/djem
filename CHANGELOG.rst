@@ -6,6 +6,7 @@ Change Log
 ===
 
 * Added ``UNDEFINED`` constant
+* Added ``UniversalOLPMixin`` for custom user models, to enable object-level permissions checks for superusers (which would otherwise be assumed to have all permissions)
 * Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``CommonInfoMixin`` - this was far too specific a use-case to be the default
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods
 * Removed ``ArchivableQuerySet``'s ``archive()`` and ``unarchive()`` methods

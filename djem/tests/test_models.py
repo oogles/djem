@@ -447,10 +447,7 @@ class ArchivableTestCase(TestCase):
     
     def create_instance(self, **kwargs):
         
-        obj = self.model(**kwargs)
-        obj.save()
-        
-        return obj
+        return self.model.objects.create(**kwargs)
     
     @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
     def test_object_archive__no_args(self):
@@ -617,10 +614,7 @@ class VersioningTestCase(TestCase):
     
     def create_instance(self, **kwargs):
         
-        obj = self.model(**kwargs)
-        obj.save()
-        
-        return obj
+        return self.model.objects.create(**kwargs)
     
     @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
     def test_save_version_increment(self):

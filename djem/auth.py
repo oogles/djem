@@ -2,7 +2,7 @@ from functools import wraps
 
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, _user_has_perm
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, resolve_url
 from django.utils import six
@@ -10,6 +10,25 @@ from django.utils.decorators import available_attrs
 from django.utils.six.moves.urllib.parse import urlparse
 
 DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
+
+
+class UniversalOLPMixin:
+    """
+    Simple model mixin to enable object-level permissions checking universally -
+    specifically for superusers (which would otherwise be assumed to have the
+    permission).
+    """
+    
+    _olp_for_superusers = True
+    
+    def has_perm(self, perm, obj=None):
+        
+        # Active superusers have all model-level permissions, but still require
+        # object-level checks
+        if not obj and self.is_active and self.is_superuser:
+            return True
+        
+        return _user_has_perm(self, perm, obj)
 
 
 class ObjectPermissionsBackend(object):
@@ -68,7 +87,7 @@ class ObjectPermissionsBackend(object):
         It can also be None to determine the users permissions from both sources.
         """
         
-        if not user_obj.is_active or user_obj.is_anonymous or not obj:
+        if not obj or not user_obj.is_active or user_obj.is_anonymous:
             return set()
         
         perms_for_model = Permission.objects.filter(
@@ -78,8 +97,9 @@ class ObjectPermissionsBackend(object):
         
         perms_for_model = ['{0}.{1}'.format(app, name) for app, name in perms_for_model]
         
-        if user_obj.is_superuser:
-            # Superusers get all permissions, regardless of obj or from_name
+        if user_obj.is_superuser and not getattr(user_obj, '_olp_for_superusers', False):
+            # Superusers get all permissions, regardless of obj or from_name,
+            # unless using djem's PermissionsMixin (_olp_for_superusers=True)
             perms = set(perms_for_model)
         else:
             perms = set()

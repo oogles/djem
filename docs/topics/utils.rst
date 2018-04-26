@@ -9,7 +9,7 @@ Utils
 
 The :const:`UNDEFINED` constant is designed for use in argument default values.
 
-Sometimes it is necessary to know whether *any* value was passed into a function or not, including values traditionally used as argument defaults (such as ``None``, ``False``, etc). Any given value would have an explicit meaning, with some default behaviour only performed if *nothing* was passed in.
+Sometimes it is necessary to know whether *any* value was passed into a function or not, including values traditionally used as argument defaults (such as ``None``, ``False``, etc). Any given value could have an explicit meaning, with some default behaviour only performed if *nothing* was passed in.
 
 Take the following contrived example:
 

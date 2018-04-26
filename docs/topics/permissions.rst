@@ -4,9 +4,9 @@ Object-Level Permissions
 
 .. currentmodule:: djem.auth
 
-Django's permissions framework has the foundation for, but no implementation of, object-level permissions. For example, using the standard Django "polls" application to illustrate, you can use the Django permissions framework to determine if any given user can change ``Questions``, but not to determine if they can change a given ``Question`` in particular.
+Django's permissions framework has the foundation for, but no implementation of, object-level permissions (OLP). The permissions it supports apply to *all* records of a particular model - hence they are "model-level" permissions (MLP). For example, using the standard Django "polls" application to illustrate, you can use the Django permissions framework to determine if any given user can change ``Questions``, but not to determine if they can change a given ``Question`` in particular.
 
-Djem provides a very simple implementation of an object-level permissions system with the following features:
+Djem provides a very simple implementation of an OLP system with the following features:
 
 * As with model-level permissions, an object-level permission may be granted to a user based on the ``User`` object itself, or based on a ``Group`` to which the user belongs.
 * Permissions are only checked at the object level if the user has the model-level permission. That is, a user must be able to change ``Questions`` in general if they are to be granted permission to change a particular ``Question``.
@@ -14,7 +14,7 @@ Djem provides a very simple implementation of an object-level permissions system
 
 .. note::
 
-    Just as with the Django permissions framework, the object-level permissions systems expects the ``User`` model to have certain attributes and methods. If you are using a custom user model, it will need to include the ``PermissionsMixin`` to be compatible. See the Django documentation for `custom user models and permissions <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#custom-users-and-permissions>`_.
+    Djem's OLP system is simply an extension of the default Django permissions system. As such, it expects the ``User`` model to have the same attributes and methods that power that system. If you are using a custom user model (as is recommended), it should either inherit from ``AbstractUser`` or include the ``PermissionsMixin`` to be compatible. See the Django documentation for `custom user models and permissions <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#custom-users-and-permissions>`_.
 
 
 Enabling
@@ -38,11 +38,11 @@ See the Django  `documentation on authentication backends <https://docs.djangopr
 Supported permissions
 =====================
 
-Any existing permission can be used with the object-level permissions system, though it may not make sense for all of them. For example, Django provides default "add" permissions for all models. It doesn't make sense for adding to involve object-level permissions, as no object would yet exist on which to *check* for an "add" permission. That being said, the object-level permissions system contains no logic preventing you from using *any* permission at the object level.
+Any existing permission can be used with the OLP system, though it may not make sense for all of them. For example, Django provides default "add" permissions for all models. It doesn't make sense for adding to involve object-level permissions, as no object would yet exist on which to *check* for an "add" permission. That being said, the OLP system contains no logic preventing you from using *any* permission at the object level.
 
 If the default Django-provided permissions ("add", "change" and "delete") aren't enough, you can add custom permissions via the ``permissions`` attribute of a model's inner ``Meta`` class, as per the `Django documentation <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#custom-permissions>`_.
 
-Any permissions added this way are automatically supported by the object-level permissions system. You just need to define the necessary methods on the model class, :ref:`as described below <permissions-defining>`. And remember: a user must have the standard, model-level permission before object-level permissions will even be checked. It does not matter *how* the user is granted the model-level permission, as long as they have it. That is, it may be granted to the user specifically, or to any one of the groups they belong to.
+Any permissions added this way are automatically supported by the OLP system. You just need to define the necessary methods on the model class, :ref:`as described below <permissions-defining>`. And remember: a user must have the standard, model-level permission before object-level permissions will even be checked. It does not matter *how* the user is granted the model-level permission, as long as they have it. That is, it may be granted to the user specifically, or to any one of the groups they belong to.
 
 
 .. _permissions-defining:
@@ -92,15 +92,15 @@ The following example demonstrates how to define a model that uses object-level 
 Permissions default open
 ------------------------
 
-An important concept in Djem's object-level permissions system is that permissions default *open* at the object level. That is to say, unless explicit logic is given to dictate how an object-level permission should be granted/denied, it is assumed to be granted. As such, an object-level permission check on an object with no defined object-level access methods is equivalent to a model-level permission check for the same permission.
+An important concept in Djem's OLP system is that permissions default *open* at the object level. That is to say, unless explicit logic is given to dictate how an object-level permission should be granted/denied, it is assumed to be granted. As such, an object-level permission check on an object with no defined object-level access methods is equivalent to a model-level permission check for the same permission.
 
-This makes the system interchangeable with the existing Django permissions system. Common code can check permissions at the object level and will be unaffected if no object-level access control exists for a given model - it doesn't need to pick and choose whether to use object-level or model-level permission checking.
+This makes the system interchangeable with the default Django permissions system. Common code can check permissions at the object level and will be unaffected if no object-level access control exists for a given model - it doesn't need to pick and choose whether to use object-level or model-level permission checking.
 
 
 Checking permissions
 ====================
 
-The main ways of using the object-level permissions system to check a user's permissions on a specific object are:
+The main ways of using the OLP system to check a user's permissions on a specific object are:
 
 * the ``permission_required`` decorator for function-based views or ``PermissionRequiredMixin`` mixin for class-based views
 * the ``ifperm`` and ``ifnotperm`` template tags
@@ -241,7 +241,7 @@ Each tag must be passed a user instance, the name of the permission to check and
 Checking via ``User`` instances
 -------------------------------
 
-The ``has_perm()`` method provided by Django's ``User`` model (or by ``PermissionsMixin`` if using a custom user model) accepts an optional ``obj`` argument. Django does nothing with it by default, but passing it will invoke Djem's object-level permissions system. Thus it can be used to check a user's object-level permissions on a given object.
+The ``has_perm()`` method provided by Django's ``User`` model (or by ``PermissionsMixin`` if using a custom user model) accepts an optional ``obj`` argument. Django does nothing with it by default, but passing it will invoke Djem's OLP system. Thus it can be used to check a user's object-level permissions on a given object.
 
 Continuing with the modified ``Question`` model defined above:
 
@@ -258,9 +258,61 @@ Continuing with the modified ``Question`` model defined above:
 
 See ``has_perm()`` documentation for `User <https://docs.djangoproject.com/en/stable/ref/contrib/auth/#django.contrib.auth.models.User.has_perm>`_ and `PermissionsMixin <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#django.contrib.auth.models.PermissionsMixin.has_perm>`_.
 
+
+Superusers
+==========
+
+The Django permissions system automatically grants any and all permissions to a ``User`` instance with the ``is_superuser`` flag set to ``True``. By default, this is how the OLP system operates as well: no object-level access methods are executed, the superuser is simply granted the permission.
+
+There are, however, situations in which this is not desirable. For example, you may want to define a model that does not grant the "delete" permission to anyone but the user that created it, no matter how "super" the user is. It would be trivial to configure the model to achieve this for a standard user, but a superuser would bypass any custom object-level access methods and be granted the permission anyway. For these situations, Djem includes the :class:`UniversalOLPMixin` for the user model.
+
+A user model configured with :class:`UniversalOLPMixin` will force superusers to be subject to any OLP logic used in your project. They will still be implicitly granted all model-level permissions, but any object-level access methods *will* be executed and *can* deny the user permission.
+
+It requires a custom user model be used, which includes :class:`UniversalOLPMixin` among its base classes. Django `recommends using <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project>`_ a custom user model anyway (for new projects, at least), even if it doesn't actually customise anything.
+
+If not looking to actually customise anything, a custom user model incorporating :class:`UniversalOLPMixin` is as simple as:
+
+.. code-block:: python
+
+    from django.contrib.auth.models import AbstractUser
+
+    from djem.auth import UniversalOLPMixin
+
+
+    class User(UniversalOLPMixin, AbstractUser):
+
+        pass
+
+This approach can also be used if wanting to *add* fields on top of Django's default implementation. If looking to customise the user model more heavily (for example, using an email address instead of a username as the user's identification token), use something like the following:
+
+.. code-block:: python
+
+    from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+
+    from djem.auth import UniversalOLPMixin
+
+
+    class User(UniversalOLPMixin, AbstractBaseUser, PermissionsMixin):
+
+        ...
+
+.. important::
+
+    :class:`UniversalOLPMixin` must be listed *ahead* of ``AbstractUser``/``PermissionsMixin`` in order for it to work correctly.
+
 .. note::
 
-    In addition to ``has_perm()``, the ``has_perms()``, ``get_group_permissions()`` and ``get_all_permissions()`` methods on ``User``/``PermissionMixin`` also accept the optional ``obj`` argument and work with the object-level permissions system.
+    User models employing :class:`UniversalOLPMixin` will cause superusers to be subject to the object-level permission logic for *all* permissions that define some. If your project contains permissions which should still be granted to superusers regardless of the additional checks that standard users are subject to, the relevant access method can include a simple guard clause:
+
+    .. code-block:: python
+
+        def _user_can_vote_on_question(self, user):
+
+            if user.is_superuser:
+                return True
+
+            # Do custom logic
+            ...
 
 
 Caching
@@ -274,7 +326,7 @@ This caching system has the same advantages and disadvantages as that used for m
 Other ``PermissionsMixin`` methods
 ==================================
 
-The object-level permissions system is fully compatible with Django's ``PermissionsMixin``, meaning it supports more than just the ``has_perm()`` method. Other supported methods include:
+The OLP system is fully compatible with Django's ``PermissionsMixin``, meaning it supports more than just the ``has_perm()`` method. Other supported methods include:
 
 * ``has_perms()``: For checking multiple permissions against a ``User`` instance at once.
 * ``get_all_permissions()``: To obtain a list of all permissions accessible to the user, either directly or via their groups, with all necessary object-level logic applied.
