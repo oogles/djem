@@ -12,7 +12,7 @@ from django.utils.six.moves.urllib.parse import urlparse
 DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
 
-class OLPMixin:
+class OLPMixin(object):
     """
     Simple mixin for a custom user model, enabling advanced object-level
     permission related features.
