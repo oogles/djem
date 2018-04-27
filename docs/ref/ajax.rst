@@ -9,8 +9,6 @@ AJAX
 
 .. class:: AjaxResponse(request, data=None, success=None, **kwargs)
 
-    .. versionadded:: 0.4
-
     An extension of Django's ``JsonResponse``, differing in the following ways:
 
     * The ``data`` argument is optional. If provided, it must always be a ``dict`` instance. If not provided, a new ``dict`` instance will be created and used. Using the ``safe`` argument of ``JsonResponse`` to JSON-encode other types is not supported (see the `documentation <https://docs.djangoproject.com/en/stable/ref/request-response/#serializing-non-dictionary-objects>`_ for the ``safe`` argument of ``JsonResponse``).

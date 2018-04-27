@@ -92,7 +92,12 @@ QuerySets
     ``ArchivableQuerySet`` provides custom functionality pertaining to the ``is_archived`` field provided by :class:`~djem.models.ArchivableMixin`.
 
     .. automethod:: archived
+
+        .. versionadded:: 0.7
+
     .. automethod:: unarchived
+
+        .. versionadded:: 0.7
 
 
 ``VersioningQuerySet``

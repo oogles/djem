@@ -9,8 +9,6 @@ Date/Time Utils
 
 .. class:: TimeZoneHelper(tz)
 
-    .. versionadded:: 0.3
-
     A simple helper class that provides shortcuts for getting the current date and the current datetime for a known local timezone.
 
     ``tz`` should be a valid timezone name string (as accepted by the ``pytz.timezone`` function) or a ``pytz`` ``tzinfo`` instance (as returned by the ``pytz.timezone`` function).

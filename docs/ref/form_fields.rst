@@ -11,8 +11,6 @@ Form Fields
 
 .. class:: TimeZoneField(**kwargs)
 
-    .. versionadded:: 0.3
-
     A ``TypedChoiceField`` with defaults applied for ``coerce`` and ``choices``.
 
     * Default widget: ``Select``.

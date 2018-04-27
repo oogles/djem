@@ -137,9 +137,6 @@ If it is not feasible to customise code that calls these methods, it *is* possib
 
 This allows the use of ``CommonInfoMixin`` and all related functionality without the strict requirement of passing the ``user`` argument to methods that save/update the record. If passed, it will still be used as described above, but not providing it will not raise an exception. Of course, the methods won't automatically populate the appropriate fields, either. This means that ``user_created`` and ``user_modified`` will need to be manually populated when creating, and ``user_modified`` will need to be manually populated when updating.
 
-.. versionadded:: 0.4
-    The :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` setting
-
 .. warning::
 
     Setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` reduces the accuracy of the ``user_modified`` field, as it cannot be guaranteed that the user that made a change was recorded.
@@ -374,8 +371,6 @@ To make use of :class:`StaticAbstract`, simply inherit from it:
 
 TimeZoneField
 =============
-
-.. versionadded:: 0.3
 
 :class:`TimeZoneField` is a model field that stores timezone name strings ('Australia/Sydney', 'US/Eastern', etc) in the database and provides access to :class:`~djem.utils.dt.TimeZoneHelper` instances for the stored timezones, as :ref:`explained below <timezonefield-timezonehelper>`.
 

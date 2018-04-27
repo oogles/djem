@@ -10,8 +10,6 @@ The following settings can be added to your project's ``settings.py`` file to cu
 ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
 =========================================
 
-.. versionadded:: 0.4
-
 Default: ``True``
 
 By default, the :meth:`~djem.models.CommonInfoMixin.save` method of :class:`~djem.models.CommonInfoMixin` and the :meth:`~djem.models.managers.CommonInfoQuerySet.update` method of :class:`~djem.models.managers.CommonInfoQuerySet` require their first positional argument to be a ``User`` instance, so they can automatically set the ``user_created`` and/or ``user_modified`` fields that ``CommonInfoMixin`` provides. This behaviour can cause issues if you are using third party code that calls the ``save`` method of a model instance or the ``update`` method of a queryset, as it will not pass this required argument.

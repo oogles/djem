@@ -28,9 +28,6 @@ Using :class:`AjaxResponse` differs from ``JsonResponse`` in the following ways:
 
 With the exception of ``safe``, as noted above, :class:`AjaxResponse` accepts and supports all arguments of ``JsonResponse``.
 
-.. versionadded:: 0.4
-    :class:`AjaxResponse`
-
 Usage
 -----
 
