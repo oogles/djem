@@ -23,16 +23,14 @@ Auth
         ]
 
 
-``UniversalOLPMixin``
-=====================
+``OLPMixin``
+============
 
-.. class:: UniversalOLPMixin
+.. class:: OLPMixin
 
-    A mixin for a custom user model that enables universal application of object-level permission logic - specifically, for superusers. By default, superusers (users with ``is_superuser=True``) are implicitly granted all permissions, no questions asked, and no object-level access methods executed. Using this mixin causes object-level permission logic to be applied to superusers as well. They are still implicitly granted all model-level permissions, but at the object level, they will be subject to the same restrictions as a regular user.
+    .. versionadded:: 0.7
 
-    .. note::
-
-        Logic in object-level permission access methods can still manually check ``is_superuser`` and alter behaviour as necessary.
+    A mixin for a custom user model that enables additional :doc:`advanced features <../topics/permissions/advanced>` of the object-level permission system.
 
 
 ``permission_required``

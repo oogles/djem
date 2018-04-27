@@ -12,19 +12,20 @@ from django.utils.six.moves.urllib.parse import urlparse
 DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
 
-class UniversalOLPMixin:
+class OLPMixin:
     """
-    Simple model mixin to enable object-level permissions checking universally -
-    specifically for superusers (which would otherwise be assumed to have the
-    permission).
+    Simple mixin for a custom user model, enabling advanced object-level
+    permission related features.
     """
-    
-    _olp_for_superusers = True
     
     def has_perm(self, perm, obj=None):
         
-        # Active superusers have all model-level permissions, but still require
-        # object-level checks
+        # Use the default behaviour unless DJEM_UNIVERSAL_OLP is True
+        if not getattr(settings, 'DJEM_UNIVERSAL_OLP', False):
+            return super(OLPMixin, self).has_perm(perm, obj)
+        
+        # Customise behaviour - active superusers implicitly have all
+        # model-level permissions, but are subject to object-level checks
         if not obj and self.is_active and self.is_superuser:
             return True
         
@@ -97,9 +98,10 @@ class ObjectPermissionsBackend(object):
         
         perms_for_model = ['{0}.{1}'.format(app, name) for app, name in perms_for_model]
         
-        if user_obj.is_superuser and not getattr(user_obj, '_olp_for_superusers', False):
+        if user_obj.is_superuser and not getattr(settings, 'DJEM_UNIVERSAL_OLP', False):
             # Superusers get all permissions, regardless of obj or from_name,
-            # unless using djem's PermissionsMixin (_olp_for_superusers=True)
+            # unless using "universal" OLP, in which case they are subject to
+            # the same OLP logic as regular users
             perms = set(perms_for_model)
         else:
             perms = set()

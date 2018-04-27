@@ -24,7 +24,7 @@ class _TestView(PermissionRequiredMixin, View):
 
 
 @override_settings(AUTH_USER_MODEL='auth.User')
-class ObjectPermissionsTestCase(TestCase):
+class OLPTestCase(TestCase):
     
     UserModel = User
     TestModel = OLPTest
@@ -756,13 +756,27 @@ class ObjectPermissionsTestCase(TestCase):
                 getattr(user, cache_attr)
 
 
-@override_settings(AUTH_USER_MODEL='tests.CustomUser')
-class UniversalOLPMixinTestCase(ObjectPermissionsTestCase):
+@override_settings(AUTH_USER_MODEL='tests.CustomUser', DJEM_UNIVERSAL_OLP=False)
+class UniversalOLPFalseTestCase(OLPTestCase):
     
     #
-    # Basically a repeat of all the standard object-level permissions tests,
-    # for a user model incorporating UniversalOLPMixin.
-    # Results should be identical except for the tests involving active
+    # A repeat of the object-level permissions tests for the default user model,
+    # but for one incorporating OLPMixin, and with DJEM_UNIVERSAL_OLP=False.
+    # Results should be identical.
+    #
+    
+    UserModel = CustomUser
+    TestModel = UniversalOLPTest
+    model_name = 'universalolptest'
+
+
+@override_settings(AUTH_USER_MODEL='tests.CustomUser', DJEM_UNIVERSAL_OLP=True)
+class UniversalOLPTrueTestCase(OLPTestCase):
+    
+    #
+    # A repeat of the object-level permissions tests for the default user model,
+    # but for one incorporating OLPMixin, and with DJEM_UNIVERSAL_OLP=True.
+    # Results should be identical EXCEPT for the tests involving active
     # superusers, which should actually perform object-level permissions rather
     # than unconditionally granting such users every permission.
     #

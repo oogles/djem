@@ -5,7 +5,7 @@ Using Djem
 .. toctree::
     :maxdepth: 2
 
-    permissions
+    permissions/index
     models
     forms
     pagination

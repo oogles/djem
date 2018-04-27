@@ -36,7 +36,7 @@ Setting ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "requ
 
 .. versionadded:: 0.5
 
-Default: False
+Default: ``False``
 
 Specifies the default behaviour of the :func:`~djem.auth.permission_required` decorator and :class:`djem.auth.PermissionRequired` class-based view mixin when a user does not have the specified permission/s. If ``True``, the ``PermissionDenied`` exception will be raised, invoking the 403 handler. If ``False``, the user will be redirected to the appropriate login url.
 
@@ -50,7 +50,7 @@ This affects default behaviour only - individual uses of :func:`~djem.auth.permi
 
 .. versionadded:: 0.5
 
-Default: None
+Default: ``None``
 
 The default page length to use for the :func:`djem.pagination.get_page` helper function. Adding this setting removes the need to provide a page length argument to every :func:`djem.pagination.get_page` call. See :ref:`pagination-page-length` for more details.
 
@@ -64,6 +64,20 @@ The default page length to use for the :func:`djem.pagination.get_page` helper f
 
 .. currentmodule:: djem.templatetags.djem
 
-Default: 'div'
+Default: ``'div'``
 
 The HTML tag to use for the wrapping element rendered around form fields when using the :ttag:`form_field` or :ttag:`checkbox` template tags.
+
+
+.. setting:: DJEM_UNIVERSAL_OLP
+
+``DJEM_UNIVERSAL_OLP``
+======================
+
+.. versionadded:: 0.7
+
+.. currentmodule:: djem.auth
+
+Default: ``False``
+
+In conjunction with a custom user model including :class:`OLPMixin`, setting this to ``True`` enables support for forcing superusers to undergo the same object-level permissions checking that regular users do, allowing OLP logic to actually *deny* permissions to superusers where relevant.

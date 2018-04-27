@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.exceptions import PermissionDenied
 from django.db import models
 
-from djem.auth import UniversalOLPMixin
+from djem.auth import OLPMixin
 from djem.models import (
     ArchivableMixin, CommonInfoMixin, StaticAbstract, TimeZoneField,
     VersioningMixin
@@ -72,7 +72,7 @@ class TimeZoneTest(models.Model):
 
 
 # Custom user model for testing UniversalOLPMixin
-class CustomUser(UniversalOLPMixin, AbstractUser):
+class CustomUser(OLPMixin, AbstractUser):
     
     # Override groups and user_permissions to avoid related_name clashes with
     # the same fields on the regular auth.User model
