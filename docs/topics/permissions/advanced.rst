@@ -73,3 +73,15 @@ With these two requirements met, object-level permissions will be applied "unive
 
             # Do custom logic
             ...
+
+
+.. _permissions-advanced-clear-cache:
+
+Clearing the permission cache
+=============================
+
+As described in :ref:`permissions-cache`, the results of object-level permission checks are cached, which has the downside of the results potentially getting out-of-date if elements of the state used to determine the permission are changed.
+
+By default, the only way to clear this cache is to re-query for a new user instance. This is particularly annoying if needing to replace the user instance on the ``request`` object. :class:`OLPMixin` provides a :meth:`~OLPMixin.clear_perm_cache` method, which, as the name suggests, clears the permissions cache on the user instance.
+
+In addition to clearing the OLP cache, :meth:`~OLPMixin.clear_perm_cache` also clears Django's model-level permissions caches, for good measure.

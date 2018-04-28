@@ -5,9 +5,13 @@ SECRET_KEY = 'abcde12345'
 # Need to point at something
 ROOT_URLCONF = 'djem.tests'
 
-MIDDLEWARE_CLASSES = ()
+MIDDLEWARE_CLASSES = []
 
-INSTALLED_APPS = ()
+# Install minimal apps - only to avoid import errors for autodoc
+INSTALLED_APPS = [
+    'django.contrib.contenttypes',  # for django.contrib.auth
+    'django.contrib.auth'
+]
 
 DATABASES = {
     'default': {

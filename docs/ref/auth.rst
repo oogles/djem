@@ -32,6 +32,11 @@ Auth
 
     A mixin for a custom user model that enables additional :doc:`advanced features <../topics/permissions/advanced>` of the object-level permission system.
 
+    .. method:: has_perm(perm, obj=None)
+
+        A replacement for the default ``has_perm()`` method defined by Django's ``PermissionsMixin``. In conjunction with the :setting:`DJEM_UNIVERSAL_OLP` setting, this version can force superusers to be subject to the same object-level permissions checks as regular users.
+
+    .. automethod:: clear_perm_cache
 
 ``permission_required``
 =======================

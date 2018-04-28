@@ -203,6 +203,8 @@ More subtly, ``get_group_permissions()`` can potentially list permissions that w
 While not accessible via ``PermissionsMixin``, :class:`ObjectPermissionsBackend` also contains a ``get_user_permissions()`` method which suffers from the same side-effect due to ignoring group-based access methods.
 
 
+.. _permissions-cache:
+
 Caching
 =======
 
@@ -210,4 +212,4 @@ Like ``ModelBackend`` `does for model-level permissions <https://docs.djangoproj
 
 This caching system has the same advantages and disadvantages as that used at the model level. Multiple checks of the same permission (on the same object) in the same request will only need to execute the (possibly expensive) logic in your object-level access methods once. However, that means that if something changes within the request that would alter the state of a permission, and that permission has already been checked, the ``User`` object will not immediately reflect the new state of the permission. Exactly what *might* affect the state of a permission depends entirely upon the logic implemented in the ``_user_can_<permission_name>()``/``_group_can_<permission_name>()`` methods, so this is something to be aware of both while writing these methods and while using them.
 
-Clearing the cache is possible by querying for a new instance of the ``User`` or, depending on how your user model is configured :ref:`using the cache-clearing helper method <>`.
+Clearing the cache is possible by querying for a new instance of the ``User`` or, depending on how your user model is configured, :ref:`using the cache-clearing helper method <permissions-advanced-clear-cache>`.

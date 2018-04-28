@@ -14,9 +14,15 @@ DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
 class OLPMixin(object):
     """
-    Simple mixin for a custom user model, enabling advanced object-level
-    permission related features.
+    A mixin for a custom user model that enables additional advanced features
+    of the object-level permission system.
     """
+    
+    def __init__(self, *args, **kwargs):
+        
+        self._olp_cache = {}
+        
+        super(OLPMixin, self).__init__(*args, **kwargs)
     
     def has_perm(self, perm, obj=None):
         
@@ -30,6 +36,20 @@ class OLPMixin(object):
             return True
         
         return _user_has_perm(self, perm, obj)
+    
+    def clear_perm_cache(self):
+        """
+        Clear the object-level and model-level permissions caches on the user
+        instance.
+        """
+        
+        # Clear the object-level permissions cache
+        self._olp_cache = {}
+        
+        # Clear the model-level permissions cache as well, for good measure
+        del self._user_perm_cache
+        del self._group_perm_cache
+        del self._perm_cache
 
 
 class ObjectPermissionsBackend(object):
@@ -48,9 +68,17 @@ class ObjectPermissionsBackend(object):
         if not user_obj.is_active:
             return False
         
-        perm_cache_name = '_{0}_perm_cache_{1}_{2}'.format(from_name, perm, obj.pk)
+        try:
+            perm_cache = user_obj._olp_cache
+        except AttributeError:
+            # OLP cache dictionary will not exist by default if not using
+            # OLPMixin and no permissions have yet been checked on this user
+            # object
+            perm_cache = user_obj._olp_cache = {}
         
-        if not hasattr(user_obj, perm_cache_name):
+        perm_cache_name = '{0}-{1}-{2}'.format(from_name, perm, obj.pk)
+        
+        if perm_cache_name not in perm_cache:
             if not user_obj.has_perm(perm):
                 # The User needs to have model-level permissions in order to
                 # get object-level permissions
@@ -76,9 +104,9 @@ class ObjectPermissionsBackend(object):
                     except PermissionDenied:
                         access = False
             
-            setattr(user_obj, perm_cache_name, access)
+            perm_cache[perm_cache_name] = access
         
-        return getattr(user_obj, perm_cache_name)
+        return perm_cache[perm_cache_name]
     
     def _get_object_permissions(self, user_obj, obj, from_name=None):
         """

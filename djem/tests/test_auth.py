@@ -65,12 +65,35 @@ class OLPTestCase(TestCase):
     
     def cache(self, cache_type, perm_name, obj):
         
-        return '_{0}_perm_cache_tests.{1}_{2}_{3}'.format(
+        return '{0}-tests.{1}_{2}-{3}'.format(
             cache_type,
             perm_name,
             self.model_name,
             obj.pk
         )
+    
+    def cache_empty_test(self, user):
+        
+        # The cache attribute on the user does not exist by default
+        with self.assertRaises(AttributeError):
+            getattr(user, '_olp_cache')
+        
+        # Django's own permission cache attributes should not exist either
+        with self.assertRaises(AttributeError):
+            getattr(user, '_user_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_group_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_perm_cache')
+    
+    def cache_reset_test(self, user):
+        
+        # Requerying for the user is the only way to reset the cache
+        user = self.UserModel.objects.get(pk=user.pk)
+        
+        self.cache_empty_test(user)
     
     def test_auth__valid(self):
         """
@@ -170,7 +193,7 @@ class OLPTestCase(TestCase):
     
     def test_has_perm__no_access_fn(self):
         """
-        Test that the lack of defined permission access functions on the object
+        Test that the lack of defined permission access methods on the object
         being tested does not deny access (checking a permission without passing
         an object should be identical to checking a permission with passing an
         object, if there is no object-level logic involved in granting/denying
@@ -278,26 +301,16 @@ class OLPTestCase(TestCase):
         group_perm_cache_name = self.cache('group', 'combined', obj)
         
         # Test cache does not exist
-        with self.assertRaises(AttributeError):
-            getattr(user, user_perm_cache_name)
-        
-        with self.assertRaises(AttributeError):
-            getattr(user, group_perm_cache_name)
+        self.cache_empty_test(user)
         
         user.has_perm(self.perm('combined'), obj)
         
         # Test cache has been set
-        self.assertFalse(getattr(user, user_perm_cache_name))
-        self.assertFalse(getattr(user, group_perm_cache_name))
+        self.assertFalse(user._olp_cache[user_perm_cache_name])
+        self.assertFalse(user._olp_cache[group_perm_cache_name])
         
-        # Test requerying for the user resets the cache
-        user = self.UserModel.objects.get(pk=user.pk)
-        
-        with self.assertRaises(AttributeError):
-            getattr(user, user_perm_cache_name)
-        
-        with self.assertRaises(AttributeError):
-            getattr(user, group_perm_cache_name)
+        # Test resetting the cache
+        self.cache_reset_test(user)
     
     def test_has_perms(self):
         """
@@ -439,25 +452,20 @@ class OLPTestCase(TestCase):
             self.cache('user', 'deny', obj)
         )
         
-        # Test caches do not exist
-        for cache_attr in expected_caches:
-            with self.assertRaises(AttributeError):
-                getattr(user, cache_attr)
+        # Test cache does not exist
+        self.cache_empty_test(user)
         
         backend.get_user_permissions(user, obj)
         
         # Test caches have been set
-        for cache_attr in expected_caches:
+        for cache_key in expected_caches:
             try:
-                getattr(user, cache_attr)
-            except AttributeError:  # pragma: no cover
-                self.fail('Cache not set: {0}'.format(cache_attr))
+                user._olp_cache[cache_key]
+            except (AttributeError, KeyError):  # pragma: no cover
+                self.fail('Cache not set: {0}'.format(cache_key))
         
-        # Test requerying for the user resets the cache
-        user = self.UserModel.objects.get(pk=user.pk)
-        for cache_attr in expected_caches:
-            with self.assertRaises(AttributeError):
-                getattr(user, cache_attr)
+        # Test resetting the cache
+        self.cache_reset_test(user)
     
     def test_get_group_permissions(self):
         """
@@ -573,25 +581,20 @@ class OLPTestCase(TestCase):
             self.cache('group', 'deny', obj)
         )
         
-        # Test caches do not exist
-        for cache_attr in expected_caches:
-            with self.assertRaises(AttributeError):
-                getattr(user, cache_attr)
+        # Test cache does not exist
+        self.cache_empty_test(user)
         
         user.get_group_permissions(obj)
         
         # Test caches have been set
-        for cache_attr in expected_caches:
+        for cache_key in expected_caches:
             try:
-                getattr(user, cache_attr)
-            except AttributeError:  # pragma: no cover
-                self.fail('Cache not set: {0}'.format(cache_attr))
+                user._olp_cache[cache_key]
+            except (AttributeError, KeyError):  # pragma: no cover
+                self.fail('Cache not set: {0}'.format(cache_key))
         
-        # Test requerying for the user resets the cache
-        user = self.UserModel.objects.get(pk=user.pk)
-        for cache_attr in expected_caches:
-            with self.assertRaises(AttributeError):
-                getattr(user, cache_attr)
+        # Test resetting the cache
+        self.cache_reset_test(user)
     
     def test_get_all_permissions(self):
         """
@@ -730,34 +733,59 @@ class OLPTestCase(TestCase):
         
         unexpected_caches = [s.format(obj.pk) for s in unexpected_caches]
         
-        # Test all caches do not exist
-        for cache_attr in expected_caches + unexpected_caches:
-            with self.assertRaises(AttributeError):
-                getattr(user, cache_attr)
+        # Test cache does not exist
+        self.cache_empty_test(user)
         
         user.get_all_permissions(obj)
         
         # Test expected caches have been set
-        for cache_attr in expected_caches:
+        for cache_key in expected_caches:
             try:
-                getattr(user, cache_attr)
-            except AttributeError:  # pragma: no cover
-                self.fail('Cache not set: {0}'.format(cache_attr))
+                user._olp_cache[cache_key]
+            except (AttributeError, KeyError):  # pragma: no cover
+                self.fail('Cache not set: {0}'.format(cache_key))
         
         # Test unexpected caches still do not exist
-        for cache_attr in unexpected_caches:
-            with self.assertRaises(AttributeError):
-                getattr(user, cache_attr)
+        for cache_key in unexpected_caches:
+            with self.assertRaises(KeyError):
+                user._olp_cache[cache_key]
         
-        # Test requerying for the user resets the all caches
-        user = self.UserModel.objects.get(pk=user.pk)
-        for cache_attr in expected_caches + unexpected_caches:
-            with self.assertRaises(AttributeError):
-                getattr(user, cache_attr)
+        # Test resetting the cache
+        self.cache_reset_test(user)
+
+
+class OLPCacheMixin:
+    
+    #
+    # Overrides for the cache testing helper methods defined on OLPTestCase,
+    # for test cases that use a user model that incorporates OLPMixin
+    #
+    
+    def cache_empty_test(self, user):
+        
+        # OLPMixin defines the cache attribute by default, but it should be empty
+        self.assertEqual(user._olp_cache, {})
+        
+        # Django's own permission cache attributes should not exist
+        with self.assertRaises(AttributeError):
+            getattr(user, '_user_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_group_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_perm_cache')
+    
+    def cache_reset_test(self, user):
+        
+        # OLPMixin provides a method to clear the cache
+        user.clear_perm_cache()
+        
+        self.cache_empty_test(user)
 
 
 @override_settings(AUTH_USER_MODEL='tests.CustomUser', DJEM_UNIVERSAL_OLP=False)
-class UniversalOLPFalseTestCase(OLPTestCase):
+class UniversalOLPFalseTestCase(OLPCacheMixin, OLPTestCase):
     
     #
     # A repeat of the object-level permissions tests for the default user model,
@@ -768,10 +796,10 @@ class UniversalOLPFalseTestCase(OLPTestCase):
     UserModel = CustomUser
     TestModel = UniversalOLPTest
     model_name = 'universalolptest'
-
+    
 
 @override_settings(AUTH_USER_MODEL='tests.CustomUser', DJEM_UNIVERSAL_OLP=True)
-class UniversalOLPTrueTestCase(OLPTestCase):
+class UniversalOLPTrueTestCase(OLPCacheMixin, OLPTestCase):
     
     #
     # A repeat of the object-level permissions tests for the default user model,
