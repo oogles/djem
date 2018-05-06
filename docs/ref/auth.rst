@@ -38,6 +38,7 @@ Auth
 
     .. automethod:: clear_perm_cache
 
+
 ``permission_required``
 =======================
 

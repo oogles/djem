@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from functools import wraps
 
 from django.conf import settings
@@ -21,6 +22,9 @@ class OLPMixin(object):
     def __init__(self, *args, **kwargs):
         
         self._olp_cache = {}
+        
+        self._active_logs = OrderedDict()
+        self._finished_logs = OrderedDict()
         
         super(OLPMixin, self).__init__(*args, **kwargs)
     
@@ -50,6 +54,96 @@ class OLPMixin(object):
         del self._user_perm_cache
         del self._group_perm_cache
         del self._perm_cache
+    
+    def start_log(self, name):
+        """
+        Start a new log with the given ``name``. The new log becomes the
+        current "active" log.
+        
+        :param name: The name of the log.
+        """
+        
+        if name in self._active_logs:
+            raise ValueError('A log named "{0}" is already active.'.format(name))
+        
+        self._active_logs[name] = []
+    
+    def end_log(self):
+        """
+        End the currently active log. A log must be ended in order to be
+        retrieved.
+        """
+        
+        # Move from active logs to finished logs
+        name, log = self._active_logs.popitem()
+        
+        # If a log with the same name has been finished previously, remove it
+        # from the finished logs dict before adding this one, so that this one
+        # is added to the "end" of the ordered dict.
+        if name in self._finished_logs:
+            self._finished_logs.pop(name)
+        
+        self._finished_logs[name] = log
+    
+    def log(self, *lines):
+        """
+        Append to the currently active log. Each given argument will be added
+        as a separate line to the log.
+        
+        :param lines: Individual lines to add to the log.
+        """
+        
+        # Pop to get the last item
+        name, log = self._active_logs.popitem()
+        
+        # Append to the log
+        log.extend(lines)
+        
+        # Put back in the active logs dict
+        self._active_logs[name] = log
+    
+    def get_log(self, name, raw=False):
+        """
+        Return the named log, as a string. The log must have been ended (via
+        ``end_log()``) in order to retrieve it. Can return the raw list of lines
+        in the log if ``raw=True``.
+        
+        :param name: The name of the log to retrieve.
+        :param raw: ``True`` to return the log as a list. Returned as a string by default.
+        :return: The log, either as a string or a list.
+        """
+        
+        try:
+            log = self._finished_logs[name]
+        except KeyError:
+            raise KeyError('No log found for "{0}". Has it been finished?'.format(name))
+        
+        if raw:
+            return log
+        
+        return '\n'.join(log)
+    
+    def get_last_log(self, raw=False):
+        """
+        Return the most recently finished log, as a string. Can return the raw
+        list of lines in the log if ``raw=True``.
+        
+        :param raw: ``True`` to return the log as a list. Returned as a string by default.
+        :return: The log, either as a string or a list.
+        """
+        
+        # Pop to get the last item, but put it straight back
+        try:
+            name, log = self._finished_logs.popitem()
+        except KeyError:
+            raise KeyError('No finished logs to retrieve.')
+        
+        self._finished_logs[name] = log
+        
+        if raw:
+            return log
+        
+        return '\n'.join(log)
 
 
 class ObjectPermissionsBackend(object):
