@@ -13,6 +13,11 @@ from django.utils.six.moves.urllib.parse import urlparse
 DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
 
+def get_user_log_verbosity():
+    
+    return getattr(settings, 'DJEM_PERM_LOG_VERBOSITY', 0)
+
+
 class OLPMixin(object):
     """
     A mixin for a custom user model that enables additional advanced features
@@ -28,18 +33,60 @@ class OLPMixin(object):
         
         super(OLPMixin, self).__init__(*args, **kwargs)
     
+    def _check_perm(self, perm, obj):
+        
+        if not getattr(settings, 'DJEM_UNIVERSAL_OLP', False):
+            # Default behaviour: active superusers implicitly have ALL permissions
+            if self.is_active and self.is_superuser:
+                return True, 'Active superuser: Implicit permission'
+            
+            return _user_has_perm(self, perm, obj), None
+        else:
+            # "Universal OLP" behaviour: active superusers implicitly have all
+            # permissions at the model level, but are subject to object-level
+            # checks
+            if not obj and self.is_active and self.is_superuser:
+                return True, 'Active superuser: Implicit permission (model-level)'
+            
+            return _user_has_perm(self, perm, obj), None
+    
+    def logged_has_perm(self, perm, obj=None, verbosity=1):
+        
+        log_key = 'auto-{}'.format(perm)
+        if obj:
+            log_key = '{}-{}'.format(log_key, obj.pk)
+
+        self.start_log(log_key)
+        
+        if verbosity > 1:
+            perm_log = 'Permission: {}'.format(perm)
+            user_log = 'User: {} ({})'.format(self.get_username(), self.pk)
+            
+            if obj:
+                self.log(perm_log, user_log, 'Object: {} ({})\n'.format(str(obj), obj.pk))
+            else:
+                user_log = '{}\n'.format(user_log)
+                self.log(perm_log, user_log)
+        
+        has_perm, log_entry = self._check_perm(perm, obj)
+        
+        if log_entry:
+            self.log(log_entry)
+        
+        self.log('\nRESULT: {}'.format('Permission Granted' if has_perm else 'Permission Denied'))
+        self.end_log()
+        
+        return has_perm
+    
     def has_perm(self, perm, obj=None):
         
-        # Use the default behaviour unless DJEM_UNIVERSAL_OLP is True
-        if not getattr(settings, 'DJEM_UNIVERSAL_OLP', False):
-            return super(OLPMixin, self).has_perm(perm, obj)
+        verbosity = get_user_log_verbosity()
         
-        # Customise behaviour - active superusers implicitly have all
-        # model-level permissions, but are subject to object-level checks
-        if not obj and self.is_active and self.is_superuser:
-            return True
-        
-        return _user_has_perm(self, perm, obj)
+        if verbosity:
+            return self.logged_has_perm(perm, obj, verbosity)
+        else:
+            has_perm, log_entry = self._check_perm(perm, obj)
+            return has_perm
     
     def clear_perm_cache(self):
         """
@@ -51,9 +98,12 @@ class OLPMixin(object):
         self._olp_cache = {}
         
         # Clear the model-level permissions cache as well, for good measure
-        del self._user_perm_cache
-        del self._group_perm_cache
-        del self._perm_cache
+        try:
+            del self._user_perm_cache
+            del self._group_perm_cache
+            del self._perm_cache
+        except AttributeError:
+            pass
     
     def start_log(self, name):
         """
@@ -119,7 +169,7 @@ class OLPMixin(object):
             raise KeyError('No log found for "{0}". Has it been finished?'.format(name))
         
         if raw:
-            return log
+            return list(log)  # return a copy
         
         return '\n'.join(log)
     
@@ -141,7 +191,7 @@ class OLPMixin(object):
         self._finished_logs[name] = log
         
         if raw:
-            return log
+            return list(log)  # return a copy
         
         return '\n'.join(log)
 
@@ -152,6 +202,23 @@ class ObjectPermissionsBackend(object):
         
         return None
     
+    def _get_model_permission(self, perm, user_obj):
+        
+        verbosity = get_user_log_verbosity()
+        if not verbosity:
+            access = user_obj.has_perm(perm)
+        else:
+            access = user_obj.logged_has_perm(perm)
+            
+            # Add the log from the model-level check to the log for the
+            # object-level check, replacing the "result" line
+            log = user_obj.get_last_log(raw=True)
+            log.pop()
+            log.append('Model-level Result: {}\n'.format('Granted' if access else 'Denied'))
+            user_obj.log(*log)
+        
+        return access
+    
     def _get_object_permission(self, perm, user_obj, obj, from_name):
         """
         Test if a user has a permission on a specific model object.
@@ -159,7 +226,9 @@ class ObjectPermissionsBackend(object):
         using the user object itself or the groups it belongs to, respectively.
         """
         
-        if not user_obj.is_active:
+        if not user_obj.is_active:  # pragma: no cover
+            # An inactive user won't normally get this far as they would not
+            # pass the model-level permissions check
             return False
         
         try:
@@ -173,30 +242,25 @@ class ObjectPermissionsBackend(object):
         perm_cache_name = '{0}-{1}-{2}'.format(from_name, perm, obj.pk)
         
         if perm_cache_name not in perm_cache:
-            if not user_obj.has_perm(perm):
-                # The User needs to have model-level permissions in order to
-                # get object-level permissions
-                access = False
+            access_fn_name = '_{0}_can_{1}'.format(
+                from_name,
+                perm.split('.')[-1]
+            )
+            access_fn = getattr(obj, access_fn_name, None)
+            
+            if not access_fn:
+                # No function defined on obj to determine access - assume
+                # access should be granted if no explicit object-level logic
+                # exists to determine otherwise
+                access = None
             else:
-                access_fn_name = '_{0}_can_{1}'.format(
-                    from_name,
-                    perm.split('.')[-1]
-                )
-                access_fn = getattr(obj, access_fn_name, None)
-                
-                if not access_fn:
-                    # No function defined on obj to determine access - assume
-                    # access should be granted if no explicit object-level logic
-                    # exists to determine otherwise
-                    access = None
-                else:
-                    try:
-                        if from_name == 'user':
-                            access = access_fn(user_obj)
-                        else:
-                            access = access_fn(user_obj.groups.all())
-                    except PermissionDenied:
-                        access = False
+                try:
+                    if from_name == 'user':
+                        access = access_fn(user_obj)
+                    else:
+                        access = access_fn(user_obj.groups.all())
+                except PermissionDenied:
+                    access = False
             
             perm_cache[perm_cache_name] = access
         
@@ -228,6 +292,9 @@ class ObjectPermissionsBackend(object):
         else:
             perms = set()
             for perm in perms_for_model:
+                if not self._get_model_permission(perm, user_obj):
+                    continue
+                
                 user_access = None
                 group_access = None
                 
@@ -264,6 +331,9 @@ class ObjectPermissionsBackend(object):
         
         if not obj:
             return False  # not dealing with non-object permissions
+        
+        if not self._get_model_permission(perm, user_obj):
+            return False
         
         user_access = self._get_object_permission(perm, user_obj, obj, 'user')
         group_access = None

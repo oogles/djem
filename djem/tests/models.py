@@ -71,7 +71,7 @@ class TimeZoneTest(models.Model):
     ))
 
 
-# Custom user model for testing UniversalOLPMixin
+# Custom user model for testing OLPMixin
 class CustomUser(OLPMixin, AbstractUser):
     
     # Override groups and user_permissions to avoid related_name clashes with
@@ -80,7 +80,27 @@ class CustomUser(OLPMixin, AbstractUser):
     user_permissions = models.ManyToManyField(Permission, related_name='+')
 
 
-# Model for object-level permissions testing with standard users
+# Model for testing OLPMixin permission logging
+class LogTest(models.Model):
+    
+    def __str__(self):
+        
+        return 'Log Test #{}'.format(self.pk)
+    
+    def _user_can_olp_logtest(self, user):
+        
+        user.log('This permission is restricted.')
+        
+        return False
+    
+    class Meta:
+        permissions = (
+            ('mlp_logtest', 'Permission with no object-level checks'),
+            ('olp_logtest', 'Permission with object-level checks and additional logging'),
+        )
+
+
+# Model for testing object-level permissions with standard user model
 class OLPTest(models.Model):
     
     user = models.ForeignKey('auth.User', null=True, on_delete=models.PROTECT)
@@ -136,7 +156,7 @@ class OLPTest(models.Model):
         )
 
 
-# Model for object-level permissions testing with superusers (via CustomUser)
+# Model for testing object-level permissions with custom user model incorporating OLPMixin
 class UniversalOLPTest(models.Model):
     
     user = models.ForeignKey(CustomUser, null=True, on_delete=models.PROTECT)

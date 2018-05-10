@@ -8,7 +8,7 @@ from django.views import View
 
 from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
 
-from .models import CustomUser, OLPTest, UniversalOLPTest
+from .models import CustomUser, LogTest, OLPTest, UniversalOLPTest
 
 
 def _test_view(request, obj=None):
@@ -28,7 +28,42 @@ class OLPMixinTestCase(TestCase):
     
     def setUp(self):
         
-        self.user = CustomUser.objects.create_user('test')
+        self.user = CustomUser.objects.create_user('test.user')
+    
+    def test_clear_perm_cache__no_checks(self):
+        """
+        Test the clear_perm_cache() method before any permissions have been
+        checked. It should have no effect.
+        """
+        
+        user = self.user
+        
+        # OLPMixin defines the cache attribute by default, but it should be empty
+        self.assertEqual(user._olp_cache, {})
+        
+        # Django's MLP cache attributes should not exist
+        with self.assertRaises(AttributeError):
+            getattr(user, '_user_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_group_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_perm_cache')
+        
+        # Clear the cache
+        user.clear_perm_cache()
+        
+        self.assertEqual(user._olp_cache, {})
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_user_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_group_perm_cache')
+        
+        with self.assertRaises(AttributeError):
+            getattr(user, '_perm_cache')
     
     def test_clear_perm_cache__mlp(self):
         """
@@ -435,7 +470,7 @@ class OLPMixinTestCase(TestCase):
         with self.assertRaisesMessage(KeyError, 'No finished logs to retrieve'):
             self.user.get_last_log()
     
-    def test_repeat_when_ended(self):
+    def test_repeating_logs(self):
         """
         Test the log() method with multiple nested logs, including reusing
         previous log names for logs that have been properly ended (as might
@@ -487,6 +522,363 @@ class OLPMixinTestCase(TestCase):
         )
         
         self.assertEqual(user.get_log('nested_log'), 'third run')
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=0)
+    def test_has_perm__logging__0(self):
+        """
+        Test the overridden has_perm() method when the DJEM_PERM_LOG_VERBOSITY
+        setting is 0 (no logging). No log should be created automatically.
+        """
+        
+        user = self.user
+        
+        user.has_perm('tests.mlp_logtest')
+        
+        with self.assertRaisesMessage(KeyError, 'No finished logs to retrieve'):
+            user.get_last_log()
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
+    def test_has_perm__logging__1__mlp(self):
+        """
+        Test the overridden has_perm() method for a model-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 1 (automatic logging, minimal output).
+        A log should be created automatically with a minimum of automatic log
+        entries.
+        """
+        
+        user = self.user
+        
+        user.has_perm('tests.mlp_logtest')
+        
+        # Only one log - thet for the model-level check - should be created
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            '\nRESULT: Permission Denied'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
+    def test_has_perm__logging__1__olp(self):
+        """
+        Test the overridden has_perm() method for an object-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 1 (automatic logging, minimal output).
+        A log should be created automatically with a minimum of automatic log
+        entries.
+        """
+        
+        user = self.user
+        
+        # Grant the user the model-level permission so that object-level checks
+        # are performed
+        user.user_permissions.add(Permission.objects.get(codename='olp_logtest'))
+        
+        obj = LogTest.objects.create()
+        
+        user.has_perm('tests.olp_logtest', obj)
+        
+        # Two logs should be created - one for the model-level permission
+        # check and another for the object-level permission check
+        self.assertEqual(len(user._finished_logs), 2)
+        self.assertEqual(
+            list(user._finished_logs.keys()),
+            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+        )
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Model-level Result: Granted\n',
+            'This permission is restricted.',
+            '\nRESULT: Permission Denied'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
+    def test_has_perm__logging__1__mlp__superuser(self):
+        """
+        Test the overridden has_perm() method for a model-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 1 (automatic logging, minimal output)
+        and when the user is a superuser. A log should be created automatically
+        with a minimum of automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        user.has_perm('tests.mlp_logtest')
+        
+        # Only one log - thet for the model-level check - should be created
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Active superuser: Implicit permission',
+            '\nRESULT: Permission Granted'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
+    def test_has_perm__logging__1__olp__superuser(self):
+        """
+        Test the overridden has_perm() method for an object-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 1 (automatic logging, minimal output)
+        and when the user is a superuser. A log should be created automatically
+        with a minimum of automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        obj = LogTest.objects.create()
+        
+        user.has_perm('tests.olp_logtest', obj)
+        
+        # Only one log should be created - the object-level permission should
+        # be implicitly granted without even needing the model-level check first
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Active superuser: Implicit permission',
+            '\nRESULT: Permission Granted'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=1, DJEM_UNIVERSAL_OLP=True)
+    def test_has_perm__logging__1__mlp__superuser__universal_olp(self):
+        """
+        Test the overridden has_perm() method for a model-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 1 (automatic logging, minimal output),
+        DJEM_UNIVERSAL_OLP is True, and when the user is a superuser. A log
+        should be created automatically with a minimum of automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        user.has_perm('tests.mlp_logtest')
+        
+        # Only one log - thet for the model-level check - should be created
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Active superuser: Implicit permission (model-level)',
+            '\nRESULT: Permission Granted'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=1, DJEM_UNIVERSAL_OLP=True)
+    def test_has_perm__logging__1__olp__superuser__universal_olp(self):
+        """
+        Test the overridden has_perm() method for an object-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 1 (automatic logging, minimal output),
+        DJEM_UNIVERSAL_OLP is True, and when the user is a superuser. A log
+        should be created automatically with a minimum of automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        obj = LogTest.objects.create()
+        
+        user.has_perm('tests.olp_logtest', obj)
+        
+        # Two logs should be created - one for the model-level permission
+        # check and another for the object-level permission check (which is
+        # still performed for superusers with universal OLP)
+        self.assertEqual(len(user._finished_logs), 2)
+        self.assertEqual(
+            list(user._finished_logs.keys()),
+            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+        )
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Active superuser: Implicit permission (model-level)',
+            'Model-level Result: Granted\n',
+            'This permission is restricted.',
+            '\nRESULT: Permission Denied'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
+    def test_has_perm__logging__2__mlp(self):
+        """
+        Test the overridden has_perm() method for a model-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 2 (automatic logging, standard output).
+        A log should be created automatically with all standard automatic log
+        entries.
+        """
+        
+        user = self.user
+        
+        user.has_perm('tests.mlp_logtest')
+        
+        # Only one log - thet for the model-level check - should be created
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Permission: tests.mlp_logtest',
+            'User: test.user ({})\n'.format(self.user.pk),
+            '\nRESULT: Permission Denied'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
+    def test_has_perm__logging__2__olp(self):
+        """
+        Test the overridden has_perm() method for an object-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 2 (automatic logging, standard output).
+        A log should be created automatically with all standard automatic log
+        entries.
+        """
+        
+        user = self.user
+        
+        # Grant the user the model-level permission so that object-level checks
+        # are performed
+        user.user_permissions.add(Permission.objects.get(codename='olp_logtest'))
+        
+        obj = LogTest.objects.create()
+        
+        user.has_perm('tests.olp_logtest', obj)
+        
+        # Two logs should be created - one for the model-level permission
+        # check and another for the object-level permission check
+        self.assertEqual(len(user._finished_logs), 2)
+        self.assertEqual(
+            list(user._finished_logs.keys()),
+            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+        )
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Permission: tests.olp_logtest',
+            'User: test.user ({})'.format(self.user.pk),
+            'Object: Log Test #{0} ({0})\n'.format(obj.pk),
+            'Model-level Result: Granted\n',
+            'This permission is restricted.',
+            '\nRESULT: Permission Denied'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
+    def test_has_perm__logging__2__mlp__superuser(self):
+        """
+        Test the overridden has_perm() method for a model-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 2 (automatic logging, standard output)
+        and when the user is a superuser. A log should be created automatically
+        with all standard automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        user.has_perm('tests.mlp_logtest')
+        
+        # Only one log - thet for the model-level check - should be created
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Permission: tests.mlp_logtest',
+            'User: test.user ({})\n'.format(self.user.pk),
+            'Active superuser: Implicit permission',
+            '\nRESULT: Permission Granted'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
+    def test_has_perm__logging__2__olp__superuser(self):
+        """
+        Test the overridden has_perm() method for an object-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 2 (automatic logging, standard output)
+        and when the user is a superuser. A log should be created automatically
+        with all standard automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        obj = LogTest.objects.create()
+        
+        user.has_perm('tests.olp_logtest', obj)
+        
+        # Only one log should be created - the object-level permission should
+        # be implicitly granted without even needing the model-level check first
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Permission: tests.olp_logtest',
+            'User: test.user ({})'.format(self.user.pk),
+            'Object: Log Test #{0} ({0})\n'.format(obj.pk),
+            'Active superuser: Implicit permission',
+            '\nRESULT: Permission Granted'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=2, DJEM_UNIVERSAL_OLP=True)
+    def test_has_perm__logging__2__mlp__superuser__universal_olp(self):
+        """
+        Test the overridden has_perm() method for a model-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 2 (automatic logging, standard output),
+        DJEM_UNIVERSAL_OLP is True, and when the user is a superuser. A log
+        should be created automatically with all standard automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        user.has_perm('tests.mlp_logtest')
+        
+        # Only one log - thet for the model-level check - should be created
+        self.assertEqual(len(user._finished_logs), 1)
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Permission: tests.mlp_logtest',
+            'User: test.user ({})\n'.format(self.user.pk),
+            'Active superuser: Implicit permission (model-level)',
+            '\nRESULT: Permission Granted'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=2, DJEM_UNIVERSAL_OLP=True)
+    def test_has_perm__logging__2__olp__superuser__universal_olp(self):
+        """
+        Test the overridden has_perm() method for an object-level check when the
+        DJEM_PERM_LOG_VERBOSITY setting is 2 (automatic logging, standard output),
+        DJEM_UNIVERSAL_OLP is True, and when the user is a superuser. A log
+        should be created automatically with all standard automatic log entries.
+        """
+        
+        user = self.user
+        user.is_superuser = True
+        user.save()
+        
+        obj = LogTest.objects.create()
+        
+        user.has_perm('tests.olp_logtest', obj)
+        
+        # Two logs should be created - one for the model-level permission
+        # check and another for the object-level permission check (which is
+        # still performed for superusers with universal OLP)
+        self.assertEqual(len(user._finished_logs), 2)
+        self.assertEqual(
+            list(user._finished_logs.keys()),
+            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+        )
+        
+        log = user.get_last_log(raw=True)
+        self.assertEqual(log, [
+            'Permission: tests.olp_logtest',
+            'User: test.user ({})'.format(self.user.pk),
+            'Object: Log Test #{0} ({0})\n'.format(obj.pk),
+            'Active superuser: Implicit permission (model-level)',
+            'Model-level Result: Granted\n',
+            'This permission is restricted.',
+            '\nRESULT: Permission Denied'
+        ])
 
 
 @override_settings(AUTH_USER_MODEL='auth.User')
@@ -901,24 +1293,34 @@ class OLPTestCase(TestCase):
             self.cache('user', 'change', obj),
             self.cache('user', 'delete', obj),
             self.cache('user', 'open', obj),
-            self.cache('user', 'closed', obj),
             self.cache('user', 'user_only', obj),
             self.cache('user', 'group_only', obj),
             self.cache('user', 'combined', obj),
             self.cache('user', 'deny', obj)
         )
         
+        unexpected_caches = (
+            self.cache('user', 'closed', obj),  # does not reach OLP stage (MLP denied)
+        )
+        
+        unexpected_caches = [s.format(obj.pk) for s in unexpected_caches]
+        
         # Test cache does not exist
         self.cache_empty_test(user)
         
         backend.get_user_permissions(user, obj)
         
-        # Test caches have been set
+        # Test expected caches have been set
         for cache_key in expected_caches:
             try:
                 user._olp_cache[cache_key]
             except (AttributeError, KeyError):  # pragma: no cover
                 self.fail('Cache not set: {0}'.format(cache_key))
+        
+        # Test unexpected caches still do not exist
+        for cache_key in unexpected_caches:
+            with self.assertRaises(KeyError):
+                user._olp_cache[cache_key]
         
         # Test resetting the cache
         self.cache_reset_test(user)
@@ -1030,24 +1432,34 @@ class OLPTestCase(TestCase):
             self.cache('group', 'change', obj),
             self.cache('group', 'delete', obj),
             self.cache('group', 'open', obj),
-            self.cache('group', 'closed', obj),
             self.cache('group', 'user_only', obj),
             self.cache('group', 'group_only', obj),
             self.cache('group', 'combined', obj),
             self.cache('group', 'deny', obj)
         )
         
+        unexpected_caches = (
+            self.cache('group', 'closed', obj),  # does not reach OLP stage (MLP denied)
+        )
+        
+        unexpected_caches = [s.format(obj.pk) for s in unexpected_caches]
+        
         # Test cache does not exist
         self.cache_empty_test(user)
         
         user.get_group_permissions(obj)
         
-        # Test caches have been set
+        # Test expected caches have been set
         for cache_key in expected_caches:
             try:
                 user._olp_cache[cache_key]
             except (AttributeError, KeyError):  # pragma: no cover
                 self.fail('Cache not set: {0}'.format(cache_key))
+        
+        # Test unexpected caches still do not exist
+        for cache_key in unexpected_caches:
+            with self.assertRaises(KeyError):
+                user._olp_cache[cache_key]
         
         # Test resetting the cache
         self.cache_reset_test(user)
@@ -1165,9 +1577,6 @@ class OLPTestCase(TestCase):
             
             self.cache('user', 'open', obj),  # group won't need checking
             
-            self.cache('user', 'closed', obj),
-            self.cache('group', 'closed', obj),
-            
             self.cache('user', 'user_only', obj),  # group won't need checking
             
             self.cache('user', 'group_only', obj),
@@ -1182,6 +1591,11 @@ class OLPTestCase(TestCase):
         expected_caches = [s.format(obj.pk) for s in expected_caches]
         
         unexpected_caches = (
+            # Does not reach OLP stage (MLP denied)
+            self.cache('user', 'closed', obj),
+            self.cache('group', 'closed', obj),
+            
+            #  Does not reach group OLP stage (user OLP granted)
             self.cache('group', 'open', obj),
             self.cache('group', 'user_only', obj),
             self.cache('group', 'combined', obj)
