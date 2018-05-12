@@ -6,8 +6,9 @@ Change Log
 ===
 
 * Added ``UNDEFINED`` constant
-* Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality
+* Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality and user-based logging
 * Added ``DJEM_UNIVERSAL_OLP`` setting
+* Added ``DJEM_PERM_LOG_VERBOSITY`` setting
 * Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``CommonInfoMixin`` - this was far too specific a use-case to be the default
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods
 * Removed ``ArchivableQuerySet``'s ``archive()`` and ``unarchive()`` methods
@@ -16,10 +17,15 @@ Change Log
 * Moved custom ``QuerySet`` classes for mixins into ``djem.models.models``
 
 
-0.6.1
+0.6.2
 =====
 
 * Fixed #2: Object level access now defaults open when no model method exists to define it explicitly
+
+0.6.1
+=====
+
+* Updated PyPi details
 
 0.6
 ===
