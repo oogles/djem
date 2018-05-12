@@ -158,7 +158,10 @@ class OLPMixin(object):
         """
         
         # Pop to get the last item
-        name, log = self._active_logs.popitem()
+        try:
+            name, log = self._active_logs.popitem()
+        except KeyError:
+            raise KeyError('No active log to append to. Has one been started?')
         
         # Append to the log
         log.extend(lines)
@@ -304,6 +307,16 @@ class ObjectPermissionsBackend(object):
             # the same OLP logic as regular users
             perms = set(perms_for_model)
         else:
+            # If using any level of automated logging for permissions, create a
+            # temporary log to act as the target for any log entries (either
+            # automatic entries appended by this backend or any manual entries
+            # that may be present in object-level access methods). The usual
+            # automatic log started as part of OLPMixin.has_perm() will not
+            # have been created, so this acts as a replacement.
+            log_verbosity = get_user_log_verbosity()
+            if log_verbosity:
+                user_obj.start_log('temp-{0}'.format(obj.pk))
+            
             perms = set()
             for perm in perms_for_model:
                 if not self._get_model_permission(perm, user_obj):
@@ -326,6 +339,10 @@ class ObjectPermissionsBackend(object):
                 # object-level access method
                 if user_access or group_access or (user_access is None and group_access is None):
                     perms.add(perm)
+            
+            # Remove the temporary log, if one was created
+            if log_verbosity:
+                user_obj.discard_log()
         
         return perms
     

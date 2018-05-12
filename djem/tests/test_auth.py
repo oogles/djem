@@ -456,7 +456,7 @@ class OLPMixinTestCase(TestCase):
         KeyError.
         """
         
-        with self.assertRaises(KeyError):
+        with self.assertRaisesMessage(KeyError, 'No active log to append to. Has one been started?'):
             self.user.log('first line', 'second line')
     
     def test_get_log(self):
@@ -948,6 +948,55 @@ class OLPMixinTestCase(TestCase):
             'Model-level Result: Granted\n',
             'This permission is restricted.',
             '\nRESULT: Permission Denied'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=0)
+    def test_get_all_permissions_logging__0__olp(self):
+        
+        user = self.user
+        obj = LogTest.objects.create()
+        
+        user.get_all_permissions(obj)
+        
+        self.assertEqual(len(user._active_logs), 0)
+        self.assertEqual(len(user._finished_logs), 0)
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
+    def test_get_all_permissions_logging__1__olp(self):
+        
+        user = self.user
+        obj = LogTest.objects.create()
+        
+        user.get_all_permissions(obj)
+        
+        # No logs should remain active
+        self.assertEqual(len(user._active_logs), 0)
+        
+        # Finished logs should only exist for the model-level checks
+        self.assertEqual(len(user._finished_logs), 5)
+        self.assertCountEqual(user._finished_logs.keys(), [
+            'auto-tests.add_logtest', 'auto-tests.change_logtest',
+            'auto-tests.delete_logtest', 'auto-tests.mlp_logtest',
+            'auto-tests.olp_logtest'
+        ])
+    
+    @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
+    def test_get_all_permissions_logging__2__olp(self):
+        
+        user = self.user
+        obj = LogTest.objects.create()
+        
+        user.get_all_permissions(obj)
+        
+        # No logs should remain active
+        self.assertEqual(len(user._active_logs), 0)
+        
+        # Finished logs should only exist for the model-level checks
+        self.assertEqual(len(user._finished_logs), 5)
+        self.assertCountEqual(user._finished_logs.keys(), [
+            'auto-tests.add_logtest', 'auto-tests.change_logtest',
+            'auto-tests.delete_logtest', 'auto-tests.mlp_logtest',
+            'auto-tests.olp_logtest'
         ])
 
 
