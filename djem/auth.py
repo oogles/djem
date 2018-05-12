@@ -108,7 +108,8 @@ class OLPMixin(object):
     def start_log(self, name):
         """
         Start a new log with the given ``name``. The new log becomes the
-        current "active" log.
+        current "active" log. Queue any previous active log so that it can be
+        reactivated when the new log is either finished or discarded.
         
         :param name: The name of the log.
         """
@@ -121,11 +122,14 @@ class OLPMixin(object):
     def end_log(self):
         """
         End the currently active log. A log must be ended in order to be
-        retrieved.
+        retrieved. Reactivate the previous log, if any.
         """
         
-        # Move from active logs to finished logs
-        name, log = self._active_logs.popitem()
+        # Pop from active logs to move to finished logs
+        try:
+            name, log = self._active_logs.popitem()
+        except KeyError:
+            raise KeyError('No active log to finish.')
         
         # If a log with the same name has been finished previously, remove it
         # from the finished logs dict before adding this one, so that this one
@@ -134,6 +138,16 @@ class OLPMixin(object):
             self._finished_logs.pop(name)
         
         self._finished_logs[name] = log
+    
+    def discard_log(self):
+        """
+        Discard the currently active log. Reactivate the previous log, if any.
+        """
+        
+        try:
+            self._active_logs.popitem()
+        except KeyError:
+            raise KeyError('No active log to discard.')
     
     def log(self, *lines):
         """

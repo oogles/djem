@@ -306,8 +306,78 @@ class OLPMixinTestCase(TestCase):
         raise KeyError.
         """
         
-        with self.assertRaises(KeyError):
+        with self.assertRaisesMessage(KeyError, 'No active log to finish'):
             self.user.end_log()
+    
+    def test_discard_log(self):
+        """
+        Test the discard_log() method. It should remove the log entry created by
+        start_log().
+        """
+        
+        user = self.user
+        
+        self.assertEqual(len(user._active_logs), 0)
+        self.assertEqual(len(user._finished_logs), 0)
+        
+        user.start_log('test_log')
+        
+        self.assertEqual(len(user._active_logs), 1)
+        self.assertEqual(len(user._finished_logs), 0)
+        
+        user.discard_log()
+        
+        self.assertEqual(len(user._active_logs), 0)
+        self.assertEqual(len(user._finished_logs), 0)
+    
+    def test_discard_log__nested(self):
+        """
+        Test the discard_log() method on a nested log. It should remove the log
+        entry created by start_log(), returning focus to the log that was
+        active prior to the nested log being started.
+        """
+        
+        user = self.user
+        
+        self.assertEqual(len(user._active_logs), 0)
+        self.assertEqual(len(user._finished_logs), 0)
+        
+        # Start the first log
+        user.start_log('test_log')
+        
+        self.assertEqual(len(user._active_logs), 1)
+        self.assertEqual(list(user._active_logs.keys()), ['test_log'])
+        self.assertEqual(len(user._finished_logs), 0)
+        
+        # Start a nested log
+        user.start_log('nested_log')
+        
+        self.assertEqual(len(user._active_logs), 2)
+        self.assertEqual(list(user._active_logs.keys()), ['test_log', 'nested_log'])
+        self.assertEqual(len(user._finished_logs), 0)
+        
+        # Discard the nested log
+        user.discard_log()
+        
+        self.assertEqual(len(user._active_logs), 1)
+        self.assertEqual(list(user._active_logs.keys()), ['test_log'])
+        self.assertEqual(len(user._finished_logs), 0)
+        
+        # End the first log
+        user.end_log()
+        
+        self.assertEqual(len(user._active_logs), 0)
+        self.assertEqual(len(user._finished_logs), 1)
+        self.assertEqual(list(user._finished_logs.keys()), ['test_log'])
+    
+    def test_discard_log__unstarted(self):
+        """
+        Test the discard_log() method when no logs have been started. It should
+        raise KeyError.
+        """
+        
+        with self.assertRaisesMessage(KeyError, 'No active log to discard'):
+            self.user.discard_log()
     
     def test_log(self):
         """
