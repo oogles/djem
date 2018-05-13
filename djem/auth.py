@@ -121,8 +121,18 @@ class OLPMixin(object):
     
     def end_log(self):
         """
-        End the currently active log. A log must be ended in order to be
-        retrieved. Reactivate the previous log, if any.
+        End the currently active log and return a ``(name, log)`` tuple, where
+        ``name`` is the name of the log that was ended and ``log`` is a list of
+        the entries that have been added to the log.
+        
+        The returned list will be a *copy* of the one used to store the log
+        internally, allowing it to be safely manipulated without affecting the
+        original log.
+        
+        A log must be ended in order to be retrieved. Reactivates the previous
+        log, if any.
+        
+        :return: A ``(name, log)`` tuple.
         """
         
         # Pop from active logs to move to finished logs
@@ -138,10 +148,14 @@ class OLPMixin(object):
             self._finished_logs.pop(name)
         
         self._finished_logs[name] = log
+        
+        return name, log
     
     def discard_log(self):
         """
-        Discard the currently active log. Reactivate the previous log, if any.
+        Discard the currently active log.
+        
+        Reactivates the previous log, if any.
         """
         
         try:
@@ -172,8 +186,12 @@ class OLPMixin(object):
     def get_log(self, name, raw=False):
         """
         Return the named log, as a string. The log must have been ended (via
-        ``end_log()``) in order to retrieve it. Can return the raw list of lines
-        in the log if ``raw=True``.
+        ``end_log()``) in order to retrieve it.
+        
+        Can return a raw list of lines in the log if ``raw=True``. In this case,
+        the returned list will be a *copy* of the one used to store the log
+        internally, allowing it to be safely manipulated without affecting the
+        original log.
         
         :param name: The name of the log to retrieve.
         :param raw: ``True`` to return the log as a list. Returned as a string by default.
@@ -192,8 +210,12 @@ class OLPMixin(object):
     
     def get_last_log(self, raw=False):
         """
-        Return the most recently finished log, as a string. Can return the raw
-        list of lines in the log if ``raw=True``.
+        Return the most recently finished log, as a string.
+        
+        Can return a raw list of lines in the log if ``raw=True``. In this case,
+        the returned list will be a *copy* of the one used to store the log
+        internally, allowing it to be safely manipulated without affecting the
+        original log.
         
         :param raw: ``True`` to return the log as a list. Returned as a string by default.
         :return: The log, either as a string or a list.

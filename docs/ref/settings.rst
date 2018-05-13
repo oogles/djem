@@ -79,3 +79,23 @@ The HTML tag to use for the wrapping element rendered around form fields when us
 Default: ``False``
 
 In conjunction with a custom user model including :class:`OLPMixin`, setting this to ``True`` enables support for forcing superusers to undergo the same object-level permissions checking that regular users do, allowing OLP logic to actually *deny* permissions to superusers where relevant.
+
+
+.. setting:: DJEM_PERM_LOG_VERBOSITY
+
+``DJEM_PERM_LOG_VERBOSITY``
+===========================
+
+.. versionadded:: 0.7
+
+.. currentmodule:: djem.auth
+
+Default: ``0``
+
+In conjunction with a custom user model including :class:`OLPMixin`, this setting controls the level of automatic :ref:`user-based logging <user-based-logging>`. performed by :meth:`OLPMixin.has_perm`:
+
+* ``0``: No automatic logging
+* ``1``: Logs are automatically created for each permission check, with minimal automatic entries
+* ``2``: Logs are automatically created for each permission check, with more informative automatic entries
+
+In addition to the automatic entries, a value of ``1`` or ``2`` allow manual log entries to be added from within object-level access methods with no need to manually start/finish any logs.
