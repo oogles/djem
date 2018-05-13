@@ -2,6 +2,8 @@ from django.db import models
 
 from djem.utils.dt import PYTZ_AVAILABLE, TIMEZONE_CHOICES, get_tz_helper
 
+__all__ = ('TimeZoneField', )
+
 
 # Based on django-timezone-field
 # https://github.com/mfogel/django-timezone-field

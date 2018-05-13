@@ -8,7 +8,7 @@ from django.views import View
 
 from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
 
-from .models import CustomUser, LogTest, OLPTest, UniversalOLPTest
+from .models import CustomUser, UserLogTest, OLPTest, UniversalOLPTest
 
 
 def _test_view(request, obj=None):
@@ -177,422 +177,6 @@ class OLPMixinTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, '_perm_cache')
     
-    def test_start_log(self):
-        """
-        Test the start_log() method. It should create an empty log entry, ready
-        for adding to.
-        """
-        
-        user = self.user
-        
-        self.assertEqual(len(user._active_logs), 0)
-        
-        user.start_log('test_log')
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(user._active_logs['test_log'], [])
-    
-    def test_start_log__nested(self):
-        """
-        Test the start_log() method when an earlier log has already been started.
-        It should create a second empty log entry, listed after the first.
-        """
-        
-        user = self.user
-        
-        self.assertEqual(len(user._active_logs), 0)
-        
-        # Start the first log
-        user.start_log('test_log')
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(user._active_logs['test_log'], [])
-        
-        # Start a nested log
-        user.start_log('nested_log')
-        
-        self.assertEqual(len(user._active_logs), 2)
-        self.assertEqual(list(user._active_logs.keys()), ['test_log', 'nested_log'])
-        self.assertEqual(user._active_logs['nested_log'], [])
-    
-    def test_start_log__repeat(self):
-        """
-        Test the start_log() method when attempting to start a nested log that
-        uses the same name as an earlier, unfinished one. It should raise
-        ValueError.
-        """
-        
-        user = self.user
-        
-        self.assertEqual(len(user._active_logs), 0)
-        
-        # Start the first log
-        user.start_log('test_log')
-        
-        # Start a nested log
-        user.start_log('nested_log')
-        
-        # Attempt starting a second nested log reusing an existing name
-        with self.assertRaisesMessage(ValueError, 'A log named "test_log" is already active'):
-            user.start_log('test_log')
-    
-    def test_end_log(self):
-        """
-        Test the end_log() method. It should move the log entry created by
-        start_log() from the store of active logs to the store of finished ones.
-        """
-        
-        user = self.user
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        user.start_log('test_log')
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        user.end_log()
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 1)
-        self.assertEqual(user._finished_logs['test_log'], [])
-    
-    def test_end_log__nested(self):
-        """
-        Test the end_log() method when ending a nested log. It should move the
-        log entry the store of active logs to the store of finished ones,
-        returning focus to the log that was active prior to the nested log
-        being started.
-        """
-        
-        user = self.user
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        # Start the first log
-        user.start_log('test_log')
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(list(user._active_logs.keys()), ['test_log'])
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        # Start a nested log
-        user.start_log('nested_log')
-        
-        self.assertEqual(len(user._active_logs), 2)
-        self.assertEqual(list(user._active_logs.keys()), ['test_log', 'nested_log'])
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        # End the nested log
-        user.end_log()
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(list(user._active_logs.keys()), ['test_log'])
-        self.assertEqual(len(user._finished_logs), 1)
-        self.assertEqual(list(user._finished_logs.keys()), ['nested_log'])
-        
-        # End the first log
-        user.end_log()
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 2)
-        self.assertEqual(list(user._finished_logs.keys()), ['nested_log', 'test_log'])
-    
-    def test_end_log__unstarted(self):
-        """
-        Test the end_log() method when no logs have been started. It should
-        raise KeyError.
-        """
-        
-        with self.assertRaisesMessage(KeyError, 'No active log to finish'):
-            self.user.end_log()
-    
-    def test_discard_log(self):
-        """
-        Test the discard_log() method. It should remove the log entry created by
-        start_log().
-        """
-        
-        user = self.user
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        user.start_log('test_log')
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        user.discard_log()
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 0)
-    
-    def test_discard_log__nested(self):
-        """
-        Test the discard_log() method on a nested log. It should remove the log
-        entry created by start_log(), returning focus to the log that was
-        active prior to the nested log being started.
-        """
-        
-        user = self.user
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        # Start the first log
-        user.start_log('test_log')
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(list(user._active_logs.keys()), ['test_log'])
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        # Start a nested log
-        user.start_log('nested_log')
-        
-        self.assertEqual(len(user._active_logs), 2)
-        self.assertEqual(list(user._active_logs.keys()), ['test_log', 'nested_log'])
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        # Discard the nested log
-        user.discard_log()
-        
-        self.assertEqual(len(user._active_logs), 1)
-        self.assertEqual(list(user._active_logs.keys()), ['test_log'])
-        self.assertEqual(len(user._finished_logs), 0)
-        
-        # End the first log
-        user.end_log()
-        
-        self.assertEqual(len(user._active_logs), 0)
-        self.assertEqual(len(user._finished_logs), 1)
-        self.assertEqual(list(user._finished_logs.keys()), ['test_log'])
-    
-    def test_discard_log__unstarted(self):
-        """
-        Test the discard_log() method when no logs have been started. It should
-        raise KeyError.
-        """
-        
-        with self.assertRaisesMessage(KeyError, 'No active log to discard'):
-            self.user.discard_log()
-    
-    def test_log(self):
-        """
-        Test the log() method. It should append the given lines to the currently
-        active log.
-        """
-        
-        user = self.user
-        
-        user.start_log('test_log')
-        self.assertEqual(user._active_logs['test_log'], [])
-        
-        user.log('first line', 'second line', 'third line')
-        self.assertEqual(
-            user._active_logs['test_log'],
-            ['first line', 'second line', 'third line']
-        )
-        
-        user.log('fourth line')
-        self.assertEqual(
-            user._active_logs['test_log'],
-            ['first line', 'second line', 'third line', 'fourth line']
-        )
-    
-    def test_log__nested(self):
-        """
-        Test the log() method when a nested log has been started. It should
-        append the given lines to the currently active log.
-        """
-        
-        user = self.user
-        
-        user.start_log('test_log')
-        user.log('first line 1', 'second line 1', 'third line 1')
-        self.assertEqual(
-            user._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1']
-        )
-        
-        user.start_log('nested_log')
-        user.log('first line 2', 'second line 2', 'third line 2')
-        self.assertEqual(
-            user._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1']
-        )
-        self.assertEqual(
-            user._active_logs['nested_log'],
-            ['first line 2', 'second line 2', 'third line 2']
-        )
-        
-        user.log('fourth line 2')
-        self.assertEqual(
-            user._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1']
-        )
-        self.assertEqual(
-            user._active_logs['nested_log'],
-            ['first line 2', 'second line 2', 'third line 2', 'fourth line 2']
-        )
-        
-        user.end_log()
-        
-        user.log('fourth line 1')
-        self.assertEqual(
-            user._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1', 'fourth line 1']
-        )
-        self.assertEqual(
-            user._finished_logs['nested_log'],
-            ['first line 2', 'second line 2', 'third line 2', 'fourth line 2']
-        )
-    
-    def test_log__unstarted(self):
-        """
-        Test the log() method when no logs have been started. It should raise
-        KeyError.
-        """
-        
-        with self.assertRaisesMessage(KeyError, 'No active log to append to. Has one been started?'):
-            self.user.log('first line', 'second line')
-    
-    def test_get_log(self):
-        """
-        Test the get_log() method. It should return the log entry for the named
-        log.
-        """
-        
-        user = self.user
-        
-        user.start_log('test_log')
-        user.log('first line', 'second line')
-        user.end_log()
-        
-        log = user.get_log('test_log')
-        self.assertEqual(log, 'first line\nsecond line')
-        
-        raw_log = user.get_log('test_log', raw=True)
-        self.assertEqual(raw_log, ['first line', 'second line'])
-    
-    def test_get_log__unstarted(self):
-        """
-        Test the get_log() method when no log by the given name has been started.
-        It should raise KeyError.
-        """
-        
-        with self.assertRaisesMessage(KeyError, 'No log found for "test_log". Has it been finished?'):
-            self.user.get_log('test_log')
-    
-    def test_get_log__unfinished(self):
-        """
-        Test the get_log() method when a log by the given name has been started,
-        but not finished. It should raise KeyError.
-        """
-        
-        user = self.user
-        
-        user.start_log('test_log')
-        
-        with self.assertRaisesMessage(KeyError, 'No log found for "test_log". Has it been finished?'):
-            user.get_log('test_log')
-    
-    def test_get_last_log(self):
-        """
-        Test the get_last_log() method. It should return the log entry for most
-        recently finished log.
-        """
-        
-        user = self.user
-        
-        user.start_log('log-1')
-        user.log('log 1')
-        user.end_log()
-        
-        self.assertEqual(user.get_last_log(), 'log 1')
-        self.assertEqual(user.get_last_log(raw=True), ['log 1'])
-        
-        user.start_log('log-2')
-        user.log('log 2')
-        user.end_log()
-        
-        user.start_log('log-3')
-        user.log('log 3')
-        user.end_log()
-        
-        self.assertEqual(user.get_last_log(), 'log 3')
-        self.assertEqual(user.get_last_log(raw=True), ['log 3'])
-        
-        # Ensure all three logs are still there to retrieve again later if
-        # necessary
-        self.assertEqual(len(user._finished_logs), 3)
-        
-        self.assertEqual(user.get_log('log-2'), 'log 2')
-    
-    def test_get_last_log__none_finished(self):
-        """
-        Test the get_last_log() method when no logs have been finished. It
-        should raise KeyError.
-        """
-        
-        with self.assertRaisesMessage(KeyError, 'No finished logs to retrieve'):
-            self.user.get_last_log()
-    
-    def test_repeating_logs(self):
-        """
-        Test the log() method with multiple nested logs, including reusing
-        previous log names for logs that have been properly ended (as might
-        occur during a loop). It should append the given lines to the currently
-        active log.
-        """
-        
-        user = self.user
-        
-        user.start_log('test_log')
-        user.log('first line', 'second line', 'third line')
-        
-        user.start_log('nested_log')
-        user.log('first run')
-        user.end_log()
-        
-        self.assertEqual(user.get_last_log(), 'first run')
-        
-        # Ensure a random log that occurs between two runs of the same log does
-        # not keep the second run from being "last". i.e. when a log with the
-        # same name as an earlier log is run, it should always append to the
-        # end of the OrderedDict of finished logs, not update the existing entry,
-        # which is potentially further back in the "list".
-        user.start_log('random_log')
-        user.log('second run')
-        user.end_log()
-        
-        user.log('fourth line')
-        
-        user.start_log('nested_log')
-        user.log('second run')
-        user.end_log()
-        
-        self.assertEqual(user.get_last_log(), 'second run')
-        
-        user.log('fifth line')
-        
-        user.start_log('nested_log')
-        user.log('third run')
-        user.end_log()
-        
-        self.assertEqual(user.get_last_log(), 'third run')
-        
-        user.end_log()
-        
-        self.assertEqual(
-            user.get_log('test_log', raw=True),
-            ['first line', 'second line', 'third line', 'fourth line', 'fifth line']
-        )
-        
-        self.assertEqual(user.get_log('nested_log'), 'third run')
-    
     @override_settings(DJEM_PERM_LOG_VERBOSITY=0)
     def test_has_perm__logging__0(self):
         """
@@ -602,7 +186,7 @@ class OLPMixinTestCase(TestCase):
         
         user = self.user
         
-        user.has_perm('tests.mlp_logtest')
+        user.has_perm('tests.mlp_log')
         
         with self.assertRaisesMessage(KeyError, 'No finished logs to retrieve'):
             user.get_last_log()
@@ -618,7 +202,7 @@ class OLPMixinTestCase(TestCase):
         
         user = self.user
         
-        user.has_perm('tests.mlp_logtest')
+        user.has_perm('tests.mlp_log')
         
         # Only one log - thet for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
@@ -641,18 +225,18 @@ class OLPMixinTestCase(TestCase):
         
         # Grant the user the model-level permission so that object-level checks
         # are performed
-        user.user_permissions.add(Permission.objects.get(codename='olp_logtest'))
+        user.user_permissions.add(Permission.objects.get(codename='olp_log'))
         
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_logtest', obj)
+        user.has_perm('tests.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
@@ -675,7 +259,7 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_logtest')
+        user.has_perm('tests.mlp_log')
         
         # Only one log - thet for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
@@ -699,9 +283,9 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_logtest', obj)
+        user.has_perm('tests.olp_log', obj)
         
         # Only one log should be created - the object-level permission should
         # be implicitly granted without even needing the model-level check first
@@ -726,7 +310,7 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_logtest')
+        user.has_perm('tests.mlp_log')
         
         # Only one log - thet for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
@@ -750,9 +334,9 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_logtest', obj)
+        user.has_perm('tests.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check (which is
@@ -760,7 +344,7 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
@@ -782,14 +366,14 @@ class OLPMixinTestCase(TestCase):
         
         user = self.user
         
-        user.has_perm('tests.mlp_logtest')
+        user.has_perm('tests.mlp_log')
         
         # Only one log - thet for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.mlp_logtest',
+            'Permission: tests.mlp_log',
             'User: test.user ({})\n'.format(self.user.pk),
             '\nRESULT: Permission Denied'
         ])
@@ -807,23 +391,23 @@ class OLPMixinTestCase(TestCase):
         
         # Grant the user the model-level permission so that object-level checks
         # are performed
-        user.user_permissions.add(Permission.objects.get(codename='olp_logtest'))
+        user.user_permissions.add(Permission.objects.get(codename='olp_log'))
         
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_logtest', obj)
+        user.has_perm('tests.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.olp_logtest',
+            'Permission: tests.olp_log',
             'User: test.user ({})'.format(self.user.pk),
             'Object: Log Test #{0} ({0})\n'.format(obj.pk),
             'Model-level Result: Granted\n',
@@ -844,14 +428,14 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_logtest')
+        user.has_perm('tests.mlp_log')
         
         # Only one log - thet for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.mlp_logtest',
+            'Permission: tests.mlp_log',
             'User: test.user ({})\n'.format(self.user.pk),
             'Active superuser: Implicit permission',
             '\nRESULT: Permission Granted'
@@ -870,9 +454,9 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_logtest', obj)
+        user.has_perm('tests.olp_log', obj)
         
         # Only one log should be created - the object-level permission should
         # be implicitly granted without even needing the model-level check first
@@ -880,7 +464,7 @@ class OLPMixinTestCase(TestCase):
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.olp_logtest',
+            'Permission: tests.olp_log',
             'User: test.user ({})'.format(self.user.pk),
             'Object: Log Test #{0} ({0})\n'.format(obj.pk),
             'Active superuser: Implicit permission',
@@ -900,14 +484,14 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_logtest')
+        user.has_perm('tests.mlp_log')
         
         # Only one log - thet for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.mlp_logtest',
+            'Permission: tests.mlp_log',
             'User: test.user ({})\n'.format(self.user.pk),
             'Active superuser: Implicit permission (model-level)',
             '\nRESULT: Permission Granted'
@@ -926,9 +510,9 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_logtest', obj)
+        user.has_perm('tests.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check (which is
@@ -936,12 +520,12 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_logtest', 'auto-tests.olp_logtest-{0}'.format(obj.pk)]
+            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.olp_logtest',
+            'Permission: tests.olp_log',
             'User: test.user ({})'.format(self.user.pk),
             'Object: Log Test #{0} ({0})\n'.format(obj.pk),
             'Active superuser: Implicit permission (model-level)',
@@ -954,7 +538,7 @@ class OLPMixinTestCase(TestCase):
     def test_get_all_permissions_logging__0__olp(self):
         
         user = self.user
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
         user.get_all_permissions(obj)
         
@@ -965,7 +549,7 @@ class OLPMixinTestCase(TestCase):
     def test_get_all_permissions_logging__1__olp(self):
         
         user = self.user
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
         user.get_all_permissions(obj)
         
@@ -975,16 +559,16 @@ class OLPMixinTestCase(TestCase):
         # Finished logs should only exist for the model-level checks
         self.assertEqual(len(user._finished_logs), 5)
         self.assertCountEqual(user._finished_logs.keys(), [
-            'auto-tests.add_logtest', 'auto-tests.change_logtest',
-            'auto-tests.delete_logtest', 'auto-tests.mlp_logtest',
-            'auto-tests.olp_logtest'
+            'auto-tests.add_userlogtest', 'auto-tests.change_userlogtest',
+            'auto-tests.delete_userlogtest', 'auto-tests.mlp_log',
+            'auto-tests.olp_log'
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
     def test_get_all_permissions_logging__2__olp(self):
         
         user = self.user
-        obj = LogTest.objects.create()
+        obj = UserLogTest.objects.create()
         
         user.get_all_permissions(obj)
         
@@ -994,9 +578,9 @@ class OLPMixinTestCase(TestCase):
         # Finished logs should only exist for the model-level checks
         self.assertEqual(len(user._finished_logs), 5)
         self.assertCountEqual(user._finished_logs.keys(), [
-            'auto-tests.add_logtest', 'auto-tests.change_logtest',
-            'auto-tests.delete_logtest', 'auto-tests.mlp_logtest',
-            'auto-tests.olp_logtest'
+            'auto-tests.add_userlogtest', 'auto-tests.change_userlogtest',
+            'auto-tests.delete_userlogtest', 'auto-tests.mlp_log',
+            'auto-tests.olp_log'
         ])
 
 

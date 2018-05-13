@@ -2,17 +2,15 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.exceptions import PermissionDenied
 from django.db import models
 
-from djem.auth import OLPMixin
 from djem.models import (
-    ArchivableMixin, CommonInfoMixin, StaticAbstract, TimeZoneField,
-    VersioningMixin
+    ArchivableMixin, CommonInfoMixin, LogMixin, OLPMixin, StaticAbstract,
+    TimeZoneField, VersioningMixin
 )
 
 
 class CommonInfoTest(CommonInfoMixin, models.Model):
     """
-    This model provides a concrete model with the CommonInfoMixin for testing
-    the mixin without introducing the variables of a real subclass.
+    This model provides a concrete model with the CommonInfoMixin for testing.
     """
     
     field1 = models.BooleanField(default=True)
@@ -25,8 +23,7 @@ class CommonInfoTest(CommonInfoMixin, models.Model):
 
 class ArchivableTest(ArchivableMixin, models.Model):
     """
-    This model provides a concrete model with the ArchivableMixin for testing
-    the mixin without introducing the variables of a real subclass.
+    This model provides a concrete model with the ArchivableMixin for testing.
     """
     
     field1 = models.BooleanField(default=True)
@@ -35,8 +32,7 @@ class ArchivableTest(ArchivableMixin, models.Model):
 
 class VersioningTest(VersioningMixin, models.Model):
     """
-    This model provides a concrete model with the VersioningMixin for testing
-    the mixin without introducing the variables of a real subclass.
+    This model provides a concrete model with the VersioningMixin for testing.
     """
     
     field1 = models.BooleanField(default=True)
@@ -46,10 +42,7 @@ class VersioningTest(VersioningMixin, models.Model):
 class StaticTest(StaticAbstract):
     """
     This model provides a concrete version of the abstract StaticAbstract
-    model for testing elements of StaticAbstract without introducing the
-    variables of a real subclass.
-    It also provides a test bed for object-level permissions, both using defaults
-    inherited from CommonInfoMixin and model-specific overrides.
+    model for testing.
     """
     
     field1 = models.BooleanField(default=True)
@@ -71,8 +64,18 @@ class TimeZoneTest(models.Model):
     ))
 
 
-# Custom user model for testing OLPMixin
+class LogTest(LogMixin, models.Model):
+    """
+    This model provides a concrete model with the LogMixin for testing.
+    """
+    
+    field = models.BooleanField(default=True)
+
+
 class CustomUser(OLPMixin, AbstractUser):
+    """
+    This is a custom user model for testing OLPMixin.
+    """
     
     # Override groups and user_permissions to avoid related_name clashes with
     # the same fields on the regular auth.User model
@@ -80,14 +83,16 @@ class CustomUser(OLPMixin, AbstractUser):
     user_permissions = models.ManyToManyField(Permission, related_name='+')
 
 
-# Model for testing OLPMixin permission logging
-class LogTest(models.Model):
+class UserLogTest(models.Model):
+    """
+    This is a contrived model for testing OLPMixin permission logging.
+    """
     
     def __str__(self):
         
         return 'Log Test #{}'.format(self.pk)
     
-    def _user_can_olp_logtest(self, user):
+    def _user_can_olp_log(self, user):
         
         user.log('This permission is restricted.')
         
@@ -95,13 +100,16 @@ class LogTest(models.Model):
     
     class Meta:
         permissions = (
-            ('mlp_logtest', 'Permission with no object-level checks'),
-            ('olp_logtest', 'Permission with object-level checks and additional logging'),
+            ('mlp_log', 'Permission with no object-level checks'),
+            ('olp_log', 'Permission with object-level checks and additional logging'),
         )
 
 
-# Model for testing object-level permissions with standard user model
 class OLPTest(models.Model):
+    """
+    This is a contrived model for testing object-level permissions with the
+    standard user model.
+    """
     
     user = models.ForeignKey('auth.User', null=True, on_delete=models.PROTECT)
     group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)
@@ -155,9 +163,12 @@ class OLPTest(models.Model):
             ('deny_olptest', 'Denies permission by raising PermissionDenied for the user'),
         )
 
-
-# Model for testing object-level permissions with custom user model incorporating OLPMixin
+ 
 class UniversalOLPTest(models.Model):
+    """
+    This is a contrived model for testing object-level permissions with the
+    above custom user model incorporating OLPMixin.
+    """
     
     user = models.ForeignKey(CustomUser, null=True, on_delete=models.PROTECT)
     group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)

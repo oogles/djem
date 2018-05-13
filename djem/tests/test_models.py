@@ -10,7 +10,10 @@ from django.utils import timezone
 from djem.models import TimeZoneField
 from djem.utils.dt import TimeZoneHelper
 
-from .models import ArchivableTest, CommonInfoTest, StaticTest, TimeZoneTest, VersioningTest
+from .models import (
+    ArchivableTest, CommonInfoTest, LogTest, StaticTest, TimeZoneTest,
+    VersioningTest
+)
 
 
 def make_user(username):
@@ -740,6 +743,429 @@ class StaticTestCase(CommonInfoTestCase, ArchivableTestCase, VersioningTestCase)
         obj.save()
         
         return obj
+
+
+class LogTestCase(TestCase):
+    
+    def setUp(self):
+        
+        self.obj = LogTest.objects.create()
+    
+    def test_start_log(self):
+        """
+        Test the start_log() method. It should create an empty log entry, ready
+        for adding to.
+        """
+        
+        obj = self.obj
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        
+        obj.start_log('test_log')
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(obj._active_logs['test_log'], [])
+    
+    def test_start_log__nested(self):
+        """
+        Test the start_log() method when an earlier log has already been started.
+        It should create a second empty log entry, listed after the first.
+        """
+        
+        obj = self.obj
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        
+        # Start the first log
+        obj.start_log('test_log')
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(obj._active_logs['test_log'], [])
+        
+        # Start a nested log
+        obj.start_log('nested_log')
+        
+        self.assertEqual(len(obj._active_logs), 2)
+        self.assertEqual(list(obj._active_logs.keys()), ['test_log', 'nested_log'])
+        self.assertEqual(obj._active_logs['nested_log'], [])
+    
+    def test_start_log__repeat(self):
+        """
+        Test the start_log() method when attempting to start a nested log that
+        uses the same name as an earlier, unfinished one. It should raise
+        ValueError.
+        """
+        
+        obj = self.obj
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        
+        # Start the first log
+        obj.start_log('test_log')
+        
+        # Start a nested log
+        obj.start_log('nested_log')
+        
+        # Attempt starting a second nested log reusing an existing name
+        with self.assertRaisesMessage(ValueError, 'A log named "test_log" is already active'):
+            obj.start_log('test_log')
+    
+    def test_end_log(self):
+        """
+        Test the end_log() method. It should move the log entry created by
+        start_log() from the store of active logs to the store of finished ones.
+        """
+        
+        obj = self.obj
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        obj.start_log('test_log')
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        obj.end_log()
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 1)
+        self.assertEqual(obj._finished_logs['test_log'], [])
+    
+    def test_end_log__nested(self):
+        """
+        Test the end_log() method when ending a nested log. It should move the
+        log entry the store of active logs to the store of finished ones,
+        returning focus to the log that was active prior to the nested log
+        being started.
+        """
+        
+        obj = self.obj
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        # Start the first log
+        obj.start_log('test_log')
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(list(obj._active_logs.keys()), ['test_log'])
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        # Start a nested log
+        obj.start_log('nested_log')
+        
+        self.assertEqual(len(obj._active_logs), 2)
+        self.assertEqual(list(obj._active_logs.keys()), ['test_log', 'nested_log'])
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        # End the nested log
+        obj.end_log()
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(list(obj._active_logs.keys()), ['test_log'])
+        self.assertEqual(len(obj._finished_logs), 1)
+        self.assertEqual(list(obj._finished_logs.keys()), ['nested_log'])
+        
+        # End the first log
+        obj.end_log()
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 2)
+        self.assertEqual(list(obj._finished_logs.keys()), ['nested_log', 'test_log'])
+    
+    def test_end_log__unstarted(self):
+        """
+        Test the end_log() method when no logs have been started. It should
+        raise KeyError.
+        """
+        
+        with self.assertRaisesMessage(KeyError, 'No active log to finish'):
+            self.obj.end_log()
+    
+    def test_discard_log(self):
+        """
+        Test the discard_log() method. It should remove the log entry created by
+        start_log().
+        """
+        
+        obj = self.obj
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        obj.start_log('test_log')
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        obj.discard_log()
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 0)
+    
+    def test_discard_log__nested(self):
+        """
+        Test the discard_log() method on a nested log. It should remove the log
+        entry created by start_log(), returning focus to the log that was
+        active prior to the nested log being started.
+        """
+        
+        obj = self.obj
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        # Start the first log
+        obj.start_log('test_log')
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(list(obj._active_logs.keys()), ['test_log'])
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        # Start a nested log
+        obj.start_log('nested_log')
+        
+        self.assertEqual(len(obj._active_logs), 2)
+        self.assertEqual(list(obj._active_logs.keys()), ['test_log', 'nested_log'])
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        # Discard the nested log
+        obj.discard_log()
+        
+        self.assertEqual(len(obj._active_logs), 1)
+        self.assertEqual(list(obj._active_logs.keys()), ['test_log'])
+        self.assertEqual(len(obj._finished_logs), 0)
+        
+        # End the first log
+        obj.end_log()
+        
+        self.assertEqual(len(obj._active_logs), 0)
+        self.assertEqual(len(obj._finished_logs), 1)
+        self.assertEqual(list(obj._finished_logs.keys()), ['test_log'])
+    
+    def test_discard_log__unstarted(self):
+        """
+        Test the discard_log() method when no logs have been started. It should
+        raise KeyError.
+        """
+        
+        with self.assertRaisesMessage(KeyError, 'No active log to discard'):
+            self.obj.discard_log()
+    
+    def test_log(self):
+        """
+        Test the log() method. It should append the given lines to the currently
+        active log.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('test_log')
+        self.assertEqual(obj._active_logs['test_log'], [])
+        
+        obj.log('first line', 'second line', 'third line')
+        self.assertEqual(
+            obj._active_logs['test_log'],
+            ['first line', 'second line', 'third line']
+        )
+        
+        obj.log('fourth line')
+        self.assertEqual(
+            obj._active_logs['test_log'],
+            ['first line', 'second line', 'third line', 'fourth line']
+        )
+    
+    def test_log__nested(self):
+        """
+        Test the log() method when a nested log has been started. It should
+        append the given lines to the currently active log.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('test_log')
+        obj.log('first line 1', 'second line 1', 'third line 1')
+        self.assertEqual(
+            obj._active_logs['test_log'],
+            ['first line 1', 'second line 1', 'third line 1']
+        )
+        
+        obj.start_log('nested_log')
+        obj.log('first line 2', 'second line 2', 'third line 2')
+        self.assertEqual(
+            obj._active_logs['test_log'],
+            ['first line 1', 'second line 1', 'third line 1']
+        )
+        self.assertEqual(
+            obj._active_logs['nested_log'],
+            ['first line 2', 'second line 2', 'third line 2']
+        )
+        
+        obj.log('fourth line 2')
+        self.assertEqual(
+            obj._active_logs['test_log'],
+            ['first line 1', 'second line 1', 'third line 1']
+        )
+        self.assertEqual(
+            obj._active_logs['nested_log'],
+            ['first line 2', 'second line 2', 'third line 2', 'fourth line 2']
+        )
+        
+        obj.end_log()
+        
+        obj.log('fourth line 1')
+        self.assertEqual(
+            obj._active_logs['test_log'],
+            ['first line 1', 'second line 1', 'third line 1', 'fourth line 1']
+        )
+        self.assertEqual(
+            obj._finished_logs['nested_log'],
+            ['first line 2', 'second line 2', 'third line 2', 'fourth line 2']
+        )
+    
+    def test_log__unstarted(self):
+        """
+        Test the log() method when no logs have been started. It should raise
+        KeyError.
+        """
+        
+        with self.assertRaisesMessage(KeyError, 'No active log to append to. Has one been started?'):
+            self.obj.log('first line', 'second line')
+    
+    def test_get_log(self):
+        """
+        Test the get_log() method. It should return the log entry for the named
+        log.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('test_log')
+        obj.log('first line', 'second line')
+        obj.end_log()
+        
+        log = obj.get_log('test_log')
+        self.assertEqual(log, 'first line\nsecond line')
+        
+        raw_log = obj.get_log('test_log', raw=True)
+        self.assertEqual(raw_log, ['first line', 'second line'])
+    
+    def test_get_log__unstarted(self):
+        """
+        Test the get_log() method when no log by the given name has been started.
+        It should raise KeyError.
+        """
+        
+        with self.assertRaisesMessage(KeyError, 'No log found for "test_log". Has it been finished?'):
+            self.obj.get_log('test_log')
+    
+    def test_get_log__unfinished(self):
+        """
+        Test the get_log() method when a log by the given name has been started,
+        but not finished. It should raise KeyError.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('test_log')
+        
+        with self.assertRaisesMessage(KeyError, 'No log found for "test_log". Has it been finished?'):
+            obj.get_log('test_log')
+    
+    def test_get_last_log(self):
+        """
+        Test the get_last_log() method. It should return the log entry for most
+        recently finished log.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('log-1')
+        obj.log('log 1')
+        obj.end_log()
+        
+        self.assertEqual(obj.get_last_log(), 'log 1')
+        self.assertEqual(obj.get_last_log(raw=True), ['log 1'])
+        
+        obj.start_log('log-2')
+        obj.log('log 2')
+        obj.end_log()
+        
+        obj.start_log('log-3')
+        obj.log('log 3')
+        obj.end_log()
+        
+        self.assertEqual(obj.get_last_log(), 'log 3')
+        self.assertEqual(obj.get_last_log(raw=True), ['log 3'])
+        
+        # Ensure all three logs are still there to retrieve again later if
+        # necessary
+        self.assertEqual(len(obj._finished_logs), 3)
+        
+        self.assertEqual(obj.get_log('log-2'), 'log 2')
+    
+    def test_get_last_log__none_finished(self):
+        """
+        Test the get_last_log() method when no logs have been finished. It
+        should raise KeyError.
+        """
+        
+        with self.assertRaisesMessage(KeyError, 'No finished logs to retrieve'):
+            self.obj.get_last_log()
+    
+    def test_repeating_logs(self):
+        """
+        Test the log() method with multiple nested logs, including reusing
+        previous log names for logs that have been properly ended (as might
+        occur during a loop). It should append the given lines to the currently
+        active log.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('test_log')
+        obj.log('first line', 'second line', 'third line')
+        
+        obj.start_log('nested_log')
+        obj.log('first run')
+        obj.end_log()
+        
+        self.assertEqual(obj.get_last_log(), 'first run')
+        
+        # Ensure a random log that occurs between two runs of the same log does
+        # not keep the second run from being "last". i.e. when a log with the
+        # same name as an earlier log is run, it should always append to the
+        # end of the OrderedDict of finished logs, not update the existing entry,
+        # which is potentially further back in the "list".
+        obj.start_log('random_log')
+        obj.log('second run')
+        obj.end_log()
+        
+        obj.log('fourth line')
+        
+        obj.start_log('nested_log')
+        obj.log('second run')
+        obj.end_log()
+        
+        self.assertEqual(obj.get_last_log(), 'second run')
+        
+        obj.log('fifth line')
+        
+        obj.start_log('nested_log')
+        obj.log('third run')
+        obj.end_log()
+        
+        self.assertEqual(obj.get_last_log(), 'third run')
+        
+        obj.end_log()
+        
+        self.assertEqual(
+            obj.get_log('test_log', raw=True),
+            ['first line', 'second line', 'third line', 'fourth line', 'fifth line']
+        )
+        
+        self.assertEqual(obj.get_log('nested_log'), 'third run')
 
 
 class TimeZoneFieldTest(TestCase):

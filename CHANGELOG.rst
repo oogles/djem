@@ -6,7 +6,8 @@ Change Log
 ===
 
 * Added ``UNDEFINED`` constant
-* Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality and user-based logging
+* Added ``LogMixin`` for instance-based logging
+* Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality
 * Added ``DJEM_UNIVERSAL_OLP`` setting
 * Added ``DJEM_PERM_LOG_VERBOSITY`` setting
 * Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``CommonInfoMixin`` - this was far too specific a use-case to be the default
@@ -15,7 +16,6 @@ Change Log
 * Removed ``ArchivableMixin``'s ``live`` and ``archived`` Managers
 * Removed explicit ``Manager`` classes for mixins
 * Moved custom ``QuerySet`` classes for mixins into ``djem.models.models``
-
 
 0.6.2
 =====
