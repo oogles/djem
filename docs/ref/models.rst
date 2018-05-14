@@ -2,10 +2,49 @@
 Model Mixins and QuerySets
 ==========================
 
-.. module:: djem.models
+.. module:: djem.models.models
+
+.. py:currentmodule:: djem.models
 
 Mixins
 ======
+
+``LogMixin``
+------------
+
+.. autoclass:: LogMixin
+
+    Adds :doc:`instance-based logging <../topics/logging>` support to any model.
+
+    .. versionadded:: 0.7
+
+    .. automethod:: start_log
+    .. automethod:: end_log
+    .. automethod:: discard_log
+    .. automethod:: log
+    .. automethod:: get_log
+    .. automethod:: get_last_log
+
+``OLPMixin``
+------------
+
+.. class:: OLPMixin
+
+    .. versionadded:: 0.7
+
+    A mixin for a custom user model that enables additional :doc:`advanced features <../topics/permissions/advanced>` of the object-level permission system.
+
+    Inherits instance-based logging functionality from :class:`LogMixin`.
+
+    .. method:: has_perm(perm, obj=None)
+
+        A replacement for the default ``has_perm()`` method defined by Django's ``PermissionsMixin``.
+
+        In conjunction with the :setting:`DJEM_UNIVERSAL_OLP` setting, this version can force superusers to be subject to the same object-level permissions checks as regular users.
+
+        In conjunction with the :setting:`DJEM_PERM_LOG_VERBOSITY`, an automatic log of all permission checks can be kept, using :doc:`instance-based logging <../topics/logging>`.
+
+    .. automethod:: clear_perm_cache
 
 ``CommonInfoMixin``
 -------------------

@@ -74,7 +74,7 @@ The HTML tag to use for the wrapping element rendered around form fields when us
 
 .. versionadded:: 0.7
 
-.. currentmodule:: djem.auth
+.. currentmodule:: djem.models
 
 Default: ``False``
 
@@ -88,11 +88,11 @@ In conjunction with a custom user model including :class:`OLPMixin`, setting thi
 
 .. versionadded:: 0.7
 
-.. currentmodule:: djem.auth
+.. currentmodule:: djem.models
 
 Default: ``0``
 
-In conjunction with a custom user model including :class:`OLPMixin`, this setting controls the level of automatic :ref:`user-based logging <user-based-logging>`. performed by :meth:`OLPMixin.has_perm`:
+In conjunction with a custom user model including :class:`OLPMixin`, this setting controls the level of :ref:`automatic permission logging <permissions-advanced-logging>` performed by :meth:`OLPMixin.has_perm`:
 
 * ``0``: No automatic logging
 * ``1``: Logs are automatically created for each permission check, with minimal automatic entries

@@ -6,6 +6,7 @@ Using Djem
     :maxdepth: 2
 
     permissions/index
+    logging
     models
     forms
     pagination

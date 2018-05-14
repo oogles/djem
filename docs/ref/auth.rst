@@ -23,32 +23,6 @@ Auth
         ]
 
 
-``OLPMixin``
-============
-
-.. class:: OLPMixin
-
-    .. versionadded:: 0.7
-
-    A mixin for a custom user model that enables additional :doc:`advanced features <../topics/permissions/advanced>` of the object-level permission system.
-
-    .. method:: has_perm(perm, obj=None)
-
-        A replacement for the default ``has_perm()`` method defined by Django's ``PermissionsMixin``.
-
-        In conjunction with the :setting:`DJEM_UNIVERSAL_OLP` setting, this version can force superusers to be subject to the same object-level permissions checks as regular users.
-
-        In conjunction with the :setting:`DJEM_PERM_LOG_VERBOSITY`, an automatic log of all permission checks can be kept, using :ref:`user-based logging <user-based-logging>`.
-
-    .. automethod:: clear_perm_cache
-    .. automethod:: start_log
-    .. automethod:: end_log
-    .. automethod:: discard_log
-    .. automethod:: log
-    .. automethod:: get_log
-    .. automethod:: get_last_log
-
-
 ``permission_required``
 =======================
 
