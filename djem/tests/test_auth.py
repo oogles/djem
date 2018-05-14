@@ -1,3 +1,6 @@
+from unittest import skipIf
+
+from django import VERSION
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission, User
@@ -8,7 +11,7 @@ from django.views import View
 
 from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
 
-from .models import CustomUser, UserLogTest, OLPTest, UniversalOLPTest
+from .models import CustomUser, OLPTest, UniversalOLPTest, UserLogTest
 
 
 def _test_view(request, obj=None):
@@ -65,6 +68,7 @@ class OLPMixinTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, '_perm_cache')
     
+    @skipIf(VERSION[0] < 2, '_user_perm_cache is buggy')
     def test_clear_perm_cache__mlp(self):
         """
         Test the clear_perm_cache() method after model-level permissions have
@@ -119,6 +123,7 @@ class OLPMixinTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, '_perm_cache')
     
+    @skipIf(VERSION[0] < 2, '_user_perm_cache is buggy')
     def test_clear_perm_cache__olp(self):
         """
         Test the clear_perm_cache() method after object-level permissions have
