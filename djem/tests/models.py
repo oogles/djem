@@ -16,6 +16,9 @@ class CommonInfoTest(CommonInfoMixin, models.Model):
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
     
+    class Meta:
+        app_label = 'tests'
+    
     def _user_can_change_commoninfotest(self, user):
         
         return user.pk == self.user_created_id
@@ -28,6 +31,9 @@ class ArchivableTest(ArchivableMixin, models.Model):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
+    
+    class Meta:
+        app_label = 'tests'
 
 
 class VersioningTest(VersioningMixin, models.Model):
@@ -37,6 +43,9 @@ class VersioningTest(VersioningMixin, models.Model):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
+    
+    class Meta:
+        app_label = 'tests'
 
 
 class StaticTest(StaticAbstract):
@@ -47,6 +56,9 @@ class StaticTest(StaticAbstract):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
+    
+    class Meta:
+        app_label = 'tests'
 
 
 class TimeZoneTest(models.Model):
@@ -62,6 +74,9 @@ class TimeZoneTest(models.Model):
         ('Australia/Melbourne', 'Australia/Melbourne'),
         ('invalid', 'Invalid'),
     ))
+    
+    class Meta:
+        app_label = 'tests'
 
 
 class LogTest(LogMixin, models.Model):
@@ -70,6 +85,9 @@ class LogTest(LogMixin, models.Model):
     """
     
     field = models.BooleanField(default=True)
+    
+    class Meta:
+        app_label = 'tests'
 
 
 class CustomUser(OLPMixin, AbstractUser):
@@ -81,12 +99,22 @@ class CustomUser(OLPMixin, AbstractUser):
     # the same fields on the regular auth.User model
     groups = models.ManyToManyField(Group, related_name='+')
     user_permissions = models.ManyToManyField(Permission, related_name='+')
+    
+    class Meta:
+        app_label = 'tests'
 
 
 class UserLogTest(models.Model):
     """
     This is a contrived model for testing OLPMixin permission logging.
     """
+    
+    class Meta:
+        app_label = 'tests'
+        permissions = (
+            ('mlp_log', 'Permission with no object-level checks'),
+            ('olp_log', 'Permission with object-level checks and additional logging'),
+        )
     
     def __str__(self):
         
@@ -97,12 +125,6 @@ class UserLogTest(models.Model):
         user.log('This permission is restricted.')
         
         return False
-    
-    class Meta:
-        permissions = (
-            ('mlp_log', 'Permission with no object-level checks'),
-            ('olp_log', 'Permission with object-level checks and additional logging'),
-        )
 
 
 class OLPTest(models.Model):
@@ -113,6 +135,17 @@ class OLPTest(models.Model):
     
     user = models.ForeignKey('auth.User', null=True, on_delete=models.PROTECT)
     group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)
+    
+    class Meta:
+        app_label = 'tests'
+        permissions = (
+            ('open_olptest', 'Completely open to anyone'),
+            ('closed_olptest', 'Completely closed to everyone (except super users)'),
+            ('user_only_olptest', 'Open to the user specified on the object'),
+            ('group_only_olptest', 'Open to the group specified on the object'),
+            ('combined_olptest', 'Open to any user OR group specified on the object'),
+            ('deny_olptest', 'Denies permission by raising PermissionDenied for the user'),
+        )
     
     def _user_can_open_olptest(self, user):
         
@@ -152,16 +185,6 @@ class OLPTest(models.Model):
     def _user_can_deny_olptest(self, user):
         
         raise PermissionDenied()
-    
-    class Meta:
-        permissions = (
-            ('open_olptest', 'Completely open to anyone'),
-            ('closed_olptest', 'Completely closed to everyone (except super users)'),
-            ('user_only_olptest', 'Open to the user specified on the object'),
-            ('group_only_olptest', 'Open to the group specified on the object'),
-            ('combined_olptest', 'Open to any user OR group specified on the object'),
-            ('deny_olptest', 'Denies permission by raising PermissionDenied for the user'),
-        )
 
  
 class UniversalOLPTest(models.Model):
@@ -172,6 +195,17 @@ class UniversalOLPTest(models.Model):
     
     user = models.ForeignKey(CustomUser, null=True, on_delete=models.PROTECT)
     group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)
+    
+    class Meta:
+        app_label = 'tests'
+        permissions = (
+            ('open_universalolptest', 'Completely open to anyone'),
+            ('closed_universalolptest', 'Completely closed to everyone (except super users)'),
+            ('user_only_universalolptest', 'Open to the user specified on the object'),
+            ('group_only_universalolptest', 'Open to the group specified on the object'),
+            ('combined_universalolptest', 'Open to any user OR group specified on the object'),
+            ('deny_universalolptest', 'Denies permission by raising PermissionDenied for the user'),
+        )
     
     def _user_can_open_universalolptest(self, user):
         
@@ -211,13 +245,3 @@ class UniversalOLPTest(models.Model):
     def _user_can_deny_universalolptest(self, user):
         
         raise PermissionDenied()
-    
-    class Meta:
-        permissions = (
-            ('open_universalolptest', 'Completely open to anyone'),
-            ('closed_universalolptest', 'Completely closed to everyone (except super users)'),
-            ('user_only_universalolptest', 'Open to the user specified on the object'),
-            ('group_only_universalolptest', 'Open to the group specified on the object'),
-            ('combined_universalolptest', 'Open to any user OR group specified on the object'),
-            ('deny_universalolptest', 'Denies permission by raising PermissionDenied for the user'),
-        )
