@@ -11,6 +11,10 @@ from djem.utils.tests import TemplateRendererMixin
 from .models import CommonInfoTest
 
 
+@override_settings(AUTHENTICATION_BACKENDS=[
+    'django.contrib.auth.backends.ModelBackend',
+    'djem.auth.ObjectPermissionsBackend'
+])
 class PermTagTestCase(TemplateRendererMixin, TestCase):
     
     def setUp(self):

@@ -26,12 +26,6 @@ DATABASES = {
     },
 }
 
-# For object-level permissions framework tests
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'djem.auth.ObjectPermissionsBackend'
-]
-
 # For testing template tags
 TEMPLATES = [{
     'BACKEND': 'django.template.backends.django.DjangoTemplates',

@@ -15,6 +15,11 @@ from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permiss
 
 from .models import CustomUser, OLPTest, UniversalOLPTest, UserLogTest
 
+_backends = [
+    'django.contrib.auth.backends.ModelBackend',
+    'djem.auth.ObjectPermissionsBackend'
+]
+
 
 def _test_view(request, obj=None):
     
@@ -28,7 +33,7 @@ class _TestView(PermissionRequiredMixin, View):
         return HttpResponse('success')
 
 
-@override_settings(AUTH_USER_MODEL='tests.CustomUser')
+@override_settings(AUTH_USER_MODEL='tests.CustomUser', AUTHENTICATION_BACKENDS=_backends)
 class OLPMixinTestCase(TestCase):
     
     def setUp(self):
@@ -591,7 +596,7 @@ class OLPMixinTestCase(TestCase):
         ])
 
 
-@override_settings(AUTH_USER_MODEL='auth.User')
+@override_settings(AUTH_USER_MODEL='auth.User', AUTHENTICATION_BACKENDS=_backends)
 class OLPTestCase(TestCase):
     
     UserModel = User
@@ -1463,6 +1468,7 @@ class UniversalOLPTrueTestCase(OLPCacheMixin, OLPTestCase):
         })
 
 
+@override_settings(AUTHENTICATION_BACKENDS=_backends)
 class PermissionRequiredDecoratorTestCase(TestCase):
     
     #
@@ -1907,6 +1913,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
             view(request, obj=0)
 
 
+@override_settings(AUTHENTICATION_BACKENDS=_backends)
 class PermissionRequiredMixinTestCase(TestCase):
     
     #
