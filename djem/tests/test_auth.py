@@ -6,8 +6,10 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission, User
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.http import Http404, HttpResponse
+from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
 from django.views import View
+
 
 from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
 
@@ -1487,6 +1489,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         self.olptest_with_access = OLPTest.objects.create(user=user)
         self.olptest_without_access = OLPTest.objects.create()
         self.factory = RequestFactory()
+        self.resolved_login_url = resolve_url(settings.LOGIN_URL)
     
     def test_unauthenticated(self):
         """
@@ -1504,7 +1507,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_string_arg__access(self):
         """
@@ -1544,7 +1547,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_string_arg__no_access__redirect__custom__relative(self):
         """
@@ -1567,7 +1570,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/custom/login/?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '/custom/login/?next=/test/')
     
     def test_string_arg__no_access__redirect__custom__absolute(self):
         """
@@ -1592,9 +1595,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
             response.url,
-            'https://example.com/custom/login/?next=http%3A//testserver/test/'.format(
-                settings.LOGIN_URL
-            )
+            'https://example.com/custom/login/?next=http%3A//testserver/test/'
         )
     
     def test_string_arg__no_access__raise(self):
@@ -1634,7 +1635,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_tuple_arg__access(self):
         """
@@ -1674,7 +1675,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_tuple_arg__no_access__redirect__custom(self):
         """
@@ -1735,7 +1736,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_tuple_arg__invalid_object(self):
         """
@@ -1796,7 +1797,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_multiple_args__no_access__object(self):
         """
@@ -1818,7 +1819,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_multiple_args__no_access__custom_redirect(self):
         """
@@ -1883,7 +1884,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_multiple_args__invalid_object(self):
         """
@@ -1932,6 +1933,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         self.olptest_with_access = OLPTest.objects.create(user=user)
         self.olptest_without_access = OLPTest.objects.create()
         self.factory = RequestFactory()
+        self.resolved_login_url = resolve_url(settings.LOGIN_URL)
     
     def test_no_permissions(self):
         """
@@ -1964,7 +1966,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_string_arg__access(self):
         """
@@ -2004,7 +2006,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_string_arg__no_access__redirect__custom(self):
         """
@@ -2026,7 +2028,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/custom/login/?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '/custom/login/?next=/test/')
     
     def test_string_arg__no_access__raise(self):
         """
@@ -2065,7 +2067,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_tuple_arg__access(self):
         """
@@ -2103,7 +2105,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_tuple_arg__no_access__redirect__custom(self):
         """
@@ -2163,7 +2165,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_tuple_arg__invalid_object(self):
         """
@@ -2221,7 +2223,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_multiple_args__no_access__object(self):
         """
@@ -2242,7 +2244,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_multiple_args__no_access__custom_redirect(self):
         """
@@ -2303,7 +2305,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(settings.LOGIN_URL))
+        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
     
     def test_multiple_args__invalid_object(self):
         """
