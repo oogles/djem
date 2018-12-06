@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.6.4
+=====
+
+* Fixed setup.py to include ``include_package_data=True``
+
 0.6.3
 =====
 
