@@ -17,6 +17,11 @@ Change Log
 * Removed explicit ``Manager`` classes for mixins
 * Moved custom ``QuerySet`` classes for mixins into ``djem.models.models``
 
+0.6.3
+=====
+
+* Updated MANIFEST.in to include the templates directory
+
 0.6.2
 =====
 
