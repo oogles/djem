@@ -2,10 +2,20 @@
 Change Log
 ==========
 
-0.6.1
+0.6.3
+=====
+
+* Updated MANIFEST.in to include the templates directory
+
+0.6.2
 =====
 
 * Fixed #2: Object level access now defaults open when no model method exists to define it explicitly
+
+0.6.1
+=====
+
+* Updated PyPi details
 
 0.6
 ===
