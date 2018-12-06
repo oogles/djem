@@ -17,6 +17,11 @@ Change Log
 * Removed explicit ``Manager`` classes for mixins
 * Moved custom ``QuerySet`` classes for mixins into ``djem.models.models``
 
+0.6.4
+=====
+
+* Fixed setup.py to include ``include_package_data=True``
+
 0.6.3
 =====
 
