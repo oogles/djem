@@ -81,7 +81,10 @@ if [[ ${#PYTHON_VERSIONS[@]} -ne 0 ]]; then
 
     # List obtained from pyenv wiki. For latest, see:
     # https://github.com/pyenv/pyenv/wiki/Common-build-problems
-    apt-get -qq install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+    # Install libssl separately to work around interactive prompt issue, see:
+    # https://github.com/hashicorp/vagrant/issues/10914
+    export DEBIAN_FRONTEND=noninteractive && apt-get -qq --option "Dpkg::Options::=--force-confold" --assume-yes install libssl-dev
+    apt-get -qq install make build-essential zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
 
     echo " "
     echo "Installing additional python versions..."
