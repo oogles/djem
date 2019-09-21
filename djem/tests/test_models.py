@@ -1168,7 +1168,7 @@ class LogTestCase(TestCase):
         self.assertEqual(obj.get_log('nested_log'), 'third run')
 
 
-class TimeZoneFieldTest(TestCase):
+class TimeZoneFieldTestCase(TestCase):
     
     def test_init(self):
         
@@ -1176,6 +1176,7 @@ class TimeZoneFieldTest(TestCase):
         
         self.assertEqual(f.choices, f.CHOICES)
         self.assertEqual(f.max_length, f.MAX_LENGTH)
+        self.assertIsNone(f.verbose_name)
     
     def test_init__custom_kwargs(self):
         
@@ -1193,6 +1194,16 @@ class TimeZoneFieldTest(TestCase):
         
         self.assertEqual(f.choices, choices)
         self.assertEqual(f.max_length, 32)
+    
+    def test_init__verbose_name(self):
+        
+        # Should work as a keyword argument...
+        f = TimeZoneField(verbose_name='timezone')
+        self.assertEqual(f.verbose_name, 'timezone')
+        
+        # ... and as a positional argument
+        f = TimeZoneField('timezone')
+        self.assertEqual(f.verbose_name, 'timezone')
     
     def test_default(self):
         

@@ -29,7 +29,7 @@ class TimeZoneField(models.Field):
     CHOICES = TIMEZONE_CHOICES
     MAX_LENGTH = 63
     
-    def __init__(self, **kwargs):
+    def __init__(self, verbose_name=None, **kwargs):
         
         if not PYTZ_AVAILABLE:  # pragma: no cover
             raise RuntimeError('TimeZoneField requires pytz to be installed.')
@@ -37,7 +37,7 @@ class TimeZoneField(models.Field):
         kwargs.setdefault('choices', self.CHOICES)
         kwargs.setdefault('max_length', self.MAX_LENGTH)
         
-        super(TimeZoneField, self).__init__(**kwargs)
+        super(TimeZoneField, self).__init__(verbose_name=verbose_name, **kwargs)
     
     def get_internal_type(self):
         
