@@ -176,15 +176,17 @@ class SetupTestAppTestCase(SimpleTestCase):
     
     def test_explicit_label__duplicate(self):
         """
-        Test when called multiple times with an explicit app label provided. It
-        should raise ValueError on the second attempt due to the duplicate entry.
+        Test when called multiple times with an explicit app label provided.
+        The second attempt should have no effect.
         """
         
-        setup_test_app(self.package, '__test_label__')
+        n = len(apps.app_configs)
         
-        msg = 'An app with the "__test_label__" label is already registered'
-        with self.assertRaisesMessage(ValueError, msg):
-            setup_test_app(self.package, '__test_label__')
+        setup_test_app(self.package, '__test_label__')
+        self.assertEqual(len(apps.app_configs), n + 1)
+        
+        setup_test_app(self.package, '__test_label__')
+        self.assertEqual(len(apps.app_configs), n + 1)
         
         # Uninstall the app again to avoid polluting other tests
         apps.app_configs.pop('__test_label__')
@@ -204,15 +206,17 @@ class SetupTestAppTestCase(SimpleTestCase):
     
     def test_implicit_label__duplicate(self):
         """
-        Test when called multiple times with no explicit app label provided. It
-        should raise ValueError on the second attempt due to the duplicate entry.
+        Test when called multiple times with no explicit app label provided.
+        The second attempt should have no effect.
         """
         
-        setup_test_app(self.package)
+        n = len(apps.app_configs)
         
-        msg = 'An app with the "djem_tests" label is already registered'
-        with self.assertRaisesMessage(ValueError, msg):
-            setup_test_app(self.package)
+        setup_test_app(self.package)
+        self.assertEqual(len(apps.app_configs), n + 1)
+        
+        setup_test_app(self.package)
+        self.assertEqual(len(apps.app_configs), n + 1)
         
         # Uninstall the app again to avoid polluting other tests
         apps.app_configs.pop('djem_tests')

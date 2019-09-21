@@ -39,9 +39,6 @@ def setup_test_app(package, label=None):
     # https://code.djangoproject.com/ticket/7835#comment:46
     #
     
-    app_config = AppConfig.create(package)
-    app_config.apps = apps
-    
     if label is None:
         containing_app_config = apps.get_containing_app_config(package)
         label = containing_app_config.label
@@ -56,11 +53,20 @@ def setup_test_app(package, label=None):
             label = '{}_tests'.format(containing_app_config.label)
     
     if label in apps.app_configs:
-        raise ValueError('An app with the "{}" label is already registered.'.format(label))
+        # An app with this label already exists, skip adding it. This is
+        # necessary (vs raising an exception) as there are certain conditions
+        # that can cause this function to be run multiple times (e.g. errors
+        # during Django's initialisation can cause this).
+        return
     
+    app_config = AppConfig.create(package)
+    app_config.apps = apps
     app_config.label = label
+    
     apps.app_configs[label] = app_config
+    
     app_config.import_models()
+    
     apps.clear_cache()
 
 
