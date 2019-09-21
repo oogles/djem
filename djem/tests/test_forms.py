@@ -47,7 +47,7 @@ class CommonInfoFormTestCase(TestCase):
         
         # This user is not modified during these tests, so no need to
         # refresh_from_db in setUp
-        cls.user = get_user_model().objects.create_user('test', 'fakepassword')
+        cls.user = get_user_model().objects.create_user('test')
     
     def test_bound_init__user(self):
         """

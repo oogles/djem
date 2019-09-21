@@ -1,3 +1,5 @@
+from unittest import skipIf
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -8,6 +10,7 @@ from django.test import RequestFactory, TestCase, override_settings
 
 from djem.utils.tests import TemplateRendererMixin
 
+from .checks import after_2_1, before_2_1
 from .models import CommonInfoTest
 
 
@@ -1014,7 +1017,8 @@ class FormFieldTestCase(TemplateRendererMixin, TestCase):
         self.assertEqual(output[:24], '<li class="form-field" >')
         self.assertEqual(output[-5:], '</li>')
     
-    def test_content(self):
+    @skipIf(after_2_1(), '>= 2.1')  # rendered as <input /> pre 2.1
+    def test_content__before_2_1(self):  # pragma: no cover
         """
         Test the form_field template tag in basic usage. It should output all
         expected HTML.
@@ -1033,6 +1037,31 @@ class FormFieldTestCase(TemplateRendererMixin, TestCase):
             '<div class="form-field" >'
             '<label for="id_field">Test Field:</label>'
             '<input type="text" name="field" id="id_field" />'
+            '</div>'
+        )
+        
+        self.assertEqual(output, expected_output)
+    
+    @skipIf(before_2_1(), '< 2.1')  # rendered as <input> as of 2.1
+    def test_content__after_2_1(self):
+        """
+        Test the form_field template tag in basic usage. It should output all
+        expected HTML.
+        """
+        
+        template_string = (
+            '{% load djem %}'
+            '{% form_field form.field %}'
+        )
+        
+        output = self.render_template(template_string, {
+            'form': self.form()
+        })
+        
+        expected_output = (
+            '<div class="form-field" >'
+            '<label for="id_field">Test Field:</label>'
+            '<input type="text" name="field" id="id_field">'
             '</div>'
         )
         
@@ -1273,7 +1302,8 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
         self.assertEqual(output[:24], '<li class="form-field" >')
         self.assertEqual(output[-5:], '</li>')
     
-    def test_content(self):
+    @skipIf(after_2_1(), '>= 2.1')  # rendered as <input /> pre 2.1
+    def test_content__before_2_1(self):  # pragma: no cover
         """
         Test the checkbox template tag in basic usage. It should output all
         expected HTML.
@@ -1297,7 +1327,33 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
         
         self.assertEqual(output, expected_output)
     
-    def test_content__empty(self):
+    @skipIf(before_2_1(), '< 2.1')  # rendered as <input> as of 2.1
+    def test_content__after_2_1(self):
+        """
+        Test the checkbox template tag in basic usage. It should output all
+        expected HTML.
+        """
+        
+        template_string = (
+            '{% load djem %}'
+            '{% checkbox form.field %}Click this{% endcheckbox%}'
+        )
+        
+        output = self.render_template(template_string, {
+            'form': self.form()
+        })
+        
+        expected_output = (
+            '<div class="form-field" >'
+            '<input type="checkbox" name="field" id="id_field">'
+            '<label class="check-label" for="id_field"> Click this </label>'
+            '</div>'
+        )
+        
+        self.assertEqual(output, expected_output)
+    
+    @skipIf(after_2_1(), '>= 2.1')  # rendered as <input /> pre 2.1
+    def test_content__empty__before_2_1(self):  # pragma: no cover
         """
         Test the checkbox template tag when no content in entered between the
         start and end tags. It should use the field's own label.
@@ -1315,6 +1371,31 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
         expected_output = (
             '<div class="form-field" >'
             '<input type="checkbox" name="field" id="id_field" />'
+            '<label class="check-label" for="id_field"> Test Field </label>'
+            '</div>'
+        )
+        
+        self.assertEqual(output, expected_output)
+    
+    @skipIf(before_2_1(), '< 2.1')  # rendered as <input> as of 2.1
+    def test_content__empty__after_2_1(self):
+        """
+        Test the checkbox template tag when no content in entered between the
+        start and end tags. It should use the field's own label.
+        """
+        
+        template_string = (
+            '{% load djem %}'
+            '{% checkbox form.field %}{% endcheckbox%}'
+        )
+        
+        output = self.render_template(template_string, {
+            'form': self.form()
+        })
+        
+        expected_output = (
+            '<div class="form-field" >'
+            '<input type="checkbox" name="field" id="id_field">'
             '<label class="check-label" for="id_field"> Test Field </label>'
             '</div>'
         )

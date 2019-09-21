@@ -10,9 +10,9 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
 from django.views import View
 
-
 from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
 
+from .checks import after_2_1, before_2_1
 from .models import CustomUser, OLPTest, UniversalOLPTest, UserLogTest
 
 _backends = [
@@ -110,7 +110,7 @@ class OLPMixinTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, '_perm_cache')
         
-        # Check a model-level permissions - the MLP caches only should populate
+        # Check a model-level permission - the MLP caches only should populate
         user.has_perm('tests.open_olptest')
         
         self.assertEqual(user._olp_cache, {})
@@ -216,7 +216,7 @@ class OLPMixinTestCase(TestCase):
         
         user.has_perm('tests.mlp_log')
         
-        # Only one log - thet for the model-level check - should be created
+        # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
@@ -273,7 +273,7 @@ class OLPMixinTestCase(TestCase):
         
         user.has_perm('tests.mlp_log')
         
-        # Only one log - thet for the model-level check - should be created
+        # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
@@ -324,7 +324,7 @@ class OLPMixinTestCase(TestCase):
         
         user.has_perm('tests.mlp_log')
         
-        # Only one log - thet for the model-level check - should be created
+        # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
@@ -442,7 +442,7 @@ class OLPMixinTestCase(TestCase):
         
         user.has_perm('tests.mlp_log')
         
-        # Only one log - thet for the model-level check - should be created
+        # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
@@ -498,7 +498,7 @@ class OLPMixinTestCase(TestCase):
         
         user.has_perm('tests.mlp_log')
         
-        # Only one log - thet for the model-level check - should be created
+        # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
@@ -569,11 +569,10 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._active_logs), 0)
         
         # Finished logs should only exist for the model-level checks
-        self.assertEqual(len(user._finished_logs), 5)
         self.assertCountEqual(user._finished_logs.keys(), [
-            'auto-tests.add_userlogtest', 'auto-tests.change_userlogtest',
-            'auto-tests.delete_userlogtest', 'auto-tests.mlp_log',
-            'auto-tests.olp_log'
+            'auto-tests.view_userlogtest', 'auto-tests.add_userlogtest',
+            'auto-tests.change_userlogtest', 'auto-tests.delete_userlogtest',
+            'auto-tests.mlp_log', 'auto-tests.olp_log'
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
@@ -588,11 +587,10 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._active_logs), 0)
         
         # Finished logs should only exist for the model-level checks
-        self.assertEqual(len(user._finished_logs), 5)
         self.assertCountEqual(user._finished_logs.keys(), [
-            'auto-tests.add_userlogtest', 'auto-tests.change_userlogtest',
-            'auto-tests.delete_userlogtest', 'auto-tests.mlp_log',
-            'auto-tests.olp_log'
+            'auto-tests.view_userlogtest', 'auto-tests.add_userlogtest',
+            'auto-tests.change_userlogtest', 'auto-tests.delete_userlogtest',
+            'auto-tests.mlp_log', 'auto-tests.olp_log'
         ])
 
 
@@ -901,6 +899,7 @@ class OLPTestCase(TestCase):
         obj = self.TestModel.objects.create(user=self.user1, group=self.group1)
         
         self.assertEqual(backend.get_user_permissions(self.user1, obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -910,6 +909,7 @@ class OLPTestCase(TestCase):
         })
         
         self.assertEqual(backend.get_user_permissions(self.user2, obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -958,6 +958,7 @@ class OLPTestCase(TestCase):
         
         perms = backend.get_user_permissions(user, obj)
         self.assertEqual(perms, {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1004,6 +1005,7 @@ class OLPTestCase(TestCase):
         obj = self.TestModel.objects.create()
         
         expected_caches = (
+            self.cache('user', 'view', obj),
             self.cache('user', 'add', obj),
             self.cache('user', 'change', obj),
             self.cache('user', 'delete', obj),
@@ -1049,6 +1051,7 @@ class OLPTestCase(TestCase):
         obj = self.TestModel.objects.create(user=self.user1, group=self.group1)
         
         self.assertEqual(self.user1.get_group_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1059,6 +1062,7 @@ class OLPTestCase(TestCase):
         })
         
         self.assertEqual(self.user2.get_group_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1101,6 +1105,7 @@ class OLPTestCase(TestCase):
         obj = self.TestModel.objects.create()
         
         self.assertEqual(user.get_all_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1143,6 +1148,7 @@ class OLPTestCase(TestCase):
         obj = self.TestModel.objects.create()
         
         expected_caches = (
+            self.cache('group', 'view', obj),
             self.cache('group', 'add', obj),
             self.cache('group', 'change', obj),
             self.cache('group', 'delete', obj),
@@ -1188,6 +1194,7 @@ class OLPTestCase(TestCase):
         obj = self.TestModel.objects.create(user=self.user1, group=self.group1)
         
         self.assertEqual(self.user1.get_all_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1198,6 +1205,7 @@ class OLPTestCase(TestCase):
         })
         
         self.assertEqual(self.user2.get_all_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1239,6 +1247,7 @@ class OLPTestCase(TestCase):
         obj = self.TestModel.objects.create()
         
         self.assertEqual(user.get_all_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1410,6 +1419,7 @@ class UniversalOLPTrueTestCase(OLPCacheMixin, OLPTestCase):
         
         perms = backend.get_user_permissions(user, obj)
         self.assertEqual(perms, {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1435,6 +1445,7 @@ class UniversalOLPTrueTestCase(OLPCacheMixin, OLPTestCase):
         obj = self.TestModel.objects.create()
         
         self.assertEqual(user.get_all_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1460,6 +1471,7 @@ class UniversalOLPTrueTestCase(OLPCacheMixin, OLPTestCase):
         obj = self.TestModel.objects.create()
         
         self.assertEqual(user.get_all_permissions(obj), {
+            self.perm('view'),
             self.perm('delete'),
             self.perm('change'),
             self.perm('add'),
@@ -1956,11 +1968,12 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(ImproperlyConfigured):
             view(request)
     
-    def test_unauthenticated(self):
+    def test_unauthenticated__redirect(self):
         """
         Test the PermissionRequiredMixin with an unauthenticated user.
         Ensure the mixin correctly denies access to the view (the
-        unauthenticated user having no permissions).
+        unauthenticated user having no permissions), by redirecting to the
+        login page.
         """
         
         view = _TestView.as_view(
@@ -1974,6 +1987,46 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+    
+    def test_unauthenticated__redirect__custom(self):
+        """
+        Test the PermissionRequiredMixin with an unauthenticated user.
+        Ensure the mixin correctly denies access to the view (the
+        unauthenticated user having no permissions), by redirecting to a custom
+        page specified by ``login_url``.
+        """
+        
+        view = _TestView.as_view(
+            permission_required='tests.open_olptest',
+            login_url='/custom/login/'
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = AnonymousUser()
+        
+        response = view(request, obj=self.olptest_with_access.pk)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/custom/login/?next=/test/')
+    
+    def test_unauthenticated__raise(self):
+        """
+        Test the PermissionRequiredMixin with an unauthenticated user.
+        Ensure the mixin correctly denies access to the view (the
+        unauthenticated user having no permissions), by raising
+        PermissionDenied (which would be translated into a 403 error page).
+        """
+        
+        view = _TestView.as_view(
+            permission_required='tests.open_olptest',
+            raise_exception=True
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = AnonymousUser()
+        
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.olptest_with_access.pk)
     
     def test_string_arg__access(self):
         """
@@ -1994,50 +2047,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertContains(response, 'success', status_code=200)
     
-    def test_string_arg__no_access__redirect(self):
-        """
-        Test the PermissionRequiredMixin with a valid permission as a single
-        string.
-        Ensure the mixin correctly denies access to the view for a user that
-        has not been granted that permission at the model level, by redirecting
-        to the login page.
-        """
-        
-        view = _TestView.as_view(
-            permission_required='tests.add_olptest'
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
-    
-    def test_string_arg__no_access__redirect__custom(self):
-        """
-        Test the PermissionRequiredMixin with a valid permission as a single
-        string and a custom ``login_url``.
-        Ensure the mixin correctly denies access to the view for a user that
-        has not been granted that permission at the model level, by redirecting
-        to a custom page specified by ``login_url``.
-        """
-        
-        view = _TestView.as_view(
-            permission_required='tests.add_olptest',
-            login_url='/custom/login/'
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/custom/login/?next=/test/')
-    
-    def test_string_arg__no_access__raise(self):
+    def test_string_arg__no_access__raise_true(self):
         """
         Test the PermissionRequiredMixin with a valid permission as a single
         string and a ``raise_exception`` set to True.
@@ -2057,7 +2067,54 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request)
     
-    def test_string_arg__invalid_perm(self):
+    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
+    def test_string_arg__no_access__raise_false__before_2_1(self):  # pragma: no cover
+        """
+        Test the PermissionRequiredMixin with a valid permission as a single
+        string and a ``raise_exception`` set to False.
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the model level, by redirecting
+        to a custom page specified by ``login_url``.
+        """
+        
+        view = _TestView.as_view(
+            permission_required='tests.add_olptest',
+            raise_exception=False
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        response = view(request)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/accounts/login/?next=/test/')
+    
+    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
+    def test_string_arg__no_access__raise_false__after_2_1(self):
+        """
+        Test the PermissionRequiredMixin with a valid permission as a single
+        string and a ``raise_exception`` set to False.
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the model level, by raising
+        PermissionDenied (which would be translated into a 403 error page).
+        This should happen despite ``raise_exception `` being False, due to
+        the user already being authenticated.
+        """
+        
+        view = _TestView.as_view(
+            permission_required='tests.add_olptest',
+            raise_exception=False
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request)
+    
+    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
+    def test_string_arg__invalid_perm__before_2_1(self):  # pragma: no cover
         """
         Test the PermissionRequiredMixin with an invalid permission as a single
         string.
@@ -2075,6 +2132,24 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+    
+    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
+    def test_string_arg__invalid_perm__after_2_1(self):
+        """
+        Test the PermissionRequiredMixin with an invalid permission as a single
+        string.
+        Ensure the mixin correctly denies access to the view.
+        """
+        
+        view = _TestView.as_view(
+            permission_required='fail'
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request)
     
     def test_tuple_arg__access(self):
         """
@@ -2094,49 +2169,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertContains(response, 'success', status_code=200)
     
-    def test_tuple_arg__no_access__redirect(self):
-        """
-        Test the PermissionRequiredMixin with a valid permission as a tuple.
-        Ensure the mixin correctly denies access to the view for a user that
-        has not been granted that permission at the object level, by
-        redirecting to the login page.
-        """
-        
-        view = _TestView.as_view(
-            permission_required=[('tests.combined_olptest', 'obj')]
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_without_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
-    
-    def test_tuple_arg__no_access__redirect__custom(self):
-        """
-        Test the PermissionRequiredMixin with a valid permission as a tuple and
-        a custom ``login_url``.
-        Ensure the mixin correctly denies access to the view for a user that
-        has not been granted that permission at the object level, by
-        to a custom page specified by ``login_url``.
-        """
-        
-        view = _TestView.as_view(
-            permission_required=[('tests.combined_olptest', 'obj')],
-            login_url='/custom/login/'
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_without_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/custom/login/?next=/test/')
-    
-    def test_tuple_arg__no_access__raise(self):
+    def test_tuple_arg__no_access__raise_true(self):
         """
         Test the PermissionRequiredMixin with a valid permission as a tuple and
         ``raise_exception`` set to True.
@@ -2156,7 +2189,54 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request, obj=self.olptest_without_access.pk)
     
-    def test_tuple_arg__invalid_perm(self):
+    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
+    def test_tuple_arg__no_access__raise_false__before_2_1(self):  # pragma: no cover
+        """
+        Test the PermissionRequiredMixin with a valid permission as a tuple and
+        ``raise_exception`` set to False .
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the object level, by redirecting
+        to a custom page specified by ``login_url``.
+        """
+        
+        view = _TestView.as_view(
+            permission_required=[('tests.combined_olptest', 'obj')],
+            raise_exception=False
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        response = view(request, obj=self.olptest_without_access.pk)
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/accounts/login/?next=/test/')
+    
+    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
+    def test_tuple_arg__no_access__raise_false__after_2_1(self):
+        """
+        Test the PermissionRequiredMixin with a valid permission as a tuple and
+        ``raise_exception`` set to False .
+        Ensure the mixin correctly denies access to the view for a user that
+        has not been granted that permission at the object level, by raising
+        PermissionDenied (which would be translated into a 403 error page).
+        This should happen despite ``raise_exception `` being False, due to
+        the user already being authenticated.
+        """
+        
+        view = _TestView.as_view(
+            permission_required=[('tests.combined_olptest', 'obj')],
+            raise_exception=False
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.olptest_without_access.pk)
+    
+    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
+    def test_tuple_arg__invalid_perm__before_2_1(self):  # pragma: no cover
         """
         Test the PermissionRequiredMixin with an invalid permission as a tuple.
         Ensure the mixin correctly denies access to the view.
@@ -2173,6 +2253,23 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+    
+    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
+    def test_tuple_arg__invalid_perm__after_2_1(self):
+        """
+        Test the PermissionRequiredMixin with an invalid permission as a tuple.
+        Ensure the mixin correctly denies access to the view.
+        """
+        
+        view = _TestView.as_view(
+            permission_required=[('fail', 'obj')]
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.olptest_with_access.pk)
     
     def test_tuple_arg__invalid_object(self):
         """
@@ -2211,13 +2308,14 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertContains(response, 'success', status_code=200)
     
-    def test_multiple_args__no_access__model(self):
+    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
+    def test_multiple_args__no_access__model__before_2_1(self):  # pragma: no cover
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
         mixture of strings and tuples.
         Ensure the mixin correctly denies access to the view for a user that
-        is missing one of the model-level permissions, by redirecting to the
-        login page.
+        is missing one of the model-level permissions, by redirecting
+        to a custom page specified by ``login_url``.
         """
         
         view = _TestView.as_view(
@@ -2227,18 +2325,39 @@ class PermissionRequiredMixinTestCase(TestCase):
         request = self.factory.get('/test/')
         request.user = self.user  # simulate login
         
-        response = view(request, obj=self.olptest_with_access.pk)
+        response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, '/accounts/login/?next=/test/')
     
-    def test_multiple_args__no_access__object(self):
+    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
+    def test_multiple_args__no_access__model__after_2_1(self):
+        """
+        Test the PermissionRequiredMixin with multiple valid permissions as a
+        mixture of strings and tuples.
+        Ensure the mixin correctly denies access to the view for a user that
+        is missing one of the model-level permissions, by raising
+        PermissionDenied (which would be translated into a 403 error page).
+        """
+        
+        view = _TestView.as_view(
+            permission_required=['tests.add_olptest', ('tests.combined_olptest', 'obj')]
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.olptest_without_access.pk)
+    
+    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
+    def test_multiple_args__no_access__object__before_2_1(self):  # pragma: no cover
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
         mixture of string and tuple arguments.
         Ensure the mixin correctly denies access to the view for a user that
-        is missing one of the object-level permissions, by redirecting to the
-        login page.
+        is missing one of the object-level permissions, by redirecting
+        to a custom page specified by ``login_url``.
         """
         
         view = _TestView.as_view(
@@ -2251,42 +2370,20 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, '/accounts/login/?next=/test/')
     
-    def test_multiple_args__no_access__custom_redirect(self):
+    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
+    def test_multiple_args__no_access__object__after_2_1(self):
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
-        mixture of string and tuple arguments, and a custom ``login_url``.
+        mixture of string and tuple arguments.
         Ensure the mixin correctly denies access to the view for a user that
-        is missing one of the object-level permissions, by redirecting to a
-        custom page specified by ``login_url``.
+        is missing one of the object-level permissions, by raising
+        PermissionDenied (which would be translated into a 403 error page).
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('tests.combined_olptest', 'obj')],
-            login_url='/custom/login/'
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_without_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/custom/login/?next=/test/')
-    
-    def test_multiple_args__no_access__raise(self):
-        """
-        Test the PermissionRequiredMixin with multiple valid permissions as a
-        mixture of string and tuple arguments, and ``raise_exception`` set to True.
-        Ensure the mixin correctly denies access to the view for a user that is
-        missing one of the object-level permissions, by raising PermissionDenied
-        (which would be translated into a 403 error page).
-        """
-        
-        view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('tests.combined_olptest', 'obj')],
-            raise_exception=True
+            permission_required=['tests.open_olptest', ('tests.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2295,7 +2392,8 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request, obj=self.olptest_without_access.pk)
     
-    def test_multiple_args__invalid_perm(self):
+    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
+    def test_multiple_args__invalid_perm__before_2_1(self):  # pragma: no cover
         """
         Test the PermissionRequiredMixin with multiple permissions as a mixture
         of strings and tuples, one of which is invalid.
@@ -2313,6 +2411,24 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+    
+    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
+    def test_multiple_args__invalid_perm__after_2_1(self):
+        """
+        Test the PermissionRequiredMixin with multiple permissions as a mixture
+        of strings and tuples, one of which is invalid.
+        Ensure the mixin correctly denies access to the view.
+        """
+        
+        view = _TestView.as_view(
+            permission_required=['tests.open_olptest', ('fail', 'obj')]
+        )
+        
+        request = self.factory.get('/test/')
+        request.user = self.user  # simulate login
+        
+        with self.assertRaises(PermissionDenied):
+            view(request, obj=self.olptest_with_access.pk)
     
     def test_multiple_args__invalid_object(self):
         """

@@ -146,6 +146,10 @@ class OLPTest(models.Model):
             ('combined_olptest', 'Open to any user OR group specified on the object'),
             ('deny_olptest', 'Denies permission by raising PermissionDenied for the user'),
         )
+        
+        # For test consistency across versions - due to the lack of a default
+        # "view" permission prior to Django 2.1
+        default_permissions = ('view', 'add', 'change', 'delete')
     
     def _user_can_open_olptest(self, user):
         
@@ -206,6 +210,10 @@ class UniversalOLPTest(models.Model):
             ('combined_universalolptest', 'Open to any user OR group specified on the object'),
             ('deny_universalolptest', 'Denies permission by raising PermissionDenied for the user'),
         )
+        
+        # For test consistency across versions - due to the lack of a default
+        # "view" permission prior to Django 2.1
+        default_permissions = ('view', 'add', 'change', 'delete')
     
     def _user_can_open_universalolptest(self, user):
         
