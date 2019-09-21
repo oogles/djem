@@ -115,6 +115,10 @@ class UserLogTest(models.Model):
             ('mlp_log', 'Permission with no object-level checks'),
             ('olp_log', 'Permission with object-level checks and additional logging'),
         )
+        
+        # For test consistency across versions - due to the lack of a default
+        # "view" permission prior to Django 2.1
+        default_permissions = ('view', 'add', 'change', 'delete')
     
     def __str__(self):
         
