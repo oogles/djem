@@ -33,7 +33,7 @@ class _TestView(PermissionRequiredMixin, View):
         return HttpResponse('success')
 
 
-@override_settings(AUTH_USER_MODEL='tests.CustomUser', AUTHENTICATION_BACKENDS=_backends)
+@override_settings(AUTH_USER_MODEL='djemtest.CustomUser', AUTHENTICATION_BACKENDS=_backends)
 class OLPMixinTestCase(TestCase):
     
     def setUp(self):
@@ -87,7 +87,7 @@ class OLPMixinTestCase(TestCase):
         
         # Grant the user some permissions - both directly and via a group
         permissions = Permission.objects.filter(
-            content_type__app_label='tests',
+            content_type__app_label='djemtest',
             content_type__model='olptest'
         )
         
@@ -111,7 +111,7 @@ class OLPMixinTestCase(TestCase):
             getattr(user, '_perm_cache')
         
         # Check a model-level permission - the MLP caches only should populate
-        user.has_perm('tests.open_olptest')
+        user.has_perm('djemtest.open_olptest')
         
         self.assertEqual(user._olp_cache, {})
         self.assertEqual(len(user._user_perm_cache), 2)
@@ -142,7 +142,7 @@ class OLPMixinTestCase(TestCase):
         
         # Grant the user some permissions - both directly and via a group
         permissions = Permission.objects.filter(
-            content_type__app_label='tests',
+            content_type__app_label='djemtest',
             content_type__model='olptest'
         )
         
@@ -167,7 +167,7 @@ class OLPMixinTestCase(TestCase):
         
         # Check an object-level permission - the OLP and MLP caches should populate
         obj = OLPTest.objects.create()
-        user.has_perm('tests.open_olptest', obj)
+        user.has_perm('djemtest.open_olptest', obj)
         
         self.assertEqual(len(user._olp_cache), 1)
         self.assertEqual(len(user._user_perm_cache), 2)
@@ -198,7 +198,7 @@ class OLPMixinTestCase(TestCase):
         
         user = self.user
         
-        user.has_perm('tests.mlp_log')
+        user.has_perm('djemtest.mlp_log')
         
         with self.assertRaisesMessage(KeyError, 'No finished logs to retrieve'):
             user.get_last_log()
@@ -214,7 +214,7 @@ class OLPMixinTestCase(TestCase):
         
         user = self.user
         
-        user.has_perm('tests.mlp_log')
+        user.has_perm('djemtest.mlp_log')
         
         # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
@@ -241,14 +241,14 @@ class OLPMixinTestCase(TestCase):
         
         obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_log', obj)
+        user.has_perm('djemtest.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
@@ -271,7 +271,7 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_log')
+        user.has_perm('djemtest.mlp_log')
         
         # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
@@ -297,7 +297,7 @@ class OLPMixinTestCase(TestCase):
         
         obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_log', obj)
+        user.has_perm('djemtest.olp_log', obj)
         
         # Only one log should be created - the object-level permission should
         # be implicitly granted without even needing the model-level check first
@@ -322,7 +322,7 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_log')
+        user.has_perm('djemtest.mlp_log')
         
         # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
@@ -348,7 +348,7 @@ class OLPMixinTestCase(TestCase):
         
         obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_log', obj)
+        user.has_perm('djemtest.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check (which is
@@ -356,7 +356,7 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
@@ -378,14 +378,14 @@ class OLPMixinTestCase(TestCase):
         
         user = self.user
         
-        user.has_perm('tests.mlp_log')
+        user.has_perm('djemtest.mlp_log')
         
         # Only one log - thet for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.mlp_log',
+            'Permission: djemtest.mlp_log',
             'User: test.user ({})\n'.format(self.user.pk),
             '\nRESULT: Permission Denied'
         ])
@@ -407,19 +407,19 @@ class OLPMixinTestCase(TestCase):
         
         obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_log', obj)
+        user.has_perm('djemtest.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.olp_log',
+            'Permission: djemtest.olp_log',
             'User: test.user ({})'.format(self.user.pk),
             'Object: Log Test #{0} ({0})\n'.format(obj.pk),
             'Model-level Result: Granted\n',
@@ -440,14 +440,14 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_log')
+        user.has_perm('djemtest.mlp_log')
         
         # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.mlp_log',
+            'Permission: djemtest.mlp_log',
             'User: test.user ({})\n'.format(self.user.pk),
             'Active superuser: Implicit permission',
             '\nRESULT: Permission Granted'
@@ -468,7 +468,7 @@ class OLPMixinTestCase(TestCase):
         
         obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_log', obj)
+        user.has_perm('djemtest.olp_log', obj)
         
         # Only one log should be created - the object-level permission should
         # be implicitly granted without even needing the model-level check first
@@ -476,7 +476,7 @@ class OLPMixinTestCase(TestCase):
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.olp_log',
+            'Permission: djemtest.olp_log',
             'User: test.user ({})'.format(self.user.pk),
             'Object: Log Test #{0} ({0})\n'.format(obj.pk),
             'Active superuser: Implicit permission',
@@ -496,14 +496,14 @@ class OLPMixinTestCase(TestCase):
         user.is_superuser = True
         user.save()
         
-        user.has_perm('tests.mlp_log')
+        user.has_perm('djemtest.mlp_log')
         
         # Only one log - that for the model-level check - should be created
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.mlp_log',
+            'Permission: djemtest.mlp_log',
             'User: test.user ({})\n'.format(self.user.pk),
             'Active superuser: Implicit permission (model-level)',
             '\nRESULT: Permission Granted'
@@ -524,7 +524,7 @@ class OLPMixinTestCase(TestCase):
         
         obj = UserLogTest.objects.create()
         
-        user.has_perm('tests.olp_log', obj)
+        user.has_perm('djemtest.olp_log', obj)
         
         # Two logs should be created - one for the model-level permission
         # check and another for the object-level permission check (which is
@@ -532,12 +532,12 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-tests.olp_log', 'auto-tests.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
         )
         
         log = user.get_last_log(raw=True)
         self.assertEqual(log, [
-            'Permission: tests.olp_log',
+            'Permission: djemtest.olp_log',
             'User: test.user ({})'.format(self.user.pk),
             'Object: Log Test #{0} ({0})\n'.format(obj.pk),
             'Active superuser: Implicit permission (model-level)',
@@ -570,9 +570,9 @@ class OLPMixinTestCase(TestCase):
         
         # Finished logs should only exist for the model-level checks
         self.assertCountEqual(user._finished_logs.keys(), [
-            'auto-tests.view_userlogtest', 'auto-tests.add_userlogtest',
-            'auto-tests.change_userlogtest', 'auto-tests.delete_userlogtest',
-            'auto-tests.mlp_log', 'auto-tests.olp_log'
+            'auto-djemtest.view_userlogtest', 'auto-djemtest.add_userlogtest',
+            'auto-djemtest.change_userlogtest', 'auto-djemtest.delete_userlogtest',
+            'auto-djemtest.mlp_log', 'auto-djemtest.olp_log'
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
@@ -588,9 +588,9 @@ class OLPMixinTestCase(TestCase):
         
         # Finished logs should only exist for the model-level checks
         self.assertCountEqual(user._finished_logs.keys(), [
-            'auto-tests.view_userlogtest', 'auto-tests.add_userlogtest',
-            'auto-tests.change_userlogtest', 'auto-tests.delete_userlogtest',
-            'auto-tests.mlp_log', 'auto-tests.olp_log'
+            'auto-djemtest.view_userlogtest', 'auto-djemtest.add_userlogtest',
+            'auto-djemtest.change_userlogtest', 'auto-djemtest.delete_userlogtest',
+            'auto-djemtest.mlp_log', 'auto-djemtest.olp_log'
         ])
 
 
@@ -615,7 +615,7 @@ class OLPTestCase(TestCase):
         # Grant both users and both groups all permissions for OLPTest, at
         # the model level (except "closed", only accessible to super users)
         permissions = Permission.objects.filter(
-            content_type__app_label='tests',
+            content_type__app_label='djemtest',
             content_type__model=self.model_name
         ).exclude(codename='closed_{0}'.format(self.model_name))
         
@@ -632,11 +632,11 @@ class OLPTestCase(TestCase):
     
     def perm(self, perm_name):
         
-        return 'tests.{0}_{1}'.format(perm_name, self.model_name)
+        return 'djemtest.{0}_{1}'.format(perm_name, self.model_name)
     
     def cache(self, cache_type, perm_name, obj):
         
-        return '{0}-tests.{1}_{2}-{3}'.format(
+        return '{0}-djemtest.{1}_{2}-{3}'.format(
             cache_type,
             perm_name,
             self.model_name,
@@ -1368,7 +1368,7 @@ class OLPCacheMixin:
         self.cache_empty_test(user)
 
 
-@override_settings(AUTH_USER_MODEL='tests.CustomUser', DJEM_UNIVERSAL_OLP=False)
+@override_settings(AUTH_USER_MODEL='djemtest.CustomUser', DJEM_UNIVERSAL_OLP=False)
 class UniversalOLPFalseTestCase(OLPCacheMixin, OLPTestCase):
     
     #
@@ -1382,7 +1382,7 @@ class UniversalOLPFalseTestCase(OLPCacheMixin, OLPTestCase):
     model_name = 'universalolptest'
     
 
-@override_settings(AUTH_USER_MODEL='tests.CustomUser', DJEM_UNIVERSAL_OLP=True)
+@override_settings(AUTH_USER_MODEL='djemtest.CustomUser', DJEM_UNIVERSAL_OLP=True)
 class UniversalOLPTrueTestCase(OLPCacheMixin, OLPTestCase):
     
     #
@@ -1496,7 +1496,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         # Only grant a limited subset of permissions to test when model-level
         # permissions are NOT granted
         permissions = Permission.objects.filter(
-            content_type__app_label='tests',
+            content_type__app_label='djemtest',
             content_type__model='olptest',
             codename__in=('open_olptest', 'combined_olptest')
         )
@@ -1516,7 +1516,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest'
+            'djemtest.open_olptest'
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1536,7 +1536,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest'
+            'djemtest.open_olptest'
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1556,7 +1556,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.add_olptest'
+            'djemtest.add_olptest'
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1578,7 +1578,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.add_olptest',
+            'djemtest.add_olptest',
             login_url='/custom/login/'
         )(_test_view)
         
@@ -1601,7 +1601,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.add_olptest',
+            'djemtest.add_olptest',
             login_url='https://example.com/custom/login/'
         )(_test_view)
         
@@ -1626,7 +1626,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.add_olptest',
+            'djemtest.add_olptest',
             raise_exception=True
         )(_test_view)
         
@@ -1664,7 +1664,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.combined_olptest', 'obj')
+            ('djemtest.combined_olptest', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1684,7 +1684,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.combined_olptest', 'obj')
+            ('djemtest.combined_olptest', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1705,7 +1705,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.combined_olptest', 'obj'),
+            ('djemtest.combined_olptest', 'obj'),
             login_url='/custom/login/'
         )(_test_view)
         
@@ -1727,7 +1727,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.combined_olptest', 'obj'),
+            ('djemtest.combined_olptest', 'obj'),
             raise_exception=True
         )(_test_view)
         
@@ -1766,7 +1766,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            ('tests.combined_olptest', 'obj')
+            ('djemtest.combined_olptest', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1784,8 +1784,8 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest',
-            ('tests.combined_olptest', 'obj')
+            'djemtest.open_olptest',
+            ('djemtest.combined_olptest', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1805,8 +1805,8 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.add_olptest',
-            ('tests.combined_olptest', 'obj')
+            'djemtest.add_olptest',
+            ('djemtest.combined_olptest', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1827,8 +1827,8 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest',
-            ('tests.combined_olptest', 'obj')
+            'djemtest.open_olptest',
+            ('djemtest.combined_olptest', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1850,8 +1850,8 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest',
-            ('tests.combined_olptest', 'obj'),
+            'djemtest.open_olptest',
+            ('djemtest.combined_olptest', 'obj'),
             login_url='/custom/login/'
         )(_test_view)
         
@@ -1873,8 +1873,8 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest',
-            ('tests.combined_olptest', 'obj'),
+            'djemtest.open_olptest',
+            ('djemtest.combined_olptest', 'obj'),
             raise_exception=True
         )(_test_view)
         
@@ -1892,7 +1892,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest',
+            'djemtest.open_olptest',
             ('fail', 'obj')
         )(_test_view)
         
@@ -1914,8 +1914,8 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         """
         
         view = permission_required(
-            'tests.open_olptest',
-            ('tests.combined_olptest', 'obj')
+            'djemtest.open_olptest',
+            ('djemtest.combined_olptest', 'obj')
         )(_test_view)
         
         request = self.factory.get('/test/')
@@ -1941,7 +1941,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         # Only grant a limited subset of permissions to test when model-level
         # permissions are NOT granted
         permissions = Permission.objects.filter(
-            content_type__app_label='tests',
+            content_type__app_label='djemtest',
             content_type__model='olptest',
             codename__in=('open_olptest', 'combined_olptest')
         )
@@ -1977,7 +1977,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='tests.open_olptest'
+            permission_required='djemtest.open_olptest'
         )
         
         request = self.factory.get('/test/')
@@ -1997,7 +1997,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='tests.open_olptest',
+            permission_required='djemtest.open_olptest',
             login_url='/custom/login/'
         )
         
@@ -2018,7 +2018,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='tests.open_olptest',
+            permission_required='djemtest.open_olptest',
             raise_exception=True
         )
         
@@ -2037,7 +2037,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='tests.open_olptest'
+            permission_required='djemtest.open_olptest'
         )
         
         request = self.factory.get('/test/')
@@ -2057,7 +2057,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='tests.add_olptest',
+            permission_required='djemtest.add_olptest',
             raise_exception=True
         )
         
@@ -2078,7 +2078,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='tests.add_olptest',
+            permission_required='djemtest.add_olptest',
             raise_exception=False
         )
         
@@ -2103,7 +2103,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required='tests.add_olptest',
+            permission_required='djemtest.add_olptest',
             raise_exception=False
         )
         
@@ -2159,7 +2159,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.combined_olptest', 'obj')]
+            permission_required=[('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2179,7 +2179,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.combined_olptest', 'obj')],
+            permission_required=[('djemtest.combined_olptest', 'obj')],
             raise_exception=True
         )
         
@@ -2200,7 +2200,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.combined_olptest', 'obj')],
+            permission_required=[('djemtest.combined_olptest', 'obj')],
             raise_exception=False
         )
         
@@ -2225,7 +2225,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.combined_olptest', 'obj')],
+            permission_required=[('djemtest.combined_olptest', 'obj')],
             raise_exception=False
         )
         
@@ -2280,7 +2280,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=[('tests.combined_olptest', 'obj')]
+            permission_required=[('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2298,7 +2298,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('tests.combined_olptest', 'obj')]
+            permission_required=['djemtest.open_olptest', ('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2319,7 +2319,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.add_olptest', ('tests.combined_olptest', 'obj')]
+            permission_required=['djemtest.add_olptest', ('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2341,7 +2341,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.add_olptest', ('tests.combined_olptest', 'obj')]
+            permission_required=['djemtest.add_olptest', ('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2361,7 +2361,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('tests.combined_olptest', 'obj')]
+            permission_required=['djemtest.open_olptest', ('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2383,7 +2383,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('tests.combined_olptest', 'obj')]
+            permission_required=['djemtest.open_olptest', ('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2401,7 +2401,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('fail', 'obj')]
+            permission_required=['djemtest.open_olptest', ('fail', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2421,7 +2421,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('fail', 'obj')]
+            permission_required=['djemtest.open_olptest', ('fail', 'obj')]
         )
         
         request = self.factory.get('/test/')
@@ -2440,7 +2440,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         """
         
         view = _TestView.as_view(
-            permission_required=['tests.open_olptest', ('tests.combined_olptest', 'obj')]
+            permission_required=['djemtest.open_olptest', ('djemtest.combined_olptest', 'obj')]
         )
         
         request = self.factory.get('/test/')

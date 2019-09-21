@@ -1,5 +1,6 @@
 import re
 
+from django.apps import AppConfig, apps
 from django.template import engines
 from django.test import RequestFactory
 
@@ -7,6 +8,60 @@ from djem.middleware import MemoryStorage
 
 BETWEEN_TAG_WHITESPACE_RE = re.compile(r'>\s+<')
 EXCESS_WHITESPACE_RE = re.compile(r'\s\s+')
+
+
+def setup_test_app(package, label=None):
+    """
+    Setup a Django test app for the provided package to allow test-only models
+    to be used.
+
+    This function should be called from myapp.tests.__init__ like so:
+    
+        setup_test_app(__package__)
+    
+    Or, if a specific app label is required, like so:
+    
+        setup_test_app(__package__, 'mytests')
+    
+    Models defined within the package also require their app labels manually
+    set to match, e.g.:
+    
+        class MyTestModel(models.Model):
+            
+            # ...
+            
+            class Meta:
+                app_label = 'mytests'
+    """
+    
+    #
+    # This solution is adapted from Simon Charette's comment on Django ticket #7835:
+    # https://code.djangoproject.com/ticket/7835#comment:46
+    #
+    
+    app_config = AppConfig.create(package)
+    app_config.apps = apps
+    
+    if label is None:
+        containing_app_config = apps.get_containing_app_config(package)
+        label = containing_app_config.label
+        
+        # Only suffix the app label if it has not been already. This allows
+        # duplicate entries to be detected and prevented. It may prevent the
+        # use of an implicit label if the tests reside in an app that
+        # legitimately ends with "_tests", but an explicit label can always be
+        # used. Without this check, earlier entries are returned by
+        # get_containing_app_config() and suffixed repeatedly.
+        if not containing_app_config.label.endswith('_tests'):
+            label = '{}_tests'.format(containing_app_config.label)
+    
+    if label in apps.app_configs:
+        raise ValueError('An app with the "{}" label is already registered.'.format(label))
+    
+    app_config.label = label
+    apps.app_configs[label] = app_config
+    app_config.import_models()
+    apps.clear_cache()
 
 
 class MessagingRequestFactory(RequestFactory):

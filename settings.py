@@ -16,7 +16,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',      # for tests
     
     'djem',
-    'djem.tests',
 ]
 
 DATABASES = {

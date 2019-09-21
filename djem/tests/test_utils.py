@@ -1,10 +1,12 @@
 import pytz
 
+from django.apps import apps
 from django.test import SimpleTestCase
 from django.utils import timezone
 
 from djem import UNDEFINED
 from djem.utils.dt import TimeZoneHelper
+from djem.utils.tests import setup_test_app
 
 
 class UndefinedTestCase(SimpleTestCase):
@@ -151,3 +153,66 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         self.assertEqual(str(TimeZoneHelper(pytz.UTC)), 'UTC')
         self.assertEqual(str(TimeZoneHelper('Australia/Sydney')), 'Australia/Sydney')
         self.assertEqual(str(TimeZoneHelper('US/Eastern')), 'US/Eastern')
+
+
+class SetupTestAppTestCase(SimpleTestCase):
+    
+    # Use a package *outside* the tests package, since djem's tests themselves
+    # make use of setup_test_app()
+    package = 'djem.utils'
+    
+    def test_explicit_label(self):
+        """
+        Test when an explicit app label is provided. The provided label should
+        be used directly.
+        """
+        
+        self.assertNotIn('__test_label__', apps.app_configs)
+        setup_test_app(self.package, '__test_label__')
+        self.assertIn('__test_label__', apps.app_configs)
+        
+        # Uninstall the app again to avoid polluting other tests
+        apps.app_configs.pop('__test_label__')
+    
+    def test_explicit_label__duplicate(self):
+        """
+        Test when called multiple times with an explicit app label provided. It
+        should raise ValueError on the second attempt due to the duplicate entry.
+        """
+        
+        setup_test_app(self.package, '__test_label__')
+        
+        msg = 'An app with the "__test_label__" label is already registered'
+        with self.assertRaisesMessage(ValueError, msg):
+            setup_test_app(self.package, '__test_label__')
+        
+        # Uninstall the app again to avoid polluting other tests
+        apps.app_configs.pop('__test_label__')
+    
+    def test_implicit_label(self):
+        """
+        Test when no explicit app label is provided. The label of the
+        containing app, suffixed with "_tests", should be used.
+        """
+        
+        self.assertNotIn('djem_tests', apps.app_configs)
+        setup_test_app(self.package)
+        self.assertIn('djem_tests', apps.app_configs)
+        
+        # Uninstall the app again to avoid polluting other tests
+        apps.app_configs.pop('djem_tests')
+    
+    def test_implicit_label__duplicate(self):
+        """
+        Test when called multiple times with no explicit app label provided. It
+        should raise ValueError on the second attempt due to the duplicate entry.
+        """
+        
+        setup_test_app(self.package)
+        
+        msg = 'An app with the "djem_tests" label is already registered'
+        with self.assertRaisesMessage(ValueError, msg):
+            setup_test_app(self.package)
+        
+        # Uninstall the app again to avoid polluting other tests
+        apps.app_configs.pop('djem_tests')
