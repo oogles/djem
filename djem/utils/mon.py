@@ -386,6 +386,12 @@ class Mon(object):
         
         logger.setLevel(cls._qlogger_original_level)
         logger.addHandler(cls._qlogger_handler)
+    
+    @classmethod
+    def reset(cls):
+        
+        cls.monitors.clear()
+        cls.last_m = None
 
 
 def mon(name, allow_recursion=False):
