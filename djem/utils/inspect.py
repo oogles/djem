@@ -1,12 +1,10 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import inspect as inspector
 import pprint
 import types
 
-from django.db.models import FieldDoesNotExist, Manager, Model, QuerySet
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import Manager, Model, QuerySet
 from django.db.models.fields import NOT_PROVIDED
-from django.utils import six
 from django.utils.encoding import force_text
 
 from djem.utils.table import Table
@@ -62,9 +60,9 @@ def inspectf(func):
     signature = '{0}({1})'.format(func.__name__, ', '.join(arguments))
     
     defined = 'Defined on line {line} of {module} ({path})'.format(
-        line=func.func_code.co_firstlineno,
+        line=func.__code__.co_firstlineno,
         module=func.__module__,
-        path=func.func_code.co_filename
+        path=func.__code__.co_filename
     )
     
     return '\n\n'.join((signature, func.__doc__ if func.__doc__ else '[no doc string]', defined))
@@ -419,7 +417,7 @@ class ModelTable(InspectTable):
         if rel:
             # If a string reference, grab the model portion (if given in
             # <app_label>.<model> format). If a model class, use its name.
-            if isinstance(rel, six.string_types):
+            if isinstance(rel, str):
                 rel = rel.split('.')[-1]
             else:
                 rel = rel.__name__

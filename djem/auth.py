@@ -1,13 +1,11 @@
 from functools import wraps
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin
 from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, resolve_url
-from django.utils import six
-from django.utils.decorators import available_attrs
-from django.utils.six.moves.urllib.parse import urlparse
 
 DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
@@ -186,7 +184,7 @@ class ObjectPermissionsBackend(object):
 def _check_perms(perms, user, view_kwargs):
     
     for perm in perms:
-        if isinstance(perm, six.string_types):
+        if isinstance(perm, str):
             obj = None
         else:
             perm, obj_arg = perm  # expand two-tuple
@@ -241,7 +239,7 @@ def permission_required(*perms, **kwargs):
     
     def decorator(view_func):
         
-        @wraps(view_func, assigned=available_attrs(view_func))
+        @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
             
             # First, check if the user has the permission (even anon users)

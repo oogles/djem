@@ -11,9 +11,6 @@ class Undefined:
         
         return False
     
-    # Python 2 compat.
-    __nonzero__ = __bool__
-    
     def __str__(self):
         
         return '<undefined>'

@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import datetime
 import logging
 import resource

@@ -1,7 +1,7 @@
 # Date, time and timezone utils
 
 from django.core.exceptions import ValidationError
-from django.utils import six, timezone
+from django.utils import timezone
 
 # Allow the file to be imported without pytz installed, though it is required
 # to use TimeZoneHelper and other timezone-related functionality
@@ -23,7 +23,7 @@ class TimeZoneHelper(object):
         if not PYTZ_AVAILABLE:  # pragma: no cover
             raise RuntimeError('TimeZoneHelper requires pytz to be installed.')
         
-        if isinstance(tz, six.string_types):
+        if isinstance(tz, str):
             tz = pytz.timezone(tz)
         
         self.tz = tz
