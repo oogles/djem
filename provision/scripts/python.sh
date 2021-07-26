@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 # Source global provisioning settings
-source /tmp/env.sh
-source /tmp/versions.sh
+source /tmp/settings.sh
 
 
 # A function to test if an array contains an element.
@@ -81,10 +80,7 @@ if [[ ${#PYTHON_VERSIONS[@]} -ne 0 ]]; then
 
     # List obtained from pyenv wiki. For latest, see:
     # https://github.com/pyenv/pyenv/wiki/Common-build-problems
-    # Install libssl separately to work around interactive prompt issue, see:
-    # https://github.com/hashicorp/vagrant/issues/10914
-    export DEBIAN_FRONTEND=noninteractive && apt-get -qq --option "Dpkg::Options::=--force-confold" --assume-yes install libssl-dev
-    apt-get -qq install make build-essential zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+    apt-get -qq install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
 
     echo " "
     echo "Installing additional python versions..."
@@ -148,7 +144,7 @@ fi
 
 # Store the virtualenv activation command in env.sh to be accessible to later
 # provisioning scripts, which may need to activate the virtualenv
-"$PROVISION_DIR/scripts/utils/write_var.sh" 'VENV_ACTIVATE_CMD' "$VENV_ACTIVATE_CMD" "$PROVISION_DIR/env.sh"
+"$PROVISION_DIR/scripts/utils/write_var.sh" 'VENV_ACTIVATE_CMD' "$VENV_ACTIVATE_CMD" /tmp/settings.sh
 
 # Update the webmaster user's profile to automatically activate the virtualenv
 # when they SSH in
@@ -156,28 +152,8 @@ if ! grep -Fxq "$VENV_ACTIVATE_CMD" /home/webmaster/.profile ; then
     echo -e "\n# Automate virtualenv activation\n$VENV_ACTIVATE_CMD" >> /home/webmaster/.profile
 fi
 
+# Update the version of pip in the virtualenv
+su - webmaster -c "$VENV_ACTIVATE_CMD && pip install --upgrade pip"
 
-#
-# Install Python dependencies from requirements.txt. If DEBUG is true, also
-# install extra dev dependencies from dev_requirements.txt.
-#
-
-echo " "
-echo " --- Install Python dependencies ---"
-if [[ -f "$SRC_DIR/requirements.txt" ]]; then
-    su - webmaster -c "$VENV_ACTIVATE_CMD && pip install -q -r $SRC_DIR/requirements.txt"
-    echo "Done"
-else
-    echo "None found"
-fi
-
-if [[ "$DEBUG" -eq 1 ]]; then
-    echo " "
-    echo " ---  Install Python additional dev dependencies ---"
-    if [[ -f "$SRC_DIR/dev_requirements.txt" ]]; then
-        su - webmaster -c "$VENV_ACTIVATE_CMD && pip install -q -r $SRC_DIR/dev_requirements.txt"
-        echo "Done"
-    else
-        echo "None found"
-    fi
-fi
+# Add a shortcut symlink to the virtualenv directory in the "ln" directory
+ln -sfT "$VENV_DIR" "$APP_DIR/ln/virtualenv"

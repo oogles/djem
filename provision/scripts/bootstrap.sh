@@ -3,7 +3,7 @@
 # vagrant-django
 # Vagrant provisioning for Django projects.
 # https://github.com/oogles/vagrant-django
-# v0.6.0
+# v0.7.0a
 
 # Ensure all provisioning scripts are executable
 chmod 774 -R /opt/app/src/provision/scripts/
@@ -14,7 +14,7 @@ chmod 774 -R /opt/app/src/provision/scripts/
 # in a function is to exit this outer script if one of the executed scripts
 # returns a non-zero exit code.
 function run_script() {
-    "$1" "${@:2}"
+    "$1"
     if [[ $? != 0 ]]; then
         echo " "
         echo "PROVISION ABORTED"
@@ -29,11 +29,9 @@ echo "=================================================="
 echo " "
 echo "START PROVISION"
 
-# Define common settings, passing the arguments that were passed to this script
-run_script /opt/app/src/provision/scripts/settings.sh "$1"
-
-# Source the defined settings
-source /tmp/env.sh
+# Define and source common settings
+run_script /opt/app/src/provision/scripts/init.sh
+source /tmp/settings.sh
 
 # Get package lists current before doing anything
 echo " "
@@ -49,17 +47,14 @@ run_script "$PROVISION_DIR/scripts/ssh.sh"
 
 echo " "
 echo " --- Set time zone ---"
-if [[ ! "$TIME_ZONE" ]]; then
-    TIME_ZONE='Australia/Sydney'
-fi
-echo "$TIME_ZONE" | tee /etc/timezone
-dpkg-reconfigure --frontend noninteractive tzdata
+timedatectl set-timezone "$TIME_ZONE"
+timedatectl
 
 # Set up app directory
 run_script "$PROVISION_DIR/scripts/app-dir.sh"
 
 # Write environment settings file
-run_script "$PROVISION_DIR/scripts/write-env-settings.sh" "$SECRET_KEY" "$TIME_ZONE" "$DB_PASS"
+run_script "$PROVISION_DIR/scripts/write-env-settings.sh"
 
 # Enable a firewall in production environments
 if [[ "$DEBUG" -eq 0 ]]; then
@@ -75,6 +70,18 @@ run_script "$PROVISION_DIR/scripts/supervisor.sh"
 # Install and configure database
 run_script "$PROVISION_DIR/scripts/postgres.sh"
 
+# Install and configure python and create a virtualenv.
+# Must run after postgres is installed if installing psycopg2, and after image
+# libraries if installing Pillow.
+# Run before project-specific provisioning in case it needs to use python.
+run_script "$PROVISION_DIR/scripts/python.sh"
+
+# Install and configure nodejs/npm, if the project makes use of them.
+# Run before project-specific provisioning in case it needs to use them.
+if [[ -f "$SRC_DIR/package.json" ]]; then
+    run_script "$PROVISION_DIR/scripts/node-npm.sh"
+fi
+
 # If a project-specific provisioning file is present, ensure it is executable
 # and run it
 if [[ -f "$PROVISION_DIR/project.sh" ]]; then
@@ -84,29 +91,21 @@ if [[ -f "$PROVISION_DIR/project.sh" ]]; then
     run_script "$PROVISION_DIR/project.sh"
 fi
 
-# Install and configure virtualenv and install python dependencies.
-# Must run after postgres is installed if installing psycopg2, and after image
-# libraries if installing Pillow.
-run_script "$PROVISION_DIR/scripts/python.sh"
+# Install project dependencies (python and npm)
+run_script "$PROVISION_DIR/scripts/dependencies.sh"
 
-# Install and configure nodejs/npm and install node dependencies, if the project
-# makes use of them
-if [[ -f "$SRC_DIR/package.json" ]]; then
-    run_script "$PROVISION_DIR/scripts/node-npm.sh"
-fi
-
-# Install nginx and gunicorn for production environments. Must run after
-# virtualenv is installed.
-if [[ "$DEBUG" -eq 0 ]]; then
-    run_script "$PROVISION_DIR/scripts/nginx-gunicorn.sh"
-fi
+# Install nginx and gunicorn. Must run after virtualenv is installed.
+run_script "$PROVISION_DIR/scripts/nginx-gunicorn.sh"
 
 # Start supervisor now that program files are in place and any necessary
 # installations/configurations for those programs are complete
 echo " "
-echo " --- Start supervisor ---"
-service supervisor start
+echo " --- Start/restart supervisor and all programs ---"
+supervisorctl reload
 echo "Done"
+
+# Clean up before finishing
+run_script "$PROVISION_DIR/scripts/cleanup.sh"
 
 echo " "
 echo "END PROVISION"
@@ -116,10 +115,8 @@ echo "=================================================="
 if [[ "$DEBUG" -eq 0 ]]; then
     echo " "
     echo "IMPORTANT"
-    echo "The \"webmaster\" user account requires a password for sudo access."
-    echo "NOTE: It does NOT require one for SSH access (password-based SSH access is disabled)."
-    echo "Set a password using the following command:"
-    echo "passwd"
+    echo "Some manual post-provisioning steps may be required."
+    echo "See: https://vagrant-django.readthedocs.io/en/latest/production.html#provisioning"
     echo " "
     echo "=================================================="
 fi

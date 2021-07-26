@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 
 # Source global provisioning settings
-source /tmp/env.sh
+source /tmp/settings.sh
 
 echo " "
 echo " --- Install/configure supervisor ---"
 
 echo "Installing..."
 apt-get -qq install supervisor
-
-# Ensure the supervisord service is stopped (it may or may not be started)
-service supervisor stop
 
 # Add a "supervisor" group and add the webmaster user to it.
 # Updating the [unix_http_server] section of the supervisor configuration file
@@ -34,18 +31,14 @@ fi
 
 echo " "
 echo "Copying config file..."
-cp "$PROVISION_DIR/conf/supervisor/supervisord.conf" /etc/supervisor/supervisord.conf
+cp "/tmp/conf/supervisor/supervisord.conf" /etc/supervisor/supervisord.conf
 
 echo " "
 echo "Copying programs..."
-if [[ "$DEBUG" -eq 1 ]]; then
-    PROGRAM_DIR="$PROVISION_DIR/conf/supervisor/dev_programs"
-else
-    PROGRAM_DIR="$PROVISION_DIR/conf/supervisor/production_programs"
-fi
-
-if [[ ! -d "$PROGRAM_DIR" ]]; then
+program_dir="/tmp/conf/supervisor/programs"
+if [[ ! -d "$program_dir" ]]; then
     echo "Nothing to copy"
 else
-    rsync -r "$PROGRAM_DIR/" /etc/supervisor/conf.d
+    # Copy over changes and also delete obsolete files
+    rsync -r --del "$program_dir/" /etc/supervisor/conf.d
 fi
