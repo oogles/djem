@@ -13,8 +13,6 @@ provision/conf/user/.gitconfig
 docs/_build/
 
 # Testing
-.tox
-.coverage
 htmlcov
 
 # Distribution/packaging
