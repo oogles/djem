@@ -1,4 +1,4 @@
-import os
+import shutil
 import textwrap
 
 from django.utils.encoding import force_text
@@ -44,9 +44,9 @@ class RowWrapper(object):
         # rows that are longer than the shortened table width, and align them
         # within that width.
         for line in self.raw_value.split('\n'):
-            for l in textwrap.wrap(line, table_width):
+            for sub_line in textwrap.wrap(line, table_width):
                 rows.append('| {0} |'.format(
-                    getattr(l, self._align)(table_width)
+                    getattr(sub_line, self._align)(table_width)
                 ))
         
         return rows
@@ -239,7 +239,7 @@ class Table(object):
         outer_max_width = self._raw_max_width
         
         if outer_max_width is self.FULL_WIDTH:
-            term_rows, term_columns = os.popen('stty size', 'r').read().split()
+            term_columns, term_rows = shutil.get_terminal_size()
             outer_max_width = int(term_columns)
         
         # The max width of actual data in the table is the outer max less the
