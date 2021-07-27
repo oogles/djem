@@ -1,6 +1,3 @@
-from unittest import skipIf
-
-from django import VERSION
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission, User
@@ -12,7 +9,6 @@ from django.views import View
 
 from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
 
-from .checks import after_2_1, before_2_1
 from .models import CustomUser, OLPTest, UniversalOLPTest, UserLogTest
 
 _backends = [
@@ -75,7 +71,6 @@ class OLPMixinTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, '_perm_cache')
     
-    @skipIf(VERSION[0] < 2, '_user_perm_cache is buggy')
     def test_clear_perm_cache__mlp(self):
         """
         Test the clear_perm_cache() method after model-level permissions have
@@ -130,7 +125,6 @@ class OLPMixinTestCase(TestCase):
         with self.assertRaises(AttributeError):
             getattr(user, '_perm_cache')
     
-    @skipIf(VERSION[0] < 2, '_user_perm_cache is buggy')
     def test_clear_perm_cache__olp(self):
         """
         Test the clear_perm_cache() method after object-level permissions have
@@ -2067,31 +2061,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request)
     
-    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
-    def test_string_arg__no_access__raise_false__before_2_1(self):  # pragma: no cover
-        """
-        Test the PermissionRequiredMixin with a valid permission as a single
-        string and a ``raise_exception`` set to False.
-        Ensure the mixin correctly denies access to the view for a user that
-        has not been granted that permission at the model level, by redirecting
-        to a custom page specified by ``login_url``.
-        """
-        
-        view = _TestView.as_view(
-            permission_required='djemtest.add_olptest',
-            raise_exception=False
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/accounts/login/?next=/test/')
-    
-    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
-    def test_string_arg__no_access__raise_false__after_2_1(self):
+    def test_string_arg__no_access__raise_false(self):
         """
         Test the PermissionRequiredMixin with a valid permission as a single
         string and a ``raise_exception`` set to False.
@@ -2113,28 +2083,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request)
     
-    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
-    def test_string_arg__invalid_perm__before_2_1(self):  # pragma: no cover
-        """
-        Test the PermissionRequiredMixin with an invalid permission as a single
-        string.
-        Ensure the mixin correctly denies access to the view.
-        """
-        
-        view = _TestView.as_view(
-            permission_required='fail'
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
-    
-    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
-    def test_string_arg__invalid_perm__after_2_1(self):
+    def test_string_arg__invalid_perm(self):
         """
         Test the PermissionRequiredMixin with an invalid permission as a single
         string.
@@ -2189,31 +2138,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request, obj=self.olptest_without_access.pk)
     
-    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
-    def test_tuple_arg__no_access__raise_false__before_2_1(self):  # pragma: no cover
-        """
-        Test the PermissionRequiredMixin with a valid permission as a tuple and
-        ``raise_exception`` set to False .
-        Ensure the mixin correctly denies access to the view for a user that
-        has not been granted that permission at the object level, by redirecting
-        to a custom page specified by ``login_url``.
-        """
-        
-        view = _TestView.as_view(
-            permission_required=[('djemtest.combined_olptest', 'obj')],
-            raise_exception=False
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_without_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/accounts/login/?next=/test/')
-    
-    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
-    def test_tuple_arg__no_access__raise_false__after_2_1(self):
+    def test_tuple_arg__no_access__raise_false(self):
         """
         Test the PermissionRequiredMixin with a valid permission as a tuple and
         ``raise_exception`` set to False .
@@ -2235,27 +2160,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request, obj=self.olptest_without_access.pk)
     
-    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
-    def test_tuple_arg__invalid_perm__before_2_1(self):  # pragma: no cover
-        """
-        Test the PermissionRequiredMixin with an invalid permission as a tuple.
-        Ensure the mixin correctly denies access to the view.
-        """
-        
-        view = _TestView.as_view(
-            permission_required=[('fail', 'obj')]
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_with_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
-    
-    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
-    def test_tuple_arg__invalid_perm__after_2_1(self):
+    def test_tuple_arg__invalid_perm(self):
         """
         Test the PermissionRequiredMixin with an invalid permission as a tuple.
         Ensure the mixin correctly denies access to the view.
@@ -2308,30 +2213,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         
         self.assertContains(response, 'success', status_code=200)
     
-    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
-    def test_multiple_args__no_access__model__before_2_1(self):  # pragma: no cover
-        """
-        Test the PermissionRequiredMixin with multiple valid permissions as a
-        mixture of strings and tuples.
-        Ensure the mixin correctly denies access to the view for a user that
-        is missing one of the model-level permissions, by redirecting
-        to a custom page specified by ``login_url``.
-        """
-        
-        view = _TestView.as_view(
-            permission_required=['djemtest.add_olptest', ('djemtest.combined_olptest', 'obj')]
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_without_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/accounts/login/?next=/test/')
-    
-    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
-    def test_multiple_args__no_access__model__after_2_1(self):
+    def test_multiple_args__no_access__model(self):
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
         mixture of strings and tuples.
@@ -2350,30 +2232,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request, obj=self.olptest_without_access.pk)
     
-    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
-    def test_multiple_args__no_access__object__before_2_1(self):  # pragma: no cover
-        """
-        Test the PermissionRequiredMixin with multiple valid permissions as a
-        mixture of string and tuple arguments.
-        Ensure the mixin correctly denies access to the view for a user that
-        is missing one of the object-level permissions, by redirecting
-        to a custom page specified by ``login_url``.
-        """
-        
-        view = _TestView.as_view(
-            permission_required=['djemtest.open_olptest', ('djemtest.combined_olptest', 'obj')]
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_without_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/accounts/login/?next=/test/')
-    
-    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
-    def test_multiple_args__no_access__object__after_2_1(self):
+    def test_multiple_args__no_access__object(self):
         """
         Test the PermissionRequiredMixin with multiple valid permissions as a
         mixture of string and tuple arguments.
@@ -2392,28 +2251,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         with self.assertRaises(PermissionDenied):
             view(request, obj=self.olptest_without_access.pk)
     
-    @skipIf(after_2_1(), '>= 2.1')  # default behaviour pre 2.1 is to redirect
-    def test_multiple_args__invalid_perm__before_2_1(self):  # pragma: no cover
-        """
-        Test the PermissionRequiredMixin with multiple permissions as a mixture
-        of strings and tuples, one of which is invalid.
-        Ensure the mixin correctly denies access to the view.
-        """
-        
-        view = _TestView.as_view(
-            permission_required=['djemtest.open_olptest', ('fail', 'obj')]
-        )
-        
-        request = self.factory.get('/test/')
-        request.user = self.user  # simulate login
-        
-        response = view(request, obj=self.olptest_with_access.pk)
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
-    
-    @skipIf(before_2_1(), '< 2.1')  # default behaviour post 2.1 is to raise PermissionDenied
-    def test_multiple_args__invalid_perm__after_2_1(self):
+    def test_multiple_args__invalid_perm(self):
         """
         Test the PermissionRequiredMixin with multiple permissions as a mixture
         of strings and tuples, one of which is invalid.
