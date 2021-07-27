@@ -36,6 +36,8 @@ TEMPLATES = [{
     },
 }]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'  # suppress system check warning
+
 # Add django-extensions to INSTALLED_APPS if it is present. This provides extra
 # dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
 try:

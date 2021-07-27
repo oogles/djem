@@ -62,7 +62,7 @@ class TimeZoneField(models.Field):
         value = super(TimeZoneField, self).get_default()
         return get_tz_helper(value)
     
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         
         # Convert to TimeZoneHelper
         return get_tz_helper(value)

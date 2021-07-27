@@ -5,6 +5,8 @@ Change Log
 0.7
 ===
 
+* Dropped support for Python 2 (minimum supported version is 3.6)
+* Dropped support for Django versions below 2.2
 * Added ``UNDEFINED`` constant
 * Added ``LogMixin`` for instance-based logging
 * Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality

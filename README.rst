@@ -10,7 +10,7 @@ A collection of useful stuff for Django projects.
 Requirements
 ------------
 
-* Django 1.11+
+* Django 2.2+
 * `pytz <http://pytz.sourceforge.net/>`_ is required to make use of ``TimeZoneField``
 
 
@@ -44,7 +44,7 @@ Full documentation can be found at: https://djem.readthedocs.io.
 
 .. |pypi| image:: https://img.shields.io/pypi/v/djem.svg
     :alt: Latest release version
-    :target: https://pypi.python.org/pypi/djem/
+    :target: https://pypi.org/project/djem/
 
 .. |pyversions| image:: https://img.shields.io/pypi/pyversions/djem.svg
     :alt: Supported Python versions
