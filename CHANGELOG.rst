@@ -12,8 +12,9 @@ Change Log
 * Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality
 * Added ``DJEM_UNIVERSAL_OLP`` setting
 * Added ``DJEM_PERM_LOG_VERBOSITY`` setting
-* Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``CommonInfoMixin`` - this was far too specific a use-case to be the default
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods
+* Added ``ajax_login_required()`` decorator
+* Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``CommonInfoMixin`` - this was far too specific a use-case to be the default
 * Removed ``ArchivableQuerySet``'s ``archive()`` and ``unarchive()`` methods
 * Removed ``ArchivableMixin``'s ``live`` and ``archived`` Managers
 * Removed explicit ``Manager`` classes for mixins

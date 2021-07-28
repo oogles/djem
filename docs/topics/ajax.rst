@@ -2,6 +2,16 @@
 AJAX
 ====
 
+Checking authentication
+=======================
+
+.. currentmodule:: djem.ajax
+
+Django's built in ``login_required()`` decorator is not well suited to AJAX requests. If the user making the request is not authenticated, it issues a redirect to the configured login view. This is not particularly useful to an AJAX client.
+
+Djem provides a simple alternate decorator, :func:`ajax_login_required`, to use on views that are the target of AJAX requests. Instead of issuing a redirect if the user is not authenticated, it returns a ``HttpForbiddenResponse``.
+
+
 Responding to AJAX requests
 ===========================
 

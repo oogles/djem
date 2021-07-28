@@ -4,6 +4,13 @@ AJAX
 
 .. module:: djem.ajax
 
+
+``ajax_login_required``
+=======================
+
+.. autofunction:: ajax_login_required
+
+
 ``AjaxResponse``
 ================
 

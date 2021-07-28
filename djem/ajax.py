@@ -1,6 +1,27 @@
+from functools import wraps
+
 from django.contrib.messages import get_messages
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.template.defaultfilters import conditional_escape
+
+
+def ajax_login_required(view_fn):
+    """
+    Simple decorator that returns ``HttpResponseForbidden`` if the user is not
+    authenticated, and executes the decorated function if they are. Designed
+    for use by views accessed with AJAX requests, where redirecting to the
+    login view is not useful.
+    """
+    
+    @wraps(view_fn)
+    def wrapper(request, *args, **kwargs):
+        
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+        
+        return view_fn(request, *args, **kwargs)
+    
+    return wrapper
 
 
 class AjaxResponse(JsonResponse):

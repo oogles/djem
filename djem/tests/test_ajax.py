@@ -1,11 +1,56 @@
 import json
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
+from django.http import HttpResponse
 from django.template.defaultfilters import mark_safe
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
-from djem.ajax import AjaxResponse
+from djem.ajax import AjaxResponse, ajax_login_required
 from djem.utils.tests import MessagingRequestFactory
+
+
+def _test_view(request):
+    
+    return HttpResponse()
+
+
+class AjaxLoginRequiredTestCase(TestCase):
+    
+    def setUp(self):
+        
+        self.factory = RequestFactory()
+    
+    def test_unauthenticated(self):
+        """
+        Test the ajax_login_required decorator with an unauthenticated user.
+        It should return a 403 (forbidden) response.
+        """
+        
+        view = ajax_login_required(_test_view)
+        
+        request = self.factory.get('/test/')
+        request.user = AnonymousUser()
+        
+        response = view(request)
+        
+        self.assertEqual(response.status_code, 403)
+    
+    def test_authenticated(self):
+        """
+        Test the ajax_login_required decorator with an authenticated user.
+        It should return a 200 (success) response.
+        """
+        
+        view = ajax_login_required(_test_view)
+        
+        request = self.factory.get('/test/')
+        request.user = get_user_model().objects.create_user('test1')
+        
+        response = view(request)
+        
+        self.assertEqual(response.status_code, 200)
 
 
 class AjaxResponseTestCase(TestCase):

@@ -3,6 +3,7 @@ node_modules
 
 # Environment settings
 env.py
+joggerenv.cfg
 
 # Vagrant
 .vagrant/
