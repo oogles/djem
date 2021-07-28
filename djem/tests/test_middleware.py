@@ -1,8 +1,8 @@
-from django.conf.urls import url
 from django.contrib import messages
 from django.contrib.messages import constants
 from django.http import HttpRequest, HttpResponse
 from django.test import Client, TestCase, override_settings
+from django.urls import path
 
 from djem.middleware import MemoryStorage
 
@@ -36,8 +36,8 @@ def add_read_message_view(request):
 
 
 urlpatterns = [
-    url(r'^messages/add/$', add_message_view),
-    url(r'^messages/add/read/$', add_read_message_view),
+    path('messages/add/', add_message_view),
+    path('messages/add/read/', add_read_message_view),
 ]
 
 
