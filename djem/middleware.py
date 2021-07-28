@@ -32,7 +32,9 @@ class MessageMiddleware:
     
     def __call__(self, request):
         
-        if request.is_ajax():
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        
+        if is_ajax:
             request._messages = MemoryStorage(request)
         else:
             request._messages = default_storage(request)

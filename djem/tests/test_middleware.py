@@ -12,7 +12,7 @@ def add_message_view(request):
     msg = request.GET['msg']
     messages.info(request, msg)
     
-    if request.is_ajax():
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         prefix = 'AJAX'
     else:
         prefix = 'STANDARD'
@@ -27,7 +27,7 @@ def add_read_message_view(request):
     
     content = ', '.join([msg.message for msg in messages.get_messages(request)])
     
-    if request.is_ajax():
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         prefix = 'AJAX'
     else:
         prefix = 'STANDARD'
