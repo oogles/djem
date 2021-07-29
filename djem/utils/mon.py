@@ -107,7 +107,7 @@ def _get_stat_table(monitor, title, stats):
     return t.build_table()
 
 
-class M(object):
+class M:
     
     def __init__(self, name, parent=None):
         
@@ -321,7 +321,7 @@ class M(object):
         return self.get_total_string()
 
 
-class Mon(object):
+class Mon:
     
     monitors = {}
     

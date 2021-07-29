@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 
 
-class Developer(object):
+class Developer:
     """
     Designed for use within the Django shell to aid developers in performing
     regular operations used for testing and debugging, primarily regarding

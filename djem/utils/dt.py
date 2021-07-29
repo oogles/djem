@@ -16,7 +16,7 @@ else:
     TIMEZONE_CHOICES = [(tz, tz) for tz in pytz.common_timezones]
 
 
-class TimeZoneHelper(object):
+class TimeZoneHelper:
     
     def __init__(self, tz):
         

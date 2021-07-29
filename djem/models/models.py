@@ -20,7 +20,7 @@ __all__ = (
 )
 
 
-class LogMixin(object):
+class LogMixin:
     """
     A mixin for creating, storing, and retrieving logs. Named logs are stored
     internally on the ``LogMixin`` instance and persist for the lifetime of the

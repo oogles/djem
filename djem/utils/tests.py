@@ -92,7 +92,7 @@ class MessagingRequestFactory(RequestFactory):
         return request
 
 
-class TemplateRendererMixin(object):
+class TemplateRendererMixin:
     """
     A mixin for TestCase classes whose tests render templates from strings (as
     opposed to rendering them from files), using the Django template engine.

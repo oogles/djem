@@ -15,7 +15,7 @@ def get_user_log_verbosity():
     return getattr(settings, 'DJEM_PERM_LOG_VERBOSITY', 0)
 
 
-class ObjectPermissionsBackend(object):
+class ObjectPermissionsBackend:
     
     def authenticate(self, *args, **kwargs):
         

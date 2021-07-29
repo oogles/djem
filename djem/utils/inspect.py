@@ -68,7 +68,7 @@ def inspectf(func):
     return '\n\n'.join((signature, func.__doc__ if func.__doc__ else '[no doc string]', defined))
 
 
-class InspectTable(object):
+class InspectTable:
     
     def get_preamble(self):
         

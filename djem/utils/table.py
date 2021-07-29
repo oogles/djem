@@ -8,7 +8,7 @@ class NOT_PROVIDED:
     pass
 
 
-class RowWrapper(object):
+class RowWrapper:
     """
     Helper class for formatting full-width rows such as titles, descriptions and
     footers.
@@ -52,7 +52,7 @@ class RowWrapper(object):
         return rows
 
 
-class Table(object):
+class Table:
     
     class FULL_WIDTH:
         """
