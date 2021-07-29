@@ -33,7 +33,7 @@ class LogMixin:
         self._active_logs = OrderedDict()
         self._finished_logs = OrderedDict()
         
-        super(LogMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
     
     def start_log(self, name):
         """
@@ -173,7 +173,7 @@ class OLPMixin(LogMixin):
         
         self._olp_cache = {}
         
-        super(OLPMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
     
     def _check_perm(self, perm, obj):
         
@@ -271,7 +271,7 @@ class CommonInfoQuerySet(models.QuerySet):
         if user:
             kwargs['user_modified'] = user
         
-        return super(CommonInfoQuerySet, self).update(**kwargs)
+        return super().update(**kwargs)
     
     def owned_by(self, user):
         """
@@ -356,7 +356,7 @@ class CommonInfoMixin(models.Model):
             # so *_created fields can be ignored.
             kwargs['update_fields'] = set(kwargs['update_fields']).union(update_fields)
         
-        super(CommonInfoMixin, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
     
     def owned_by(self, user):
         """
@@ -460,7 +460,7 @@ class VersioningQuerySet(models.QuerySet):
         
         kwargs['version'] = models.F('version') + 1
         
-        return super(VersioningQuerySet, self).update(**kwargs)
+        return super().update(**kwargs)
 
 
 class VersioningMixin(models.Model):
@@ -507,7 +507,7 @@ class VersioningMixin(models.Model):
                 update_fields.add('version')
                 kwargs['update_fields'] = update_fields
         
-        super(VersioningMixin, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         
         if incremented:
             # If the version has been incremented, make it inaccessible. It

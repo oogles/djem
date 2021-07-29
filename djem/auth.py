@@ -301,4 +301,5 @@ class PermissionRequiredMixin(DjangoPermissionRequiredMixin):
         if not self.has_permission(kwargs):
             return self.handle_no_permission()
         
+        # Skip DjangoPermissionRequiredMixin.dispatch() and call *its* parent directly
         return super(DjangoPermissionRequiredMixin, self).dispatch(request, *args, **kwargs)

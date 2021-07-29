@@ -150,7 +150,7 @@ class ObjectTable(InspectTable):
             ignore_private=True,
             ignore_magic=True):
         
-        super(ObjectTable, self).__init__()
+        super().__init__()
         
         self.obj = obj
         self.ignore_methods = ignore_methods
@@ -330,7 +330,7 @@ class ModelTable(InspectTable):
     
     def __init__(self, model, *field_filters, **kwargs):
         
-        super(ModelTable, self).__init__()
+        super().__init__()
         
         self.model = model
         self.field_filters = [f.lower() for f in field_filters]

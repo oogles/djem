@@ -7,7 +7,7 @@ class ModelAmbiguousVersionError(Exception):
     
     def __init__(self):
         
-        super(ModelAmbiguousVersionError, self).__init__(
+        super().__init__(
             'This instance\'s version has been atomically incremented and '
             'therefore its value, as associated with the current values of '
             'other fields on the instance, cannot be accurately determined.'

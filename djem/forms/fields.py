@@ -18,4 +18,4 @@ class TimeZoneField(forms.TypedChoiceField):
         
         defaults.update(kwargs)
         
-        super(TimeZoneField, self).__init__(*args, **defaults)
+        super().__init__(*args, **defaults)

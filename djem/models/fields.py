@@ -37,7 +37,7 @@ class TimeZoneField(models.Field):
         kwargs.setdefault('choices', self.CHOICES)
         kwargs.setdefault('max_length', self.MAX_LENGTH)
         
-        super(TimeZoneField, self).__init__(verbose_name=verbose_name, **kwargs)
+        super().__init__(verbose_name=verbose_name, **kwargs)
     
     def get_internal_type(self):
         
@@ -45,7 +45,7 @@ class TimeZoneField(models.Field):
     
     def deconstruct(self):
         
-        name, path, args, kwargs = super(TimeZoneField, self).deconstruct()
+        name, path, args, kwargs = super().deconstruct()
         
         # Only include choices and max_length kwargs if not the default
         if kwargs['choices'] == self.CHOICES:
@@ -59,7 +59,7 @@ class TimeZoneField(models.Field):
     def get_default(self):
         
         # Convert string default to TimeZoneHelper
-        value = super(TimeZoneField, self).get_default()
+        value = super().get_default()
         return get_tz_helper(value)
     
     def from_db_value(self, value, expression, connection):
@@ -92,4 +92,4 @@ class TimeZoneField(models.Field):
         
         # Only pass the helper's timezone name into the super call - it will
         # be checked for its presence in self.choices
-        super(TimeZoneField, self).validate(value.tz.zone, model_instance)
+        super().validate(value.tz.zone, model_instance)

@@ -7,7 +7,7 @@ class CommonInfoForm(forms.ModelForm):
         
         user = kwargs.pop('user', None)
         
-        super(CommonInfoForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         # User is required for bound forms
         if self.is_bound and not user:
@@ -21,7 +21,7 @@ class CommonInfoForm(forms.ModelForm):
         
         # Call super.save() with commit=False so .save() can be called on the
         # instance with the required user argument
-        instance = super(CommonInfoForm, self).save(commit=False)
+        instance = super().save(commit=False)
         
         if commit:
             instance.save(self.user)

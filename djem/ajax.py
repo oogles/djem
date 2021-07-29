@@ -64,4 +64,4 @@ class AjaxResponse(JsonResponse):
             # if the messages were rendered by an auto-escaping Django template.
             data['messages'] = [{'message': conditional_escape(m.message), 'tags': m.tags} for m in messages]
         
-        super(AjaxResponse, self).__init__(data, **kwargs)
+        super().__init__(data, **kwargs)

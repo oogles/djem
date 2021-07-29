@@ -83,7 +83,7 @@ class MessagingRequestFactory(RequestFactory):
     
     def request(self, **request):
         
-        request = super(MessagingRequestFactory, self).request(**request)
+        request = super().request(**request)
         
         # Patch the request so it appears as though the
         # djem.middleware.MessageMiddleware is in use, and it is an AJAX request
