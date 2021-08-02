@@ -65,8 +65,11 @@ Mixins
     :class:`AuditableQuerySet`
         The custom QuerySet used by ``Auditable``.
 
-    :class:`~djem.forms.CommonInfoForm`
-        A ``ModelForm`` subclass to act as a base for ``Auditable`` model forms.
+    :class:`~djem.forms.AuditableForm`
+        A ``ModelForm`` subclass that supports ``Auditable`` models.
+
+    :class:`~djem.forms.UserSaveMixin`
+        A ``ModelForm`` mixin to add support for ``Auditable`` models, for forms that already have a known user.
 
 ``ArchivableMixin``
 -------------------

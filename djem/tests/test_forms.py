@@ -1,14 +1,29 @@
+import warnings
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from djem.forms import CommonInfoForm, TimeZoneField
+from djem.forms import AuditableForm, CommonInfoForm, TimeZoneField, UserSaveMixin
 from djem.utils.dt import TIMEZONE_CHOICES, TimeZoneHelper
 
 from .models import StaticTest, TimeZoneTest
 
 
-class CommonInfoTestForm(CommonInfoForm):
+class UserSaveMixinTestForm(UserSaveMixin, forms.ModelForm):
+    
+    def __init__(self, *args, user=None, **kwargs):
+        
+        self.user = user
+        
+        super().__init__(*args, **kwargs)
+    
+    class Meta:
+        model = StaticTest
+        fields = '__all__'
+
+
+class AuditableFormTestForm(AuditableForm):
     
     class Meta:
         model = StaticTest
@@ -40,53 +55,12 @@ class TimeZoneFieldTestForm4(forms.Form):
     timezone = TimeZoneField(choices=TIMEZONE_CHOICES[:10])
 
 
-class CommonInfoFormTestCase(TestCase):
+class UserSaveMixinTestCase(TestCase):
     
     @classmethod
     def setUpTestData(cls):
         
-        # This user is not modified during these tests, so no need to
-        # refresh_from_db in setUp
         cls.user = get_user_model().objects.create_user('test')
-    
-    def test_bound_init__user(self):
-        """
-        Test the form correctly stores the given user when instantiating it
-        with data (a bound form).
-        """
-        
-        form = CommonInfoTestForm({'test': True}, user=self.user)
-        
-        self.assertEqual(form.user, self.user)
-    
-    def test_bound_init__no_user(self):
-        """
-        Test the form correctly raises a TypeError if no user is given when
-        instantiating it with data (a bound form).
-        """
-        
-        with self.assertRaises(TypeError):
-            CommonInfoTestForm({'test': True})
-    
-    def test_unbound_init__user(self):
-        """
-        Test the form correctly stores the given user when instantiating it
-        without data (an unbound form), even though it is not required.
-        """
-        
-        form = CommonInfoTestForm(user=self.user)
-        
-        self.assertEqual(form.user, self.user)
-    
-    def test_unbound_init__no_user(self):
-        """
-        Test the form correctly stores ``None`` if no user is given when
-        instantiating it without data (an unbound form).
-        """
-        
-        form = CommonInfoTestForm()
-        
-        self.assertIsNone(form.user)
     
     def test_save_commit__true(self):
         """
@@ -94,7 +68,7 @@ class CommonInfoFormTestCase(TestCase):
         (or no ``commit`` argument at all).
         """
         
-        form = CommonInfoTestForm({'test': True}, user=self.user)
+        form = UserSaveMixinTestForm({'test': True}, user=self.user)
         
         with self.assertNumQueries(1):
             instance = form.save()
@@ -115,7 +89,7 @@ class CommonInfoFormTestCase(TestCase):
         called with ``commit=False``.
         """
         
-        form = CommonInfoTestForm({'test': True}, user=self.user)
+        form = UserSaveMixinTestForm({'test': True}, user=self.user)
         
         with self.assertNumQueries(0):
             instance = form.save(commit=False)
@@ -130,6 +104,77 @@ class CommonInfoFormTestCase(TestCase):
         self.assertIsNotNone(instance.pk)
         self.assertEqual(instance.user_created_id, self.user.pk)
         self.assertEqual(instance.user_modified_id, self.user.pk)
+
+
+class AuditableFormTestCase(TestCase):
+    
+    @classmethod
+    def setUpTestData(cls):
+        
+        cls.user = get_user_model().objects.create_user('test')
+    
+    def test_bound_init__user(self):
+        """
+        Test the form correctly stores the given user when instantiating it
+        with data (a bound form).
+        """
+        
+        form = AuditableFormTestForm({'test': True}, user=self.user)
+        
+        self.assertEqual(form.user, self.user)
+    
+    def test_bound_init__no_user(self):
+        """
+        Test the form correctly raises a TypeError if no user is given when
+        instantiating it with data (a bound form).
+        """
+        
+        with self.assertRaises(TypeError):
+            AuditableFormTestForm({'test': True})
+    
+    def test_unbound_init__user(self):
+        """
+        Test the form correctly stores the given user when instantiating it
+        without data (an unbound form), even though it is not required.
+        """
+        
+        form = AuditableFormTestForm(user=self.user)
+        
+        self.assertEqual(form.user, self.user)
+    
+    def test_unbound_init__no_user(self):
+        """
+        Test the form correctly stores ``None`` if no user is given when
+        instantiating it without data (an unbound form).
+        """
+        
+        form = AuditableFormTestForm()
+        
+        self.assertIsNone(form.user)
+
+
+class CommonInfoFormTestCase(TestCase):
+    
+    def test_deprecation_warning(self):
+        
+        class TestForm(CommonInfoForm):
+            
+            class Meta:
+                model = StaticTest
+                fields = '__all__'
+        
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered
+            warnings.simplefilter("always")
+            
+            TestForm()
+            
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[-1].category, DeprecationWarning)
+            self.assertIn(
+                'Use of CommonInfoForm is deprecated, use AuditableForm instead',
+                str(w[-1].message)
+            )
 
 
 class TimeZoneFieldFormTestCase(TestCase):
