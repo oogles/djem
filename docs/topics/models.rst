@@ -7,33 +7,33 @@ Models
 Djem provides a series of custom classes to support common model-related functionality, including models, model managers and model fields.
 
 
-.. _commoninfomixin:
+.. _auditable:
 
-CommonInfoMixin
-===============
+Auditable
+=========
 
-The :class:`CommonInfoMixin` class is designed as a mixin for Django models, providing:
+The :class:`Auditable` class is designed as a mixin for Django models, providing:
 
 * Standard user and datetime fields: ``user_created``, ``user_modified``, ``date_created``, ``date_modified``.
-* Support for :ref:`ensuring these fields remain accurate <commoninfomixin-maintaining-accuracy>` as records are updated over time.
-* Support for :ref:`ownership checking <commoninfomixin-ownership-checking>`.
+* Support for :ref:`ensuring these fields remain accurate <auditable-maintaining-accuracy>` as records are updated over time.
+* Support for :ref:`ownership checking <auditable-ownership-checking>`.
 * A custom manager/queryset to assist with maintaining accuracy and checking ownership.
 
 .. warning::
 
-    Using :class:`CommonInfoMixin` can break code that automatically calls methods such as the model's :meth:`~CommonInfoMixin.save` method, or the queryset's :meth:`~CommonInfoQuerySet.update` method. See :ref:`commoninfomixin-maintaining-accuracy` for a description of the caveats of ``CommonInfoMixin``, and workarounds.
+    Using :class:`Auditable` can break code that automatically calls methods such as the model's :meth:`~Auditable.save` method, or the queryset's :meth:`~AuditableQuerySet.update` method. See :ref:`Auditable-maintaining-accuracy` for a description of the caveats of ``Auditable``, and workarounds.
 
 Usage
 -----
 
-To make use of :class:`CommonInfoMixin`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
+To make use of :class:`Auditable`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
 
 .. code-block:: python
 
     from django.db import models
-    from djem.models import CommonInfoMixin
+    from djem.models import Auditable
 
-    class ExampleModel(CommonInfoMixin, models.Model):
+    class ExampleModel(Auditable, models.Model):
 
         name = models.CharField(max_length=64)
 
@@ -42,16 +42,16 @@ Default values
 
 The ``date_created`` and ``date_modified`` fields will default to ``django.utils.timezone.now()`` at the moment the instance is initially saved.
 
-The ``user_created`` and ``user_modified`` fields will require a ``User`` instance in order to populate their values. However, they do not need to be populated manually. Djem provides various mechanisms to both make it easy to populate these fields automatically, and to ensure they are populated any time a record is updated. See :ref:`commoninfomixin-maintaining-accuracy`.
+The ``user_created`` and ``user_modified`` fields will require a ``User`` instance in order to populate their values. However, they do not need to be populated manually. Djem provides various mechanisms to both make it easy to populate these fields automatically, and to ensure they are populated any time a record is updated. See :ref:`auditable-maintaining-accuracy`.
 
 If any of the fields *are* populated manually, those values will take precedence.
 
-.. _commoninfomixin-maintaining-accuracy:
+.. _auditable-maintaining-accuracy:
 
 Maintaining accuracy
 --------------------
 
-The fields provided by :class:`CommonInfoMixin` are designed to be automatically populated whenever necessary. And in the case of ``date_modified`` and ``user_modified``, it is necessary to update them whenever a record is updated.
+The fields provided by :class:`Auditable` are designed to be automatically populated whenever necessary. And in the case of ``date_modified`` and ``user_modified``, it is necessary to update them whenever a record is updated.
 
 For the date fields, this is easy to accomplish. For the user fields, it requires something extra - knowledge of the user doing the creating/updating.
 
@@ -60,7 +60,7 @@ Various means exist to provide this:
 Calling ``save()`` on the instance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :meth:`CommonInfoMixin.save` method is overridden to require a ``User`` instance as the first argument. This allows the method to populate ``user_created`` when a new instance is being created, and keep ``user_modified`` up to date as changes are made.
+The :meth:`Auditable.save` method is overridden to require a ``User`` instance as the first argument. This allows the method to populate ``user_created`` when a new instance is being created, and keep ``user_modified`` up to date as changes are made.
 
 .. code-block:: python
 
@@ -82,12 +82,12 @@ The :meth:`CommonInfoMixin.save` method is overridden to require a ``User`` inst
 
 .. note::
 
-    These fields will be updated even if the :meth:`~CommonInfoMixin.save` method is passed a sequence of ``update_fields`` that does not include it (see `Django documentation for update_fields <https://docs.djangoproject.com/en/stable/ref/models/instances/#specifying-which-fields-to-save>`_). They will simply be appended to the list.
+    These fields will be updated even if the :meth:`~Auditable.save` method is passed a sequence of ``update_fields`` that does not include it (see `Django documentation for update_fields <https://docs.djangoproject.com/en/stable/ref/models/instances/#specifying-which-fields-to-save>`_). They will simply be appended to the list.
 
 Calling ``update()`` on the queryset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like :meth:`CommonInfoMixin.save`, the ``CommonInfoMixin`` queryset's :meth:`~CommonInfoQuerySet.update` method is also overridden to require a ``User`` instance as the first argument. Again, this allows the method to keep ``user_modified`` up to date as changes are made.
+Like :meth:`Auditable.save`, the ``Auditable`` queryset's :meth:`~AuditableQuerySet.update` method is also overridden to require a ``User`` instance as the first argument. Again, this allows the method to keep ``user_modified`` up to date as changes are made.
 
 .. code-block:: python
 
@@ -101,7 +101,7 @@ Like :meth:`CommonInfoMixin.save`, the ``CommonInfoMixin`` queryset's :meth:`~Co
 Using forms
 ~~~~~~~~~~~
 
-The ``ModelForm`` is core to any Django web application. For compatibility with :class:`CommonInfoMixin` (i.e. ensuring a ``user`` argument is passed to the :meth:`CommonInfoMixin.save` method), Djem provides :class:`~djem.forms.CommonInfoForm`. This is a simple wrapper around ``ModelForm``, and is designed to be used as a replacement to it for forms based on ``CommonInfoMixin`` models.
+The ``ModelForm`` is core to any Django web application. For compatibility with :class:`Auditable` (i.e. ensuring a ``user`` argument is passed to the :meth:`Auditable.save` method), Djem provides :class:`~djem.forms.CommonInfoForm`. This is a simple wrapper around ``ModelForm``, and is designed to be used as a replacement to it for forms based on ``Auditable`` models.
 
 ``CommonInfoForm`` takes a ``User`` instance as a constructor argument, giving it a known user to pass to the model's ``save()`` method when the form is saved.
 
@@ -127,7 +127,7 @@ The ``ModelForm`` is core to any Django web application. For compatibility with 
 Caveats and workarounds
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Obviously any code that calls a model's ``save()`` method or a queryset's ``update()`` method will need to be updated to pass the ``user`` argument for models that incorporate :class:`CommonInfoMixin`. This may not always be possible for third party code. :class:`~djem.forms.CommonInfoForm` solves this problem for one common occurrence, by providing a wrapper around Django's ``ModelForm``, but there are plenty of others. E.g. the queryset methods ``create()`` and ``get_or_create()``, which are not currently supported.
+Obviously any code that calls a model's ``save()`` method or a queryset's ``update()`` method will need to be updated to pass the ``user`` argument for models that incorporate :class:`Auditable`. This may not always be possible for third party code. :class:`~djem.forms.CommonInfoForm` solves this problem for one common occurrence, by providing a wrapper around Django's ``ModelForm``, but there are plenty of others. E.g. the queryset methods ``create()`` and ``get_or_create()``, which are not currently supported.
 
 If it is not feasible to customise code that calls these methods, it *is* possible to disable the requirement of the ``user`` argument. This can be done by setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` to ``False`` in ``settings.py``:
 
@@ -135,7 +135,7 @@ If it is not feasible to customise code that calls these methods, it *is* possib
 
     DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE = False
 
-This allows the use of ``CommonInfoMixin`` and all related functionality without the strict requirement of passing the ``user`` argument to methods that save/update the record. If passed, it will still be used as described above, but not providing it will not raise an exception. Of course, the methods won't automatically populate the appropriate fields, either. This means that ``user_created`` and ``user_modified`` will need to be manually populated when creating, and ``user_modified`` will need to be manually populated when updating.
+This allows the use of ``Auditable`` and all related functionality without the strict requirement of passing the ``user`` argument to methods that save/update the record. If passed, it will still be used as described above, but not providing it will not raise an exception. Of course, the methods won't automatically populate the appropriate fields, either. This means that ``user_created`` and ``user_modified`` will need to be manually populated when creating, and ``user_modified`` will need to be manually populated when updating.
 
 .. warning::
 
@@ -165,15 +165,15 @@ This allows the use of ``CommonInfoMixin`` and all related functionality without
             def test_something(self):
                 # ...
 
-An additional caveat is that there may not always be a known user when a change is being made to a ``CommonInfoMixin`` record, e.g. during a system-triggered background process. Situations such as these may be solved by setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` as described above, and taking responsibility for keeping ``user_modified`` up to date when necessary, or by creating a "system" user that can be passed in during these operations.
+An additional caveat is that there may not always be a known user when a change is being made to a ``Auditable`` record, e.g. during a system-triggered background process. Situations such as these may be solved by setting :setting:`DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE` as described above, and taking responsibility for keeping ``user_modified`` up to date when necessary, or by creating a "system" user that can be passed in during these operations.
 
 
-.. _commoninfomixin-ownership-checking:
+.. _auditable-ownership-checking:
 
 Ownership checking
 ------------------
 
-:class:`CommonInfoMixin` also adds support for *ownership checking*. The :meth:`~CommonInfoMixin.owned_by` method can be called on an model instance to check if the instance is owned by the given user. The user can be provided either as a ``User`` instance or as the primary key of a ``User`` record.
+:class:`Auditable` also adds support for *ownership checking*. The :meth:`~Auditable.owned_by` method can be called on an model instance to check if the instance is owned by the given user. The user can be provided either as a ``User`` instance or as the primary key of a ``User`` record.
 
 .. code-block:: python
 
@@ -186,7 +186,7 @@ Ownership checking
     >>> obj.owned_by(bob)
     False
 
-Ownership checking is also available via a ``CommonInfoMixin`` model's manager and queryset. The queryset's :meth:`~CommonInfoQuerySet.owned_by` method also accepts a user as a ``User`` instance or as the primary key of a ``User`` record. It returns a queryset filtered to records where the ``user_created`` field matches the given user.
+Ownership checking is also available via a ``Auditable`` model's manager and queryset. The queryset's :meth:`~AuditableQuerySet.owned_by` method also accepts a user as a ``User`` instance or as the primary key of a ``User`` record. It returns a queryset filtered to records where the ``user_created`` field matches the given user.
 
 .. code-block:: python
 
@@ -243,8 +243,8 @@ Instances of :class:`~ArchivableMixin` have the :meth:`~ArchivableMixin.archive`
     >>> ExampleModel.objects.get(name='Awesome Example').is_archived
     False
 
-.. versionchanged:: 7.0
-    Previous versions of Djem also provided ``archive()`` and ``unarchive()`` methods on :class:`ArchivableQuerySet`. These were removed due to the overhead they added to combining the functionality of :class:`ArchivableQuerySet` and :class:`CommonInfoQuerySet`, and because the naming was too similar after the introduction of the :meth:`~ArchivableQuerySet.archived` and :meth:`~ArchivableQuerySet.unarchived` methods. Using the ``update()`` method and passing ``is_archived`` is more explicit and safer.
+.. versionchanged:: 0.7
+    Previous versions of Djem also provided ``archive()`` and ``unarchive()`` methods on :class:`ArchivableQuerySet`. These were removed due to the overhead they added to combining the functionality of :class:`ArchivableQuerySet` and :class:`AuditableQuerySet`, and because the naming was too similar after the introduction of the :meth:`~ArchivableQuerySet.archived` and :meth:`~ArchivableQuerySet.unarchived` methods. Using the ``update()`` method and passing ``is_archived`` is more explicit and safer.
 
 Filtering shortcuts
 -------------------
@@ -266,7 +266,7 @@ Filtering shortcuts
     >>> ExampleModel.objects.filter(name='Example2').archived().count()
     0
 
-.. versionchanged:: 7.0
+.. versionchanged:: 0.7
     Previous versions of Djem used three different managers - ``objects``, ``live`` and ``archived`` - to provide access to querysets with various preset filters on the ``is_archived`` field. This didn't allow for applying the filters if a queryset was obtained by other means (e.g. via a ``ManyToManyField`` related manager) and made it more difficult to extend the manager (if the model inheriting from ``ArchivableMixin`` needed its own custom manager/queryset).
 
 
@@ -319,23 +319,23 @@ Mixing Mixins
 
 A model can include any combination of the above mixins. However, since they all use custom managers/querysets to provide additional functionality unique to them, a model using multiple mixins will need to provide its own manager/queryset that incorporates the functionality of each. The custom querysets have been designed to make this as simple as possible, without any additional customisation necessary.
 
-For a ready-made combination of all three mixins (:ref:`commoninfomixin`, :ref:`archivablemixin` and :ref:`versioningmixin`), see :ref:`staticabstract`.
+For a ready-made combination of all three mixins (:ref:`auditable`, :ref:`archivablemixin` and :ref:`versioningmixin`), see :ref:`staticabstract`.
 
-The following is an example of a model using the :ref:`commoninfomixin` and :ref:`archivablemixin`:
+The following is an example of a model using the :ref:`auditable` and :ref:`archivablemixin`:
 
 .. code-block:: python
 
     from django.db import models
-    from djem.models import ArchivableMixin, CommonInfoMixin
-    from djem.managers import ArchivableQuerySet, CommonInfoQuerySet
+    from djem.models import ArchivableMixin, Auditable
+    from djem.managers import ArchivableQuerySet, AuditableQuerySet
 
-    class ExampleQuerySet(CommonInfoQuerySet, ArchivableQuerySet):
+    class ExampleQuerySet(AuditableQuerySet, ArchivableQuerySet):
 
         pass
 
     ExampleManager = models.Manager.from_queryset(ExampleQuerySet)
 
-    class ExampleModel(CommonInfoMixin, ArchivableMixin, models.Model):
+    class ExampleModel(Auditable, ArchivableMixin, models.Model):
 
         name = models.CharField(max_length=64)
 
@@ -347,12 +347,12 @@ The following is an example of a model using the :ref:`commoninfomixin` and :ref
 StaticAbstract
 ==============
 
-:class:`StaticAbstract` is a combination of :ref:`commoninfomixin`, :ref:`archivablemixin` and :ref:`versioningmixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins, including:
+:class:`StaticAbstract` is a combination of :ref:`auditable`, :ref:`archivablemixin` and :ref:`versioningmixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins, including:
 
-* :ref:`Maintaining the accuracy <commoninfomixin-maintaining-accuracy>` of ``date_modified`` and ``user_modified`` as changes are made.
+* :ref:`Maintaining the accuracy <auditable-maintaining-accuracy>` of ``date_modified`` and ``user_modified`` as changes are made.
 * Automatically and :ref:`atomically incrementing <versioningmixin-incrementing-version>` ``version`` as changes are made.
 * Allowing :ref:`archiving and unarchiving <archivablemixin-archiving-unarchiving>`.
-* Providing :ref:`ownership checking <commoninfomixin-ownership-checking>`.
+* Providing :ref:`ownership checking <auditable-ownership-checking>`.
 
 Usage
 -----

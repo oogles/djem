@@ -1,5 +1,6 @@
 import datetime
 import pytz
+import warnings
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -11,7 +12,7 @@ from djem.models import TimeZoneField
 from djem.utils.dt import TimeZoneHelper
 
 from .models import (
-    ArchivableTest, CommonInfoTest, LogTest, StaticTest, TimeZoneTest,
+    ArchivableTest, AuditableTest, LogTest, StaticTest, TimeZoneTest,
     VersioningTest
 )
 
@@ -22,18 +23,58 @@ def make_user(username):
 
 
 class CommonInfoTestCase(TestCase):
+    
+    def test_object_deprecation_warning(self):
+        
+        from djem.models import CommonInfoMixin
+        
+        class TestModel(CommonInfoMixin):
+            pass
+        
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered
+            warnings.simplefilter("always")
+            
+            TestModel()
+            
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[-1].category, DeprecationWarning)
+            self.assertIn(
+                'Use of CommonInfoMixin is deprecated, use Auditable instead',
+                str(w[-1].message)
+            )
+    
+    def test_queryset_deprecation_warning(self):
+        
+        from djem.models import CommonInfoQuerySet
+        
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered
+            warnings.simplefilter("always")
+            
+            CommonInfoQuerySet()
+            
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[-1].category, DeprecationWarning)
+            self.assertIn(
+                'Use of CommonInfoQuerySet is deprecated, use AuditableQuerySet instead',
+                str(w[-1].message)
+            )
+
+
+class AuditableTestCase(TestCase):
     """
-    Tests the behaviour of the ``CommonInfoMixin`` class, when mixed into a
+    Tests the behaviour of the ``Auditable`` class, when mixed into a
     model.
     """
     
     #
     # These tests use the class-level "model" attribute so they can be applied
     # to other models (such as StaticTest) in subclasses, in order to test the
-    # CommonInfoMixin's behaviour when mixed in with others (Archivable, Versioning).
+    # Auditable mixin's behaviour when mixed in with others (Archivable, Versionable).
     #
     
-    model = CommonInfoTest
+    model = AuditableTest
     
     def setUp(self):
         
@@ -440,10 +481,10 @@ class ArchivableTestCase(TestCase):
     # These tests use the class-level "model" attribute and the create_instance()
     # method so they can be applied to other models (such as StaticTest) in
     # subclasses, in order to test the ArchivableMixin's behaviour when mixed
-    # in with others (CommonInfo, Versioning).
+    # in with others (Auditable, Versionable).
     # The tests are decorated so they don't raise an exception when calling the
     # save() method without a user argument if they are called on a model that
-    # is mixed into CommonInfoMixin.
+    # is mixed into Auditable.
     #
     
     model = ArchivableTest
@@ -607,10 +648,10 @@ class VersioningTestCase(TestCase):
     # These tests use the class-level "model" attribute and the create_instance()
     # method so they can be applied to other models (such as StaticTest) in
     # subclasses, in order to test the VersioningMixin's behaviour when mixed
-    # in with others (CommonInfo, Archivable).
+    # in with others (Auditable, Archivable).
     # The tests are decorated so they don't raise an exception when calling the
     # save() method without a user argument if they are called on a model that
-    # is mixed into CommonInfoMixin.
+    # is mixed into Auditable.
     #
     
     model = VersioningTest
@@ -728,7 +769,7 @@ class VersioningTestCase(TestCase):
         self.assertEqual(obj.version, 2)
 
 
-class StaticTestCase(CommonInfoTestCase, ArchivableTestCase, VersioningTestCase):
+class StaticTestCase(AuditableTestCase, ArchivableTestCase, VersioningTestCase):
     
     model = StaticTest
     

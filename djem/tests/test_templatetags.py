@@ -8,7 +8,7 @@ from django.test import RequestFactory, TestCase, override_settings
 
 from djem.utils.tests import TemplateRendererMixin
 
-from .models import CommonInfoTest
+from .models import AuditableTest
 
 
 @override_settings(AUTHENTICATION_BACKENDS=[
@@ -21,11 +21,11 @@ class PermTagTestCase(TemplateRendererMixin, TestCase):
         
         user = get_user_model().objects.create_user('test', 'fakepassword')
         
-        # Grant the user all permissions for CommonInfoTest to ensure the tests
+        # Grant the user all permissions for AuditableTest to ensure the tests
         # focus on object-level permissions
         permissions = Permission.objects.filter(
             content_type__app_label='djemtest',
-            content_type__model='commoninfotest'
+            content_type__model='auditabletest'
         )
         user.user_permissions.set(permissions)
         
@@ -88,7 +88,7 @@ class IfPermTestCase(PermTagTestCase):
         with no "else" block defined, when an invalid permission is provided.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         template_string = (
@@ -110,7 +110,7 @@ class IfPermTestCase(PermTagTestCase):
         defined, when an invalid permission is provided.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         template_string = (
@@ -134,14 +134,14 @@ class IfPermTestCase(PermTagTestCase):
         "else" block defined, when a user has a permission on an object.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% endifperm %}'
         )
@@ -158,14 +158,14 @@ class IfPermTestCase(PermTagTestCase):
         "else" block defined, when a user has a permission on an object.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -186,14 +186,14 @@ class IfPermTestCase(PermTagTestCase):
         """
         
         other_user = get_user_model().objects.create_user('other', 'fakepassword')
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(other_user)
         
-        self.assertFalse(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertFalse(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% endifperm %}'
         )
@@ -211,14 +211,14 @@ class IfPermTestCase(PermTagTestCase):
         """
         
         other_user = get_user_model().objects.create_user('other', 'fakepassword')
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(other_user)
         
-        self.assertFalse(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertFalse(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -237,14 +237,14 @@ class IfPermTestCase(PermTagTestCase):
         template variable.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifperm some.complex.variable "djemtest.change_commoninfotest" obj %}'
+            '{% ifperm some.complex.variable "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -268,10 +268,10 @@ class IfPermTestCase(PermTagTestCase):
         complex template variable.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
@@ -286,7 +286,7 @@ class IfPermTestCase(PermTagTestCase):
             'obj': obj,
             'some': {
                 'complex': {
-                    'variable': 'djemtest.change_commoninfotest'
+                    'variable': 'djemtest.change_auditabletest'
                 }
             }
         })
@@ -299,14 +299,14 @@ class IfPermTestCase(PermTagTestCase):
         complex template variable.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifperm user "djemtest.change_commoninfotest" some.complex.variable %}'
+            '{% ifperm user "djemtest.change_auditabletest" some.complex.variable %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -334,7 +334,7 @@ class IfPermTestCase(PermTagTestCase):
             
             template_string = (
                 '{% load djem %}'
-                '{% ifperm user "djemtest.change_commoninfotest" obj %}'
+                '{% ifperm user "djemtest.change_auditabletest" obj %}'
                 '   IF'
                 '{% else %}'
                 '   ELSE'
@@ -347,7 +347,7 @@ class IfPermTestCase(PermTagTestCase):
             
             return HttpResponse(output)
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         request = RequestFactory().get('/test/')
@@ -366,7 +366,7 @@ class IfPermTestCase(PermTagTestCase):
             
             template_string = (
                 '{% load djem %}'
-                '{% ifperm user "djemtest.change_commoninfotest" obj %}'
+                '{% ifperm user "djemtest.change_auditabletest" obj %}'
                 '   IF'
                 '{% else %}'
                 '   ELSE'
@@ -379,7 +379,7 @@ class IfPermTestCase(PermTagTestCase):
             
             return HttpResponse(output)
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         request = RequestFactory().get('/test/')
@@ -445,7 +445,7 @@ class IfNotPermTestCase(PermTagTestCase):
         no "else" block defined, when an invalid permission is provided.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         template_string = (
@@ -467,7 +467,7 @@ class IfNotPermTestCase(PermTagTestCase):
         defined, when an invalid permission is provided.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         template_string = (
@@ -492,14 +492,14 @@ class IfNotPermTestCase(PermTagTestCase):
         object.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifnotperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifnotperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% endifnotperm %}'
         )
@@ -516,14 +516,14 @@ class IfNotPermTestCase(PermTagTestCase):
         when defined, when a user has a permission on an object.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifnotperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifnotperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -544,14 +544,14 @@ class IfNotPermTestCase(PermTagTestCase):
         """
         
         other_user = get_user_model().objects.create_user('other', 'fakepassword')
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(other_user)
         
-        self.assertFalse(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertFalse(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifnotperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifnotperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% endifnotperm %}'
         )
@@ -570,14 +570,14 @@ class IfNotPermTestCase(PermTagTestCase):
         """
         
         other_user = get_user_model().objects.create_user('other', 'fakepassword')
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(other_user)
         
-        self.assertFalse(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertFalse(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifnotperm user "djemtest.change_commoninfotest" obj %}'
+            '{% ifnotperm user "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -596,14 +596,14 @@ class IfNotPermTestCase(PermTagTestCase):
         template variable.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifnotperm some.complex.variable "djemtest.change_commoninfotest" obj %}'
+            '{% ifnotperm some.complex.variable "djemtest.change_auditabletest" obj %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -627,10 +627,10 @@ class IfNotPermTestCase(PermTagTestCase):
         complex template variable.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
@@ -645,7 +645,7 @@ class IfNotPermTestCase(PermTagTestCase):
             'obj': obj,
             'some': {
                 'complex': {
-                    'variable': 'djemtest.change_commoninfotest'
+                    'variable': 'djemtest.change_auditabletest'
                 }
             }
         })
@@ -658,14 +658,14 @@ class IfNotPermTestCase(PermTagTestCase):
         complex template variable.
         """
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
-        self.assertTrue(self.user.has_perm('djemtest.change_commoninfotest', obj))
+        self.assertTrue(self.user.has_perm('djemtest.change_auditabletest', obj))
         
         template_string = (
             '{% load djem %}'
-            '{% ifnotperm user "djemtest.change_commoninfotest" some.complex.variable %}'
+            '{% ifnotperm user "djemtest.change_auditabletest" some.complex.variable %}'
             '   IF'
             '{% else %}'
             '   ELSE'
@@ -693,7 +693,7 @@ class IfNotPermTestCase(PermTagTestCase):
             
             template_string = (
                 '{% load djem %}'
-                '{% ifnotperm user "djemtest.change_commoninfotest" obj %}'
+                '{% ifnotperm user "djemtest.change_auditabletest" obj %}'
                 '   IF'
                 '{% else %}'
                 '   ELSE'
@@ -706,7 +706,7 @@ class IfNotPermTestCase(PermTagTestCase):
             
             return HttpResponse(output)
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         request = RequestFactory().get('/test/')
@@ -725,7 +725,7 @@ class IfNotPermTestCase(PermTagTestCase):
             
             template_string = (
                 '{% load djem %}'
-                '{% ifnotperm user "djemtest.change_commoninfotest" obj %}'
+                '{% ifnotperm user "djemtest.change_auditabletest" obj %}'
                 '   IF'
                 '{% else %}'
                 '   ELSE'
@@ -738,7 +738,7 @@ class IfNotPermTestCase(PermTagTestCase):
             
             return HttpResponse(output)
         
-        obj = CommonInfoTest()
+        obj = AuditableTest()
         obj.save(self.user)
         
         request = RequestFactory().get('/test/')
@@ -819,10 +819,10 @@ class PaginateTestCase(TemplateRendererMixin, TestCase):
         user = get_user_model().objects.create_user('test')
         
         for i in range(23):
-            CommonInfoTest().save(user)
+            AuditableTest().save(user)
         
         # All tests will use the same Paginator with 5 results per page
-        cls.paginator = Paginator(CommonInfoTest.objects.order_by('pk'), 5)
+        cls.paginator = Paginator(AuditableTest.objects.order_by('pk'), 5)
         
         # All tests will render the same basic template - just the
         # {% paginate %} tag on the given Page. It is the Page object that will

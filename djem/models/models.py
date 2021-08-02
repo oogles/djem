@@ -1,4 +1,5 @@
 import re
+import warnings
 from collections import OrderedDict
 
 from django.conf import settings
@@ -14,9 +15,12 @@ from djem.exceptions import ModelAmbiguousVersionError
 whitespace_regex = re.compile(r'\W+')
 
 __all__ = (
-    'LogMixin', 'OLPMixin', 'CommonInfoQuerySet', 'CommonInfoMixin',
-    'ArchivableQuerySet', 'ArchivableMixin', 'VersioningQuerySet',
-    'VersioningMixin', 'StaticAbstractQuerySet', 'StaticAbstract',
+    'LogMixin', 'OLPMixin',
+    'AuditableQuerySet', 'Auditable',
+    'CommonInfoQuerySet', 'CommonInfoMixin',
+    'ArchivableQuerySet', 'ArchivableMixin',
+    'VersioningQuerySet', 'VersioningMixin',
+    'StaticAbstractQuerySet', 'StaticAbstract',
 )
 
 
@@ -248,10 +252,10 @@ class OLPMixin(LogMixin):
             pass
 
 
-class CommonInfoQuerySet(models.QuerySet):
+class AuditableQuerySet(models.QuerySet):
     """
     Provides custom functionality pertaining to the fields provided by
-    ``CommonInfoMixin``.
+    ``Auditable``.
     """
     
     def update(self, user=None, **kwargs):
@@ -282,7 +286,18 @@ class CommonInfoQuerySet(models.QuerySet):
         return self.filter(user_created=user)
 
 
-class CommonInfoMixin(models.Model):
+# Backwards compat.
+# TODO: Remove in 1.0
+class CommonInfoQuerySet(AuditableQuerySet):
+    
+    def __init__(self, *args, **kwargs):
+        
+        warnings.warn('Use of CommonInfoQuerySet is deprecated, use AuditableQuerySet instead.', DeprecationWarning)
+        
+        super().__init__(*args, **kwargs)
+
+
+class Auditable(models.Model):
     """
     Model mixin that provides standard user and datetime fields (``user_created``,
     ``user_modified``, ``date_created`` and ``date_modified``) and overridden
@@ -313,7 +328,7 @@ class CommonInfoMixin(models.Model):
         on_delete=models.PROTECT
     )
     
-    objects = models.Manager.from_queryset(CommonInfoQuerySet)()
+    objects = models.Manager.from_queryset(AuditableQuerySet)()
     
     class Meta:
         abstract = True
@@ -371,6 +386,20 @@ class CommonInfoMixin(models.Model):
             user_id = user
         
         return user_id == self.user_created_id
+
+
+# Backwards compat.
+# TODO: Remove in 1.0
+class CommonInfoMixin(Auditable):
+    
+    def __init__(self, *args, **kwargs):
+        
+        warnings.warn('Use of CommonInfoMixin is deprecated, use Auditable instead.', DeprecationWarning)
+        
+        super().__init__(*args, **kwargs)
+    
+    class Meta:
+        abstract = True
 
 
 class ArchivableQuerySet(models.QuerySet):
@@ -522,18 +551,18 @@ class VersioningMixin(models.Model):
             self.version = SimpleLazyObject(self.AmbiguousVersionError._raise)
 
 
-class StaticAbstractQuerySet(CommonInfoQuerySet, ArchivableQuerySet, VersioningQuerySet):
+class StaticAbstractQuerySet(AuditableQuerySet, ArchivableQuerySet, VersioningQuerySet):
     """
-    Combination of CommonInfoQuerySet, ArchivableQuerySet and VersioningQuerySet
+    Combination of AuditableQuerySet, ArchivableQuerySet and VersioningQuerySet
     for use by managers of models that want the functionality of all three.
     """
     
     pass
 
 
-class StaticAbstract(CommonInfoMixin, ArchivableMixin, VersioningMixin, models.Model):
+class StaticAbstract(Auditable, ArchivableMixin, VersioningMixin, models.Model):
     """
-    Useful abstract base model combining the functionality of CommonInfoMixin,
+    Useful abstract base model combining the functionality of Auditable,
     ArchivableMixing and VersioningMixin.
     """
     

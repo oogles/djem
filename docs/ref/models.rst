@@ -46,27 +46,27 @@ Mixins
 
     .. automethod:: clear_perm_cache
 
-``CommonInfoMixin``
--------------------
+``Auditable``
+-------------
 
-.. class:: CommonInfoMixin()
+.. class:: Auditable()
 
-    ``CommonInfoMixin`` is a model mixin class that provides:
+    ``Auditable`` is a model mixin class that provides:
 
     * Standard user and datetime fields: ``user_created``, ``user_modified``, ``date_created``, ``date_modified``.
-    * An overridden ``objects`` Manager that provides access to the custom :class:`CommonInfoQuerySet`.
-    * Support for :ref:`commoninfomixin-ownership-checking` on an instance and via :class:`CommonInfoQuerySet`.
+    * An overridden ``objects`` Manager that provides access to the custom :class:`AuditableQuerySet`.
+    * Support for :ref:`auditable-ownership-checking` on an instance and via :class:`AuditableQuerySet`.
 
     .. automethod:: save
     .. automethod:: owned_by
 
 .. seealso::
 
-    :class:`CommonInfoQuerySet`
-        The custom QuerySet used by ``CommonInfoMixin``.
+    :class:`AuditableQuerySet`
+        The custom QuerySet used by ``Auditable``.
 
     :class:`~djem.forms.CommonInfoForm`
-        A ``ModelForm`` subclass to act as a base for ``CommonInfoMixin`` model forms.
+        A ``ModelForm`` subclass to act as a base for ``Auditable`` model forms.
 
 ``ArchivableMixin``
 -------------------
@@ -112,12 +112,12 @@ Mixins
 QuerySets
 =========
 
-``CommonInfoQuerySet``
-----------------------
+``AuditableQuerySet``
+---------------------
 
-.. class:: CommonInfoQuerySet(\*args, \*\*kwargs)
+.. class:: AuditableQuerySet(\*args, \*\*kwargs)
 
-    ``CommonInfoQuerySet`` provides custom functionality pertaining to the fields provided by :class:`~djem.models.CommonInfoMixin`.
+    ``AuditableQuerySet`` provides custom functionality pertaining to the fields provided by :class:`~djem.models.Auditable`.
 
     .. automethod:: update
     .. automethod:: owned_by
@@ -154,4 +154,4 @@ QuerySets
 
 .. class:: StaticAbstract()
 
-    ``StaticAbstract`` is a combination of :class:`CommonInfoMixin`, :class:`ArchivableMixin` and :class:`VersioningMixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins.
+    ``StaticAbstract`` is a combination of :class:`Auditable`, :class:`ArchivableMixin` and :class:`VersioningMixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins.

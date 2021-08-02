@@ -3,14 +3,14 @@ from django.core.exceptions import PermissionDenied
 from django.db import models
 
 from djem.models import (
-    ArchivableMixin, CommonInfoMixin, LogMixin, OLPMixin, StaticAbstract,
+    ArchivableMixin, Auditable, LogMixin, OLPMixin, StaticAbstract,
     TimeZoneField, VersioningMixin
 )
 
 
-class CommonInfoTest(CommonInfoMixin, models.Model):
+class AuditableTest(Auditable, models.Model):
     """
-    This model provides a concrete model with the CommonInfoMixin for testing.
+    This model provides a concrete model with the Auditable mixin for testing.
     """
     
     field1 = models.BooleanField(default=True)
@@ -19,7 +19,7 @@ class CommonInfoTest(CommonInfoMixin, models.Model):
     class Meta:
         app_label = 'djemtest'
     
-    def _user_can_change_commoninfotest(self, user):
+    def _user_can_change_auditabletest(self, user):
         
         return user.pk == self.user_created_id
 

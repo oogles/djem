@@ -7,6 +7,7 @@ Change Log
 
 * Dropped support for Python 2 (minimum supported version is 3.6)
 * Dropped support for Django versions below 2.2
+* Renamed ``CommonInfoMixin`` and ``CommonInfoQuerySet`` to ``Auditable`` and ``AuditableQuerySet``, respectively (the old names remain available for backwards compatibility, but are deprecated)
 * Added ``UNDEFINED`` constant
 * Added ``LogMixin`` for instance-based logging
 * Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality
@@ -14,7 +15,7 @@ Change Log
 * Added ``DJEM_PERM_LOG_VERBOSITY`` setting
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods
 * Added ``ajax_login_required()`` decorator
-* Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``CommonInfoMixin`` - this was far too specific a use-case to be the default
+* Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``Auditable`` - this was far too specific a use-case to be the default
 * Removed ``ArchivableQuerySet``'s ``archive()`` and ``unarchive()`` methods
 * Removed ``ArchivableMixin``'s ``live`` and ``archived`` Managers
 * Removed explicit ``Manager`` classes for mixins

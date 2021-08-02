@@ -12,15 +12,15 @@ The following settings can be added to your project's ``settings.py`` file to cu
 
 Default: ``True``
 
-By default, the :meth:`~djem.models.CommonInfoMixin.save` method of :class:`~djem.models.CommonInfoMixin` and the :meth:`~djem.models.managers.CommonInfoQuerySet.update` method of :class:`~djem.models.managers.CommonInfoQuerySet` require their first positional argument to be a ``User`` instance, so they can automatically set the ``user_created`` and/or ``user_modified`` fields that ``CommonInfoMixin`` provides. This behaviour can cause issues if you are using third party code that calls the ``save`` method of a model instance or the ``update`` method of a queryset, as it will not pass this required argument.
+By default, the :meth:`~djem.models.Auditable.save` method of :class:`~djem.models.Auditable` and the :meth:`~djem.models.AuditableQuerySet.update` method of :class:`~djem.models.AuditableQuerySet` require their first positional argument to be a ``User`` instance, so they can automatically set the ``user_created`` and/or ``user_modified`` fields that ``Auditable`` provides. This behaviour can cause issues if you are using third party code that calls the ``save`` method of a model instance or the ``update`` method of a queryset, as it will not pass this required argument.
 
-Djem provides :class:`~djem.forms.CommonInfoForm` to enable Django ``ModelForms`` to work with models making use of ``CommonInfoMixin``. But if you can't use similar wrappers around other third party code invoking these methods, this setting can help.
+Djem provides :class:`~djem.forms.CommonInfoForm` to enable Django ``ModelForms`` to work with models making use of ``Auditable``. But if you can't use similar wrappers around other third party code invoking these methods, this setting can help.
 
-Setting ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "required" nature of the ``user`` argument to :meth:`~djem.models.CommonInfoMixin.save`/:meth:`~djem.models.managers.CommonInfoQuerySet.update`. It will still be accepted, and will still be used as per usual if it is provided. But if it is not provided, no exception will be raised, and the fields that would ordinarily be populated by it will simply be left alone.
+Setting ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "required" nature of the ``user`` argument to :meth:`~djem.models.Auditable.save`/:meth:`~djem.models.AuditableQuerySet.update`. It will still be accepted, and will still be used as per usual if it is provided. But if it is not provided, no exception will be raised, and the fields that would ordinarily be populated by it will simply be left alone.
 
 .. warning::
 
-    The ``user_created`` and ``user_modified`` fields will still be required. When creating instances of models using ``CommonInfoMixin``, and a ``User`` is not passed to the :meth:`~djem.models.CommonInfoMixin.save` method, these fields will need to be populated manually, or an ``IntegrityError`` will be raised.
+    The ``user_created`` and ``user_modified`` fields will still be required. When creating instances of models using ``Auditable``, and a ``User`` is not passed to the :meth:`~djem.models.Auditable.save` method, these fields will need to be populated manually, or an ``IntegrityError`` will be raised.
 
 .. warning::
 

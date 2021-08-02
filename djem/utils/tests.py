@@ -14,7 +14,7 @@ def setup_test_app(package, label=None):
     """
     Setup a Django test app for the provided package to allow test-only models
     to be used.
-
+    
     This function should be called from myapp.tests.__init__ like so:
     
         setup_test_app(__package__)

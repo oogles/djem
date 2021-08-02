@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from djem.pagination import get_page
 
-from .models import CommonInfoTest
+from .models import AuditableTest
 
 
 class GetPageTestCase(TestCase):
@@ -15,9 +15,9 @@ class GetPageTestCase(TestCase):
         user = get_user_model().objects.create_user('test')
         
         for i in range(23):
-            CommonInfoTest().save(user)
+            AuditableTest().save(user)
         
-        cls.object_list = CommonInfoTest.objects.order_by('pk')
+        cls.object_list = AuditableTest.objects.order_by('pk')
     
     def test_per_page__none(self):
         
