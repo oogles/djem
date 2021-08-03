@@ -9,6 +9,7 @@ Change Log
 * Dropped support for Django versions below 2.2
 * Renamed ``CommonInfoMixin`` and ``CommonInfoQuerySet`` to ``Auditable`` and ``AuditableQuerySet``, respectively (the old names remain available for backwards compatibility, but are deprecated)
 * Renamed ``CommonInfoForm`` to ``AuditableForm`` (the old name remains available for backwards compatibility, but is deprecated)
+* Renamed ``DJEM_COMMON_INFO_USER_REQUIRED_ON_SAVE`` setting to ``DJEM_AUDITABLE_USER_REQUIRED_ON_SAVE`` (the old name remains available for backwards compatibility, but is deprecated)
 * Added ``UNDEFINED`` constant
 * Added ``LogMixin`` for instance-based logging
 * Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality

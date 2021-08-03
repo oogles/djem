@@ -85,7 +85,7 @@ class AuditableTestCase(TestCase):
         """
         Test the overridden ``save`` method correctly raises TypeError when
         the ``user`` argument is not provided and it is required (per
-        ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` setting).
+        ``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE`` setting).
         """
         
         obj = self.model()
@@ -96,9 +96,23 @@ class AuditableTestCase(TestCase):
     def test_object_save__no_user__not_required(self):
         """
         Test the overridden ``save`` method correctly accepts a null ``user``
-        argument when it is not required (per``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        argument when it is not required (per``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE``
         setting). Instance creation should fail on missing fields as they are
         not automatically populated by the given user.
+        """
+        
+        obj = self.model()
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            with self.assertRaises(IntegrityError):
+                obj.save()
+    
+    def test_object_save__no_user__not_required__old_setting(self):
+        """
+        Test the overridden ``save`` method correctly accepts a null ``user``
+        argument when the old ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        setting is ``False``. Instance creation should fail on missing fields
+        as they are not automatically populated by the given user.
         """
         
         obj = self.model()
@@ -110,8 +124,7 @@ class AuditableTestCase(TestCase):
     def test_object_create__user__required(self):
         """
         Test the overridden ``save`` method automatically sets the necessary
-        fields when creating a new instance, passing the ``user`` argument
-        when it is required.
+        fields when creating a new instance, using the given ``user`` argument.
         """
         
         obj = self.model()
@@ -138,24 +151,24 @@ class AuditableTestCase(TestCase):
     def test_object_create__user__not_required(self):
         """
         Test the overridden ``save`` method automatically sets the necessary
-        fields when creating a new instance, passing the ``user`` argument
-        when it is not required. This should be identical to passing it when
-        it is required.
+        fields when creating a new instance, using the given ``user`` argument
+        even when it is not required.
         """
         
-        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
             self.test_object_create__user__required()
     
     def test_object_create__no_user(self):
         """
-        Test the overridden ``save`` method automatically sets the necessary
-        fields when creating a new instance, not using the ``user`` argument.
+        Test the overridden ``save`` method does not attempt to set the
+        user-based fields when creating a new instance and no ``user``
+        argument is provided (when it is flagged as not required).
         """
         
         user = self.user1
         obj = self.model(user_created=user, user_modified=user)
         
-        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
             with self.assertNumQueries(1):
                 obj.save()
         
@@ -177,8 +190,8 @@ class AuditableTestCase(TestCase):
     
     def test_object_create__existing_date_created(self):
         """
-        Test the overridden ``save`` method maintains a ``date_created`` value if
-        one already exists when creating a new instance.
+        Test the overridden ``save`` method maintains a ``date_created`` value
+        if one already exists when creating a new instance.
         """
         
         d = timezone.now() - datetime.timedelta(days=5)
@@ -197,8 +210,8 @@ class AuditableTestCase(TestCase):
     
     def test_object_create__existing_user_created(self):
         """
-        Test the overridden ``save`` method maintains a ``user_created`` value if
-        one already exists when creating a new instance.
+        Test the overridden ``save`` method maintains a ``user_created`` value
+        if one already exists when creating a new instance.
         """
         
         obj = self.model(user_created=self.user2)
@@ -218,8 +231,8 @@ class AuditableTestCase(TestCase):
     def test_object_update__user__required(self):
         """
         Test the overridden ``save`` method automatically sets the necessary
-        fields when updating an existing instance, passing the ``user`` argument
-        when it is required.
+        fields when updating an existing instance, using the given ``user``
+        argument.
         """
         
         obj1 = self.model()
@@ -264,19 +277,18 @@ class AuditableTestCase(TestCase):
     def test_object_update__user__not_required(self):
         """
         Test the overridden ``save`` method automatically sets the necessary
-        fields when updating an existing instance, passing the ``user`` argument
-        when it is not required. This should be identical to passing it when
-        it is required.
+        fields when updating an existing instance, using the given ``user``
+        argument even when it is not required.
         """
         
-        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
             self.test_object_update__user__required()
     
     def test_object_update__no_user(self):
         """
-        Test the overridden ``save`` method automatically sets the necessary
-        fields when updating an existing instance, not passing the ``user``
-        argument.
+        Test the overridden ``save`` method does not attempt to set the
+        user-based fields when updating an existing instance and no ``user``
+        argument is provided (when it is flagged as not required).
         """
         
         user = self.user1
@@ -293,7 +305,7 @@ class AuditableTestCase(TestCase):
         obj2.field1 = False
         obj2.field2 = False
         
-        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
             with self.assertNumQueries(1):
                 obj2.save(update_fields=('field1',))
         
@@ -321,7 +333,7 @@ class AuditableTestCase(TestCase):
         """
         Test the overridden ``update`` method of the custom queryset
         automatically sets the necessary fields when updating existing records,
-        passing the ``user`` argument when it is required.
+        using the given ``user`` argument.
         """
         
         obj = self.model()
@@ -340,8 +352,18 @@ class AuditableTestCase(TestCase):
         """
         Test the overridden ``update`` method of the custom queryset
         automatically sets the necessary fields when updating existing records,
-        passing the ``user`` argument when it is not required. This should be
-        identical to passing it when it is required.
+        using the given ``user`` argument even when it is not required.
+        """
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_update__user__required()
+    
+    def test_queryset_update__user__not_required__old_setting(self):
+        """
+        Test the overridden ``update`` method of the custom queryset
+        automatically sets the necessary fields when updating existing records,
+        using the given ``user`` argument even when it is not required as per
+        the old ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` setting.
         """
         
         with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
@@ -349,9 +371,8 @@ class AuditableTestCase(TestCase):
     
     def test_queryset_update__no_user__required(self):
         """
-        Test the overridden ``update`` method of the custom queryset
-        automatically sets the necessary fields when updating existing records,
-        not passing the ``user`` argument when it is required.
+        Test the overridden ``update`` method of the custom queryset when the
+        required ``user`` argument is not provided. It should raise TypeError.
         """
         
         obj = self.model()
@@ -363,9 +384,9 @@ class AuditableTestCase(TestCase):
     
     def test_queryset_update__no_user__not_required(self):
         """
-        Test the overridden ``update`` method of the custom queryset
-        automatically sets the necessary fields when updating existing records,
-        not passing the ``user`` argument when it is not required.
+        Test the overridden ``update`` method of the custom queryset does not
+        attempt to set the user-based fields when updating existing records and
+        no ``user`` argument is provided (when it is flagged as not required).
         """
         
         user = self.user1
@@ -376,7 +397,7 @@ class AuditableTestCase(TestCase):
         
         self.assertEqual(self.model.objects.filter(user_modified=user).count(), 1)
         
-        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
             with self.assertNumQueries(1):
                 self.model.objects.all().update(field1=False)
         
@@ -493,7 +514,7 @@ class ArchivableTestCase(TestCase):
         
         return self.model.objects.create(**kwargs)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_object_archive__no_args(self):
         """
         Test the ``archive()`` method of an instance, when called with no
@@ -518,7 +539,7 @@ class ArchivableTestCase(TestCase):
         self.assertTrue(obj.field1)
         self.assertTrue(obj.field2)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_object_archive__args(self):
         """
         Test the ``archive()`` method of an instance, when called with the
@@ -544,7 +565,7 @@ class ArchivableTestCase(TestCase):
         self.assertFalse(obj.field1)
         self.assertTrue(obj.field2)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_object_unarchive__no_args(self):
         """
         Test the ``unarchive()`` method of an instance, when called with no
@@ -569,7 +590,7 @@ class ArchivableTestCase(TestCase):
         self.assertTrue(obj.field1)
         self.assertTrue(obj.field2)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_object_unarchive__args(self):
         """
         Test the ``unarchive()`` method of an instance, when called with the
@@ -595,7 +616,7 @@ class ArchivableTestCase(TestCase):
         self.assertFalse(obj.field1)
         self.assertTrue(obj.field2)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_queryset_archived(self):
         """
         Test the custom queryset ``archived()`` method correctly filters to
@@ -616,7 +637,7 @@ class ArchivableTestCase(TestCase):
         with self.assertNumQueries(1):
             self.assertEqual(self.model.objects.filter(field1=True).archived().count(), 2)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_queryset_unarchive(self):
         """
         Test the custom queryset ``unarchived()`` method correctly filters to
@@ -660,7 +681,7 @@ class VersioningTestCase(TestCase):
         
         return self.model.objects.create(**kwargs)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_save_version_increment(self):
         """
         Test the version field is correctly auto-incremented when the ``save``
@@ -691,7 +712,7 @@ class VersioningTestCase(TestCase):
         self.assertFalse(obj.field1)      # should be modified
         self.assertTrue(obj.field2)       # should not be modified (not listed in update_fields)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_multiple_save_version_increment(self):
         """
         Test the version field is correctly auto-incremented when the ``save``
@@ -710,7 +731,7 @@ class VersioningTestCase(TestCase):
         obj.refresh_from_db()
         self.assertEqual(obj.version, 3)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_version_inaccessible_after_increment(self):
         """
         Test the version field is no longer accessible after it has been
@@ -728,7 +749,7 @@ class VersioningTestCase(TestCase):
         with self.assertRaises(self.model.AmbiguousVersionError):
             bool(obj.version)  # bool() used purely to force evaluation of SimpleLazyObject
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_manager_update_version_increment(self):
         """
         Test the version field is correctly auto-incremented when the ``update``
@@ -748,7 +769,7 @@ class VersioningTestCase(TestCase):
         obj.refresh_from_db()
         self.assertEqual(obj.version, 2)
     
-    @override_settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False)
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_queryset_update_version_increment(self):
         """
         Test the version field is correctly auto-incremented when the ``update``

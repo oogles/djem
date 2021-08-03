@@ -5,10 +5,10 @@ Settings
 The following settings can be added to your project's ``settings.py`` file to customise the behaviour of Djem features.
 
 
-.. setting:: DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE
+.. setting:: DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE
 
-``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
-=========================================
+``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE``
+=======================================
 
 Default: ``True``
 
@@ -16,7 +16,7 @@ By default, the :meth:`~djem.models.Auditable.save` method of :class:`~djem.mode
 
 Djem provides :class:`~djem.forms.AuditableForm` and :class:`~djem.forms.UserSaveMixin` to enable Django ``ModelForms`` to work with models making use of ``Auditable``. But if you can't use similar wrappers around other third party code invoking these methods, this setting can help.
 
-Setting ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "required" nature of the ``user`` argument to :meth:`~djem.models.Auditable.save`/:meth:`~djem.models.AuditableQuerySet.update`. It will still be accepted, and will still be used as per usual if it is provided. But if it is not provided, no exception will be raised, and the fields that would ordinarily be populated by it will simply be left alone.
+Setting ``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE`` to ``False`` removes the "required" nature of the ``user`` argument to :meth:`~djem.models.Auditable.save`/:meth:`~djem.models.AuditableQuerySet.update`. It will still be accepted, and will still be used as per usual if it is provided. But if it is not provided, no exception will be raised, and the fields that would ordinarily be populated by it will simply be left alone.
 
 .. warning::
 

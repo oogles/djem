@@ -262,11 +262,16 @@ class AuditableQuerySet(models.QuerySet):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
         are always updated. The ``user`` argument is required and must be passed
-        a ``User`` instance, unless the ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        a ``User`` instance, unless the ``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE``
         setting is ``False``.
         """
         
-        require_user = getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
+        # TODO: Remove fallback setting in 1.0
+        require_user = getattr(
+            settings,
+            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
+            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
+        )
         if require_user and not user:
             raise TypeError("save() requires the 'user' argument")
         
@@ -337,11 +342,16 @@ class Auditable(models.Model):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
         are always updated. The ``user`` argument is required and must be passed
-        a ``User`` instance, unless the ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        a ``User`` instance, unless the ``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE``
         setting is ``False``.
         """
         
-        require_user = getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)
+        # TODO: Remove fallback setting in 1.0
+        require_user = getattr(
+            settings,
+            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
+            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
+        )
         if require_user and not user:
             raise TypeError("save() requires the 'user' argument")
         
