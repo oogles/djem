@@ -71,16 +71,16 @@ Mixins
     :class:`~djem.forms.UserSaveMixin`
         A ``ModelForm`` mixin to add support for ``Auditable`` models, for forms that already have a known user.
 
-``ArchivableMixin``
--------------------
+``Archivable``
+--------------
 
-.. class:: ArchivableMixin()
+.. class:: Archivable()
 
-    ``ArchivableMixin`` is a model mixin class that provides:
+    ``Archivable`` is a model mixin class that provides:
 
     * An ``is_archived`` Boolean field, defaulting to ``False``.
     * An overridden ``objects`` Manager that provides access to the custom :class:`ArchivableQuerySet`.
-    * Support for :ref:`archiving and unarchiving <archivablemixin-archiving-unarchiving>`, both at the instance level and in bulk via :class:`ArchivableQuerySet`.
+    * Methods for :ref:`archiving and unarchiving <archivable-archiving-unarchiving>`
 
     .. automethod:: archive
     .. automethod:: unarchive
@@ -88,7 +88,7 @@ Mixins
 .. seealso::
 
     :class:`ArchivableQuerySet`
-        The custom QuerySet used by ``ArchivableMixin``.
+        The custom QuerySet used by ``Archivable``.
 
 ``VersioningMixin``
 -------------------
@@ -131,7 +131,7 @@ QuerySets
 
 .. class:: ArchivableQuerySet(\*args, \*\*kwargs)
 
-    ``ArchivableQuerySet`` provides custom functionality pertaining to the ``is_archived`` field provided by :class:`~djem.models.ArchivableMixin`.
+    ``ArchivableQuerySet`` provides custom functionality pertaining to the ``is_archived`` field provided by :class:`~djem.models.Archivable`.
 
     .. automethod:: archived
 
@@ -157,4 +157,4 @@ QuerySets
 
 .. class:: StaticAbstract()
 
-    ``StaticAbstract`` is a combination of :class:`Auditable`, :class:`ArchivableMixin` and :class:`VersioningMixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins.
+    ``StaticAbstract`` is a combination of :class:`Auditable`, :class:`Archivable` and :class:`VersioningMixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins.

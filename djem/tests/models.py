@@ -3,8 +3,8 @@ from django.core.exceptions import PermissionDenied
 from django.db import models
 
 from djem.models import (
-    ArchivableMixin, Auditable, LogMixin, OLPMixin, StaticAbstract,
-    TimeZoneField, VersioningMixin
+    Archivable, Auditable, LogMixin, OLPMixin, StaticAbstract, TimeZoneField,
+    VersioningMixin
 )
 
 
@@ -24,9 +24,9 @@ class AuditableTest(Auditable, models.Model):
         return user.pk == self.user_created_id
 
 
-class ArchivableTest(ArchivableMixin, models.Model):
+class ArchivableTest(Archivable, models.Model):
     """
-    This model provides a concrete model with the ArchivableMixin for testing.
+    This model provides a concrete model with the Archivable for testing.
     """
     
     field1 = models.BooleanField(default=True)

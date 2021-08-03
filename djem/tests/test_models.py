@@ -28,14 +28,14 @@ class CommonInfoTestCase(TestCase):
         
         from djem.models import CommonInfoMixin
         
-        class TestModel(CommonInfoMixin):
+        class CommonInfoMixinTestModel(CommonInfoMixin):
             pass
         
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered
             warnings.simplefilter("always")
             
-            TestModel()
+            CommonInfoMixinTestModel()
             
             self.assertEqual(len(w), 1)
             self.assertIs(w[-1].category, DeprecationWarning)
@@ -58,6 +58,29 @@ class CommonInfoTestCase(TestCase):
             self.assertIs(w[-1].category, DeprecationWarning)
             self.assertIn(
                 'Use of CommonInfoQuerySet is deprecated, use AuditableQuerySet instead',
+                str(w[-1].message)
+            )
+
+
+class ArchivableMixinTestCase:#(TestCase):
+    
+    def test_deprecation_warning(self):
+        
+        from djem.models import ArchivableMixin
+        
+        class ArchivableMixinTestModel(ArchivableMixin):
+            pass
+        
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered
+            warnings.simplefilter("always")
+            
+            ArchivableMixinTestModel()
+            
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[-1].category, DeprecationWarning)
+            self.assertIn(
+                'Use of ArchivableMixin is deprecated, use Archivable instead',
                 str(w[-1].message)
             )
 
@@ -494,15 +517,14 @@ class AuditableTestCase(TestCase):
 
 class ArchivableTestCase(TestCase):
     """
-    Tests the behaviour of the ``ArchivableMixin`` class, when mixed into a
-    model.
+    Tests the behaviour of the ``Archivable`` class, when mixed into a model.
     """
     
     #
     # These tests use the class-level "model" attribute and the create_instance()
     # method so they can be applied to other models (such as StaticTest) in
-    # subclasses, in order to test the ArchivableMixin's behaviour when mixed
-    # in with others (Auditable, Versionable).
+    # subclasses, in order to test the Archivable's behaviour when mixed in
+    # with others (Auditable, Versionable).
     # The tests are decorated so they don't raise an exception when calling the
     # save() method without a user argument if they are called on a model that
     # is mixed into Auditable.

@@ -226,37 +226,37 @@ Ownership checking is also available via a ``Auditable`` model's manager and que
     []
 
 
-.. _archivablemixin:
+.. _archivable:
 
-ArchivableMixin
-===============
+Archivable
+==========
 
-The :class:`ArchivableMixin` class is designed as a mixin for Django models, providing:
+The :class:`Archivable` class is designed as a mixin for Django models, providing:
 
 * An ``is_archived`` Boolean field, defaulting to ``False``.
 * A custom manager/queryset with shortcuts for filtering on the ``is_archived`` field.
-* Support for easily :ref:`archiving and unarchiving <archivablemixin-archiving-unarchiving>` an instance.
+* Support for easily :ref:`archiving and unarchiving <archivable-archiving-unarchiving>` an instance.
 
 Usage
 -----
 
-To make use of :class:`ArchivableMixin`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
+To make use of :class:`Archivable`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
 
 .. code-block:: python
 
     from django.db import models
-    from djem.models import ArchivableMixin
+    from djem.models import Archivable
 
-    class ExampleModel(ArchivableMixin, models.Model):
+    class ExampleModel(Archivable, models.Model):
 
         name = models.CharField(max_length=64)
 
-.. _archivablemixin-archiving-unarchiving:
+.. _archivable-archiving-unarchiving:
 
 Archiving and unarchiving
 -------------------------
 
-Instances of :class:`~ArchivableMixin` have the :meth:`~ArchivableMixin.archive` and :meth:`~ArchivableMixin.unarchive` methods. These set the ``is_archived`` flag of the instance to ``True`` or ``False``, respectively, and save the instance. Any arguments provided to them are passed through to their internal calls to ``save()``.
+Instances of :class:`Archivable` have the :meth:`~Archivable.archive` and :meth:`~Archivable.unarchive` methods. These set the ``is_archived`` flag of the instance to ``True`` or ``False``, respectively, and save the instance. Any arguments provided to them are passed through to their internal calls to ``save()``.
 
 .. code-block:: python
 
@@ -277,7 +277,7 @@ Instances of :class:`~ArchivableMixin` have the :meth:`~ArchivableMixin.archive`
 Filtering shortcuts
 -------------------
 
-:class:`ArchivableMixin` uses the custom :class:`ArchivableQuerySet`, which provides the :meth:`~ArchivableQuerySet.archived` and :meth:`~ArchivableQuerySet.unarchived` methods. These methods filter the queryset to records with ``is_archived=True`` or ``is_archived=False``, respectively. They are accessible both at the manager and queryset level.
+:class:`Archivable` uses the custom :class:`ArchivableQuerySet`, which provides the :meth:`~ArchivableQuerySet.archived` and :meth:`~ArchivableQuerySet.unarchived` methods. These methods filter the queryset to records with ``is_archived=True`` or ``is_archived=False``, respectively. They are accessible both at the manager and queryset level.
 
 .. code-block:: python
 
@@ -295,7 +295,7 @@ Filtering shortcuts
     0
 
 .. versionchanged:: 0.7
-    Previous versions of Djem used three different managers - ``objects``, ``live`` and ``archived`` - to provide access to querysets with various preset filters on the ``is_archived`` field. This didn't allow for applying the filters if a queryset was obtained by other means (e.g. via a ``ManyToManyField`` related manager) and made it more difficult to extend the manager (if the model inheriting from ``ArchivableMixin`` needed its own custom manager/queryset).
+    Previous versions of Djem used three different managers - ``objects``, ``live`` and ``archived`` - to provide access to querysets with various preset filters on the ``is_archived`` field. This didn't allow for applying the filters if a queryset was obtained by other means (e.g. via a ``ManyToManyField`` related manager) and made it more difficult to extend the manager (if the model inheriting from ``Archivable`` needed its own custom manager/queryset).
 
 
 .. _versioningmixin:
@@ -347,14 +347,14 @@ Mixing Mixins
 
 A model can include any combination of the above mixins. However, since they all use custom managers/querysets to provide additional functionality unique to them, a model using multiple mixins will need to provide its own manager/queryset that incorporates the functionality of each. The custom querysets have been designed to make this as simple as possible, without any additional customisation necessary.
 
-For a ready-made combination of all three mixins (:ref:`auditable`, :ref:`archivablemixin` and :ref:`versioningmixin`), see :ref:`staticabstract`.
+For a ready-made combination of all three mixins (:ref:`auditable`, :ref:`archivable` and :ref:`versioningmixin`), see :ref:`staticabstract`.
 
-The following is an example of a model using the :ref:`auditable` and :ref:`archivablemixin`:
+The following is an example of a model using the :ref:`auditable` and :ref:`archivable`:
 
 .. code-block:: python
 
     from django.db import models
-    from djem.models import ArchivableMixin, Auditable
+    from djem.models import Archivable, Auditable
     from djem.managers import ArchivableQuerySet, AuditableQuerySet
 
     class ExampleQuerySet(AuditableQuerySet, ArchivableQuerySet):
@@ -363,7 +363,7 @@ The following is an example of a model using the :ref:`auditable` and :ref:`arch
 
     ExampleManager = models.Manager.from_queryset(ExampleQuerySet)
 
-    class ExampleModel(Auditable, ArchivableMixin, models.Model):
+    class ExampleModel(Auditable, Archivable, models.Model):
 
         name = models.CharField(max_length=64)
 
@@ -375,11 +375,11 @@ The following is an example of a model using the :ref:`auditable` and :ref:`arch
 StaticAbstract
 ==============
 
-:class:`StaticAbstract` is a combination of :ref:`auditable`, :ref:`archivablemixin` and :ref:`versioningmixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins, including:
+:class:`StaticAbstract` is a combination of :ref:`auditable`, :ref:`archivable` and :ref:`versioningmixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins, including:
 
 * :ref:`Maintaining the accuracy <auditable-maintaining-accuracy>` of ``date_modified`` and ``user_modified`` as changes are made.
 * Automatically and :ref:`atomically incrementing <versioningmixin-incrementing-version>` ``version`` as changes are made.
-* Allowing :ref:`archiving and unarchiving <archivablemixin-archiving-unarchiving>`.
+* Allowing :ref:`archiving and unarchiving <archivable-archiving-unarchiving>`.
 * Providing :ref:`ownership checking <auditable-ownership-checking>`.
 
 Usage

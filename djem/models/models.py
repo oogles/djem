@@ -16,11 +16,10 @@ whitespace_regex = re.compile(r'\W+')
 
 __all__ = (
     'LogMixin', 'OLPMixin',
-    'AuditableQuerySet', 'Auditable',
-    'CommonInfoQuerySet', 'CommonInfoMixin',
-    'ArchivableQuerySet', 'ArchivableMixin',
-    'VersioningQuerySet', 'VersioningMixin',
-    'StaticAbstractQuerySet', 'StaticAbstract',
+    'Auditable', 'AuditableQuerySet', 'CommonInfoMixin', 'CommonInfoQuerySet',
+    'Archivable', 'ArchivableQuerySet', 'ArchivableMixin',
+    'VersioningMixin', 'VersioningQuerySet',
+    'StaticAbstract', 'StaticAbstractQuerySet',
 )
 
 
@@ -415,7 +414,7 @@ class CommonInfoMixin(Auditable):
 class ArchivableQuerySet(models.QuerySet):
     """
     Provides custom functionality pertaining to the ``is_archived`` field
-    provided by ``ArchivableMixin``.
+    provided by ``Archivable``.
     """
     
     def archived(self):
@@ -433,7 +432,7 @@ class ArchivableQuerySet(models.QuerySet):
         return self.filter(is_archived=False)
 
 
-class ArchivableMixin(models.Model):
+class Archivable(models.Model):
     """
     Model mixin that provides an ``is_archived`` Boolean field, multiple
     Managers to access querysets filtered on that flag and additional instance
@@ -484,6 +483,20 @@ class ArchivableMixin(models.Model):
         
         self.is_archived = False
         self.save(*args, **kwargs)
+
+
+# Backwards compat.
+# TODO: Remove in 1.0
+class ArchivableMixin(Archivable):
+    
+    def __init__(self, *args, **kwargs):
+        
+        warnings.warn('Use of ArchivableMixin is deprecated, use Archivable instead.', DeprecationWarning)
+        
+        super().__init__(*args, **kwargs)
+    
+    class Meta:
+        abstract = True
 
 
 class VersioningQuerySet(models.QuerySet):
@@ -570,10 +583,10 @@ class StaticAbstractQuerySet(AuditableQuerySet, ArchivableQuerySet, VersioningQu
     pass
 
 
-class StaticAbstract(Auditable, ArchivableMixin, VersioningMixin, models.Model):
+class StaticAbstract(Auditable, Archivable, VersioningMixin, models.Model):
     """
     Useful abstract base model combining the functionality of Auditable,
-    ArchivableMixing and VersioningMixin.
+    Archivable and VersioningMixin.
     """
     
     objects = models.Manager.from_queryset(StaticAbstractQuerySet)()
