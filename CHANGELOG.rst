@@ -21,7 +21,7 @@ A number of features are renamed. In all cases, the old names remain available f
 * Added ``DJEM_PERM_LOG_VERBOSITY`` setting
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods
 * Added ``ajax_login_required()`` decorator
-* Added ``UserSaveMixin`` for forms
+* Added ``UserSavable`` mixin for forms
 * Removed default implementations of ``_user_can_change_*()`` and ``_user_can_delete_*()`` on ``Auditable`` - this was far too specific a use-case to be the default
 * Removed ``ArchivableQuerySet``'s ``archive()`` and ``unarchive()`` methods
 * Removed ``Archivable``'s ``live`` and ``archived`` Managers

@@ -6,10 +6,10 @@ Form Classes and Mixins
 
 .. currentmodule:: djem.forms
 
-``UserSaveMixin``
-=================
+``UserSavable``
+===============
 
-.. autoclass:: UserSaveMixin
+.. autoclass:: UserSavable
 
 
 ``AuditableForm``

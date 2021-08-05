@@ -101,7 +101,7 @@ Like :meth:`Auditable.save`, the ``Auditable`` queryset's :meth:`~AuditableQuery
 Using forms
 ~~~~~~~~~~~
 
-The ``ModelForm`` is core to any Django web application. For compatibility with :class:`Auditable` (i.e. ensuring a ``user`` argument is passed to the :meth:`Auditable.save` method), Djem provides :class:`~djem.forms.AuditableForm` and :class:`~djem.forms.UserSaveMixin`.
+The ``ModelForm`` is core to any Django web application. For compatibility with :class:`Auditable` (i.e. ensuring a ``user`` argument is passed to the :meth:`Auditable.save` method), Djem provides :class:`~djem.forms.AuditableForm` and :class:`~djem.forms.UserSavable`.
 
 :class:`~djem.forms.AuditableForm` is a simple wrapper around ``ModelForm``, and is designed to be used as a replacement to it for forms based on ``Auditable`` models. It takes a ``User`` instance as a constructor argument, giving it a known user to pass to the model's ``save()`` method when the form is saved.
 
@@ -124,15 +124,15 @@ The ``ModelForm`` is core to any Django web application. For compatibility with 
             form.save()
         #...
 
-Alternatively, :class:`~djem.forms.UserSaveMixin` is a mixin for ``ModelForm``, and is designed to be used for forms that already accept and store a known user. Unlike :class:`~djem.forms.AuditableForm`, it does not modify the constructor, but does assume a ``self.user`` attribute is available to pass to the model's ``save()`` method when the form is saved.
+Alternatively, :class:`~djem.forms.UserSavable` is a mixin for ``ModelForm``, and is designed to be used for forms that already accept and store a known user. Unlike :class:`~djem.forms.AuditableForm`, it does not modify the constructor, but does assume a ``self.user`` attribute is available to pass to the model's ``save()`` method when the form is saved.
 
 .. code-block:: python
 
     # forms.py
     from django import forms
-    from djem.forms import UserSaveMixin
+    from djem.forms import UserSavable
 
-    class ExampleForm(UserSaveMixin, forms.ModelForm):
+    class ExampleForm(UserSavable, forms.ModelForm):
 
         def __init__(self, *args, user=None, **kwargs):
 
@@ -155,7 +155,7 @@ Alternatively, :class:`~djem.forms.UserSaveMixin` is a mixin for ``ModelForm``, 
 Caveats and workarounds
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Obviously any code that calls a model's ``save()`` method or a queryset's ``update()`` method will need to be updated to pass the ``user`` argument for models that incorporate :class:`Auditable`. This may not always be possible for third party code. :class:`~djem.forms.AuditableForm`/:class:`~djem.forms.UserSaveMixin` solve this problem for one common occurrence, by providing wrappers around Django's ``ModelForm.save()`` method, but there are plenty of others. E.g. the queryset methods ``create()`` and ``get_or_create()``, which are not currently supported.
+Obviously any code that calls a model's ``save()`` method or a queryset's ``update()`` method will need to be updated to pass the ``user`` argument for models that incorporate :class:`Auditable`. This may not always be possible for third party code. :class:`~djem.forms.AuditableForm`/:class:`~djem.forms.UserSavable` solve this problem for one common occurrence, by providing wrappers around Django's ``ModelForm.save()`` method, but there are plenty of others. E.g. the queryset methods ``create()`` and ``get_or_create()``, which are not currently supported.
 
 If it is not feasible to customise code that calls these methods, it *is* possible to disable the requirement of the ``user`` argument. This can be done by setting :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` to ``False`` in ``settings.py``:
 

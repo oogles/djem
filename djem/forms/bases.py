@@ -3,7 +3,7 @@ import warnings
 from django import forms
 
 
-class UserSaveMixin:
+class UserSavable:
     """
     A mixin for a Django ``ModelForm`` that adds support for models using the
     :class:`~djem.models.Auditable` model mixin. It handles providing a user
@@ -32,7 +32,7 @@ class UserSaveMixin:
         return instance
 
 
-class AuditableForm(UserSaveMixin, forms.ModelForm):
+class AuditableForm(UserSavable, forms.ModelForm):
     """
     A Django ``ModelForm`` that is customised to support models using the
     :class:`~djem.models.Auditable` model mixin. It handles providing a user
@@ -46,7 +46,7 @@ class AuditableForm(UserSaveMixin, forms.ModelForm):
     
     For a mixin that provides the same customisation of the ``save()`` method
     without the extra constructor argument (e.g. for use by forms that already
-    accept and store a known user), see :class:`UserSaveMixin`.
+    accept and store a known user), see :class:`UserSavable`.
     """
     
     def __init__(self, *args, user=None, **kwargs):

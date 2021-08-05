@@ -68,7 +68,7 @@ Mixins
     :class:`~djem.forms.AuditableForm`
         A ``ModelForm`` subclass that supports ``Auditable`` models.
 
-    :class:`~djem.forms.UserSaveMixin`
+    :class:`~djem.forms.UserSavable`
         A ``ModelForm`` mixin to add support for ``Auditable`` models, for forms that already have a known user.
 
 ``Archivable``

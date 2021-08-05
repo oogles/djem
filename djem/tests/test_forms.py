@@ -4,13 +4,13 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from djem.forms import AuditableForm, CommonInfoForm, TimeZoneField, UserSaveMixin
+from djem.forms import AuditableForm, CommonInfoForm, TimeZoneField, UserSavable
 from djem.utils.dt import TIMEZONE_CHOICES, TimeZoneHelper
 
 from .models import StaticTest, TimeZoneTest
 
 
-class UserSaveMixinTestForm(UserSaveMixin, forms.ModelForm):
+class UserSavableTestForm(UserSavable, forms.ModelForm):
     
     def __init__(self, *args, user=None, **kwargs):
         
@@ -55,7 +55,7 @@ class TimeZoneFieldTestForm4(forms.Form):
     timezone = TimeZoneField(choices=TIMEZONE_CHOICES[:10])
 
 
-class UserSaveMixinTestCase(TestCase):
+class UserSavableTestCase(TestCase):
     
     @classmethod
     def setUpTestData(cls):
@@ -68,7 +68,7 @@ class UserSaveMixinTestCase(TestCase):
         (or no ``commit`` argument at all).
         """
         
-        form = UserSaveMixinTestForm({'test': True}, user=self.user)
+        form = UserSavableTestForm({'test': True}, user=self.user)
         
         with self.assertNumQueries(1):
             instance = form.save()
@@ -89,7 +89,7 @@ class UserSaveMixinTestCase(TestCase):
         called with ``commit=False``.
         """
         
-        form = UserSaveMixinTestForm({'test': True}, user=self.user)
+        form = UserSavableTestForm({'test': True}, user=self.user)
         
         with self.assertNumQueries(0):
             instance = form.save(commit=False)
