@@ -10,7 +10,7 @@ Requirements
 
 .. currentmodule:: djem
 
-* Django 1.11+
+* Django 2.2+
 * `pytz <http://pytz.sourceforge.net/>`_ is required to make use of :class:`models.TimeZoneField`, :class:`forms.TimeZoneField` and :class:`~utils.dt.TimeZoneHelper`.
 
 
@@ -30,8 +30,16 @@ Features
 .. toctree::
     :maxdepth: 2
 
-    topics/index
+    topics/permissions/index
+    topics/logging
+    topics/models
+    topics/forms
+    topics/pagination
+    topics/ajax
+    topics/testing
+    topics/utils
     ref/index
+    changelog
 
 
 License

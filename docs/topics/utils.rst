@@ -2,7 +2,7 @@
 Utils
 =====
 
-.. module:: djem
+.. currentmodule:: djem
 
 ``UNDEFINED``
 =============
