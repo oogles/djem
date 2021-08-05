@@ -2,8 +2,8 @@
 Change Log
 ==========
 
-0.7
-===
+0.7 (unreleased)
+================
 
 A number of features are renamed. In all cases, the old names remain available for backwards compatibility, but are deprecated.
 
@@ -28,28 +28,28 @@ A number of features are renamed. In all cases, the old names remain available f
 * Removed explicit ``Manager`` classes for mixins
 * Moved custom ``QuerySet`` classes for mixins into ``djem.models.models``
 
-0.6.4
-=====
+0.6.4 (2018-12-06)
+==================
 
 * Fixed setup.py to include ``include_package_data=True``
 
-0.6.3
-=====
+0.6.3 (2018-12-06)
+==================
 
 * Updated MANIFEST.in to include the templates directory
 
-0.6.2
-=====
+0.6.2 (2018-03-25)
+==================
 
 * Fixed #2: Object level access now defaults open when no model method exists to define it explicitly
 
-0.6.1
-=====
+0.6.1 (2018-03-02)
+==================
 
 * Updated PyPi details
 
-0.6
-===
+0.6 (2018-03-02)
+================
 
 * Renamed project
 * Added ``csrfify_ajax`` template tag
@@ -62,8 +62,8 @@ A number of features are renamed. In all cases, the old names remain available f
 * Moved ``AjaxResponse`` from ``djem.misc.AjaxResponse`` to ``djem.ajax.AjaxResponse``. Also removed shortcut import ``djem.AjaxResponse``.
 * Moved ``get_page()`` from ``djem.misc.get_page`` to ``djem.pagination.get_page``. Also removed shortcut import ``djem.get_page``.
 
-0.5
-===
+0.5 (unreleased)
+================
 
 Never released: project renaming took precedence. These features were released under 0.6, and the new project name, instead.
 
@@ -75,31 +75,31 @@ Never released: project renaming took precedence. These features were released u
 * Added inspection/prettyprint utilities for debugging
 * Added extensible ``Developer`` class as a home for shortcuts to common user-based operations useful to developers
 
-0.4.3
-=====
+0.4.3 (2016-09-17)
+==================
 
 * Added ``authenticate()`` method to ``ObjectPermissionsBackend``, fixing a bug where it broke authentication if a user's credentials were not authenticated by earlier backends
 
-0.4.2
-=====
+0.4.2 (2016-06-21)
+==================
 
 * Fixed missing commits under 0.4.1 tag
 
-0.4.1
-=====
+0.4.1 (2016-06-21)
+==================
 
 * Fixed documentation build issues on ``readthedocs.org``
 
-0.4
-===
+0.4 (2016-06-21)
+================
 
 * Added ``AjaxResponse``
 * Added ``GOODIES_COMMON_INFO_REQUIRE_USER_ON_SAVE`` setting
 * Added object-level permission support (``ObjectPermissionsBackend``, ``ifperm`` and ``ifnotperm`` template tags)
 * Updated ``CommonInfoMixin`` to provide default object-level permissions for subclasses, based on ownership
 
-0.3
-===
+0.3 (2016-03-19)
+================
 
 * Added ``TimeZoneField``/``TimeZoneHelper``
 * Cleaned code as per ``isort`` and ``flake8``
