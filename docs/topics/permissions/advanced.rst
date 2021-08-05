@@ -94,7 +94,7 @@ Automatically logging permission checks
 
 :class:`OLPMixin` leverages instance-based logging to support automatically logging all permission checks made via its overridden :meth:`~OLPMixin.has_perm` method - both model-level and object-level.
 
-Read the :doc:`documentation for the instance-based logging functionality <../logging>` provided by :class:`LogMixin` for an introduction to the system. :class:`OLPMixin` inherits from :class:`LogMixin`, and thus offers all the same features, in addition to those specific to permissions.
+Read the :doc:`documentation for the instance-based logging functionality <../logging>` provided by :class:`Loggable` for an introduction to the system. :class:`OLPMixin` inherits from :class:`Loggable`, and thus offers all the same features, in addition to those specific to permissions.
 
 There are multiple levels of automatic permission logging available, controlled via the :setting:`DJEM_PERM_LOG_VERBOSITY` setting:
 
@@ -159,8 +159,8 @@ And with a :setting:`DJEM_PERM_LOG_VERBOSITY` of ``2``:
 Log names
 ---------
 
-Retrieving automatically generated permission logs via :meth:`~LogMixin.get_log` requires knowing their name. As long as you know the name of the permission that was checked, and the primary key of the object it was checked against (where applicable), the name of the log can be easily determined:
+Retrieving automatically generated permission logs via :meth:`~Loggable.get_log` requires knowing their name. As long as you know the name of the permission that was checked, and the primary key of the object it was checked against (where applicable), the name of the log can be easily determined:
 
-For model-level permission checks: ``auto-<permission_name>`` (e.g. ``auto-inventory.delete_permission``)
+For model-level permission checks: ``auto-<permission_name>`` (e.g. ``auto-inventory.delete_product``)
 
-For object-level permission checks: ``auto-<permission_name>-<object_id>`` (e.g. ``auto-inventory.delete_permission-1375``)
+For object-level permission checks: ``auto-<permission_name>-<object_id>`` (e.g. ``auto-inventory.delete_product-1375``)

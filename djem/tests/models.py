@@ -3,7 +3,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import models
 
 from djem.models import (
-    Archivable, Auditable, LogMixin, OLPMixin, StaticAbstract, TimeZoneField,
+    Archivable, Auditable, Loggable, OLPMixin, StaticAbstract, TimeZoneField,
     Versionable
 )
 
@@ -79,9 +79,9 @@ class TimeZoneTest(models.Model):
         app_label = 'djemtest'
 
 
-class LogTest(LogMixin, models.Model):
+class LogTest(Loggable, models.Model):
     """
-    This model provides a concrete model with the LogMixin for testing.
+    This model provides a concrete model with the Loggable mixin for testing.
     """
     
     field = models.BooleanField(default=True)

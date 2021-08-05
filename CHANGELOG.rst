@@ -15,7 +15,7 @@ A number of features are renamed. In all cases, the old names remain available f
 * Renamed ``CommonInfoForm`` to ``AuditableForm``
 * Renamed ``DJEM_COMMON_INFO_USER_REQUIRED_ON_SAVE`` setting to ``DJEM_AUDITABLE_USER_REQUIRED_ON_SAVE``
 * Added ``UNDEFINED`` constant
-* Added ``LogMixin`` for instance-based logging
+* Added ``Loggable`` for instance-based logging
 * Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality
 * Added ``DJEM_UNIVERSAL_OLP`` setting
 * Added ``DJEM_PERM_LOG_VERBOSITY`` setting

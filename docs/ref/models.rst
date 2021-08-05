@@ -9,10 +9,10 @@ Model Mixins and QuerySets
 Mixins
 ======
 
-``LogMixin``
+``Loggable``
 ------------
 
-.. autoclass:: LogMixin
+.. autoclass:: Loggable
 
     Adds :doc:`instance-based logging <../topics/logging>` support to any model.
 
@@ -34,7 +34,7 @@ Mixins
 
     A mixin for a custom user model that enables additional :doc:`advanced features <../topics/permissions/advanced>` of the object-level permission system.
 
-    Inherits instance-based logging functionality from :class:`LogMixin`.
+    Inherits instance-based logging functionality from :class:`Loggable`.
 
     .. method:: has_perm(perm, obj=None)
 

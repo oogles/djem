@@ -15,7 +15,7 @@ from djem.exceptions import ModelAmbiguousVersionError
 whitespace_regex = re.compile(r'\W+')
 
 __all__ = (
-    'LogMixin', 'OLPMixin',
+    'Loggable', 'OLPMixin',
     'Auditable', 'AuditableQuerySet', 'CommonInfoMixin', 'CommonInfoQuerySet',
     'Archivable', 'ArchivableQuerySet', 'ArchivableMixin',
     'Versionable', 'VersionableQuerySet', 'VersioningMixin', 'VersioningQuerySet',
@@ -23,12 +23,12 @@ __all__ = (
 )
 
 
-class LogMixin:
+class Loggable:
     """
-    A mixin for creating, storing, and retrieving logs. Named logs are stored
-    internally on the ``LogMixin`` instance and persist for the lifetime of the
-    object. A single log is "active" at any given time and can be freely
-    appended to while it is.
+    A mixin for creating, storing, and retrieving logs on an instance. Named
+    logs are stored internally on the ``Loggable`` instance and persist for the
+    lifetime of the object. A single log is "active" at any given time and can
+    be freely appended to while it is.
     """
     
     def __init__(self, *args, **kwargs):
@@ -166,7 +166,7 @@ class LogMixin:
         return '\n'.join(log)
 
 
-class OLPMixin(LogMixin):
+class OLPMixin(Loggable):
     """
     A mixin for a custom user model that enables additional advanced features
     of the object-level permission system.
