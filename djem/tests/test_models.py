@@ -13,7 +13,7 @@ from djem.utils.dt import TimeZoneHelper
 
 from .models import (
     ArchivableTest, AuditableTest, LogTest, StaticTest, TimeZoneTest,
-    VersioningTest
+    VersionableTest
 )
 
 
@@ -22,9 +22,9 @@ def make_user(username):
     return get_user_model().objects.create_user(username, 'fakepassword')
 
 
-class CommonInfoTestCase(TestCase):
+class CommonInfoMixinTestCase(TestCase):
     
-    def test_object_deprecation_warning(self):
+    def test_mixin_deprecation_warning(self):
         
         from djem.models import CommonInfoMixin
         
@@ -62,7 +62,7 @@ class CommonInfoTestCase(TestCase):
             )
 
 
-class ArchivableMixinTestCase:#(TestCase):
+class ArchivableMixinTestCase(TestCase):
     
     def test_deprecation_warning(self):
         
@@ -81,6 +81,46 @@ class ArchivableMixinTestCase:#(TestCase):
             self.assertIs(w[-1].category, DeprecationWarning)
             self.assertIn(
                 'Use of ArchivableMixin is deprecated, use Archivable instead',
+                str(w[-1].message)
+            )
+
+
+class VersioningMixinTestCase(TestCase):
+    
+    def test_mixin_deprecation_warning(self):
+        
+        from djem.models import VersioningMixin
+        
+        class VersioningMixinTestModel(VersioningMixin):
+            pass
+        
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered
+            warnings.simplefilter("always")
+            
+            VersioningMixinTestModel()
+            
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[-1].category, DeprecationWarning)
+            self.assertIn(
+                'Use of VersioningMixin is deprecated, use Versionable instead',
+                str(w[-1].message)
+            )
+    
+    def test_queryset_deprecation_warning(self):
+        
+        from djem.models import VersioningQuerySet
+        
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered
+            warnings.simplefilter("always")
+            
+            VersioningQuerySet()
+            
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[-1].category, DeprecationWarning)
+            self.assertIn(
+                'Use of VersioningQuerySet is deprecated, use VersionableQuerySet instead',
                 str(w[-1].message)
             )
 
@@ -681,23 +721,22 @@ class ArchivableTestCase(TestCase):
             self.assertEqual(self.model.objects.filter(field1=True).unarchived().count(), 2)
 
 
-class VersioningTestCase(TestCase):
+class VersionableTestCase(TestCase):
     """
-    Tests the behaviour of the ``VersioningMixin`` class, when mixed into a
-    model.
+    Tests the behaviour of the ``Versionable`` class, when mixed into a model.
     """
     
     #
     # These tests use the class-level "model" attribute and the create_instance()
     # method so they can be applied to other models (such as StaticTest) in
-    # subclasses, in order to test the VersioningMixin's behaviour when mixed
-    # in with others (Auditable, Archivable).
+    # subclasses, in order to test the Versionable's behaviour when mixed in
+    # with others (Auditable, Archivable).
     # The tests are decorated so they don't raise an exception when calling the
     # save() method without a user argument if they are called on a model that
     # is mixed into Auditable.
     #
     
-    model = VersioningTest
+    model = VersionableTest
     
     def create_instance(self, **kwargs):
         
@@ -812,14 +851,14 @@ class VersioningTestCase(TestCase):
         self.assertEqual(obj.version, 2)
 
 
-class StaticTestCase(AuditableTestCase, ArchivableTestCase, VersioningTestCase):
+class StaticTestCase(AuditableTestCase, ArchivableTestCase, VersionableTestCase):
     
     model = StaticTest
     
     def create_instance(self, **kwargs):
         
         # Automatically add the required user created/modified values, to
-        # enable the tests inherited from ArchivableTestCase and VersioningTestCase
+        # enable the tests inherited from ArchivableTestCase and VersionableTestCase
         kwargs['user_created'] = self.user1
         kwargs['user_modified'] = self.user1
         

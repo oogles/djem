@@ -18,7 +18,7 @@ __all__ = (
     'LogMixin', 'OLPMixin',
     'Auditable', 'AuditableQuerySet', 'CommonInfoMixin', 'CommonInfoQuerySet',
     'Archivable', 'ArchivableQuerySet', 'ArchivableMixin',
-    'VersioningMixin', 'VersioningQuerySet',
+    'Versionable', 'VersionableQuerySet', 'VersioningMixin', 'VersioningQuerySet',
     'StaticAbstract', 'StaticAbstractQuerySet',
 )
 
@@ -254,7 +254,7 @@ class OLPMixin(LogMixin):
 class AuditableQuerySet(models.QuerySet):
     """
     Provides custom functionality pertaining to the fields provided by
-    ``Auditable``.
+    :class:`Auditable`.
     """
     
     def update(self, user=None, **kwargs):
@@ -414,7 +414,7 @@ class CommonInfoMixin(Auditable):
 class ArchivableQuerySet(models.QuerySet):
     """
     Provides custom functionality pertaining to the ``is_archived`` field
-    provided by ``Archivable``.
+    provided by :class:`Archivable`.
     """
     
     def archived(self):
@@ -499,10 +499,10 @@ class ArchivableMixin(Archivable):
         abstract = True
 
 
-class VersioningQuerySet(models.QuerySet):
+class VersionableQuerySet(models.QuerySet):
     """
     Provides custom functionality pertaining to the ``version`` field
-    provided by ``VersioningMixin``.
+    provided by :class:`Versionable`.
     """
     
     def update(self, **kwargs):
@@ -515,7 +515,18 @@ class VersioningQuerySet(models.QuerySet):
         return super().update(**kwargs)
 
 
-class VersioningMixin(models.Model):
+# Backwards compat.
+# TODO: Remove in 1.0
+class VersioningQuerySet(VersionableQuerySet):
+    
+    def __init__(self, *args, **kwargs):
+        
+        warnings.warn('Use of VersioningQuerySet is deprecated, use VersionableQuerySet instead.', DeprecationWarning)
+        
+        super().__init__(*args, **kwargs)
+
+
+class Versionable(models.Model):
     """
     Model mixin that provides a ``version`` field that is automatically
     incremented on every save and overridden instance and manager methods to
@@ -534,7 +545,7 @@ class VersioningMixin(models.Model):
     
     version = models.PositiveIntegerField(editable=False, default=1)
     
-    objects = models.Manager.from_queryset(VersioningQuerySet)()
+    objects = models.Manager.from_queryset(VersionableQuerySet)()
     
     class Meta:
         abstract = True
@@ -574,19 +585,33 @@ class VersioningMixin(models.Model):
             self.version = SimpleLazyObject(self.AmbiguousVersionError._raise)
 
 
-class StaticAbstractQuerySet(AuditableQuerySet, ArchivableQuerySet, VersioningQuerySet):
+# Backwards compat.
+# TODO: Remove in 1.0
+class VersioningMixin(Versionable):
+    
+    def __init__(self, *args, **kwargs):
+        
+        warnings.warn('Use of VersioningMixin is deprecated, use Versionable instead.', DeprecationWarning)
+        
+        super().__init__(*args, **kwargs)
+    
+    class Meta:
+        abstract = True
+
+
+class StaticAbstractQuerySet(AuditableQuerySet, ArchivableQuerySet, VersionableQuerySet):
     """
-    Combination of AuditableQuerySet, ArchivableQuerySet and VersioningQuerySet
+    Combination of AuditableQuerySet, ArchivableQuerySet and VersionableQuerySet
     for use by managers of models that want the functionality of all three.
     """
     
     pass
 
 
-class StaticAbstract(Auditable, Archivable, VersioningMixin, models.Model):
+class StaticAbstract(Auditable, Archivable, Versionable, models.Model):
     """
-    Useful abstract base model combining the functionality of Auditable,
-    Archivable and VersioningMixin.
+    Useful abstract base model combining the functionality of the Auditable,
+    Archivable, and Versionable mixins.
     """
     
     objects = models.Manager.from_queryset(StaticAbstractQuerySet)()

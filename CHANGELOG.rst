@@ -11,6 +11,7 @@ A number of features are renamed. In all cases, the old names remain available f
 * Dropped support for Django versions below 2.2
 * Renamed ``CommonInfoMixin`` and ``CommonInfoQuerySet`` to ``Auditable`` and ``AuditableQuerySet``, respectively
 * Renamed ``ArchivableMixin`` to ``Archivable``
+* Renamed ``VersioningMixin`` and ``VersioningQuerySet`` to ``Versionable`` and ``VersionableQuerySet``, respectively
 * Renamed ``CommonInfoForm`` to ``AuditableForm``
 * Renamed ``DJEM_COMMON_INFO_USER_REQUIRED_ON_SAVE`` setting to ``DJEM_AUDITABLE_USER_REQUIRED_ON_SAVE``
 * Added ``UNDEFINED`` constant

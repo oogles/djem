@@ -4,7 +4,7 @@ from django.db import models
 
 from djem.models import (
     Archivable, Auditable, LogMixin, OLPMixin, StaticAbstract, TimeZoneField,
-    VersioningMixin
+    Versionable
 )
 
 
@@ -36,9 +36,9 @@ class ArchivableTest(Archivable, models.Model):
         app_label = 'djemtest'
 
 
-class VersioningTest(VersioningMixin, models.Model):
+class VersionableTest(Versionable, models.Model):
     """
-    This model provides a concrete model with the VersioningMixin for testing.
+    This model provides a concrete model with the Versionable mixin for testing.
     """
     
     field1 = models.BooleanField(default=True)

@@ -90,26 +90,26 @@ Mixins
     :class:`ArchivableQuerySet`
         The custom QuerySet used by ``Archivable``.
 
-``VersioningMixin``
--------------------
+``Versionable``
+---------------
 
-.. class:: VersioningMixin()
+.. class:: Versionable()
 
-    ``VersioningMixin`` is a model mixin class that provides:
+    ``Versionable`` is a model mixin class that provides:
 
     * A ``version`` field that is automatically incremented on every save.
-    * An overridden ``objects`` Manager that provides access to the custom :class:`VersioningQuerySet`.
+    * An overridden ``objects`` Manager that provides access to the custom :class:`VersionableQuerySet`.
 
     .. automethod:: save
 
-    .. exception:: VersioningMixin.AmbiguousVersionError
+    .. exception:: Versionable.AmbiguousVersionError
 
-        A subclass of :exc:`~djem.exceptions.ModelAmbiguousVersionError` specific to the :class:`VersioningMixin` class. Raised when attempting to access the ``version`` field after it has been atomically incremented.
+        A subclass of :exc:`~djem.exceptions.ModelAmbiguousVersionError` specific to the :class:`Versionable` class. Raised when attempting to access the ``version`` field after it has been atomically incremented.
 
 .. seealso::
 
-    :class:`VersioningQuerySet`
-        The custom QuerySet used by ``VersioningMixin``.
+    :class:`VersionableQuerySet`
+        The custom QuerySet used by ``Versionable``.
 
 
 QuerySets
@@ -118,9 +118,7 @@ QuerySets
 ``AuditableQuerySet``
 ---------------------
 
-.. class:: AuditableQuerySet(\*args, \*\*kwargs)
-
-    ``AuditableQuerySet`` provides custom functionality pertaining to the fields provided by :class:`~djem.models.Auditable`.
+.. autoclass:: AuditableQuerySet
 
     .. automethod:: update
     .. automethod:: owned_by
@@ -129,9 +127,7 @@ QuerySets
 ``ArchivableQuerySet``
 ----------------------
 
-.. class:: ArchivableQuerySet(\*args, \*\*kwargs)
-
-    ``ArchivableQuerySet`` provides custom functionality pertaining to the ``is_archived`` field provided by :class:`~djem.models.Archivable`.
+.. autoclass:: ArchivableQuerySet
 
     .. automethod:: archived
 
@@ -142,12 +138,10 @@ QuerySets
         .. versionadded:: 0.7
 
 
-``VersioningQuerySet``
-----------------------
+``VersionableQuerySet``
+-----------------------
 
-.. class:: VersioningQuerySet(\*args, \*\*kwargs)
-
-    ``VersioningQuerySet`` provides custom functionality pertaining to the ``version`` field provided by :class:`~djem.models.VersioningMixin`.
+.. autoclass:: VersionableQuerySet
 
     .. automethod:: update
 
@@ -157,4 +151,4 @@ QuerySets
 
 .. class:: StaticAbstract()
 
-    ``StaticAbstract`` is a combination of :class:`Auditable`, :class:`Archivable` and :class:`VersioningMixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins.
+    ``StaticAbstract`` is a combination of :class:`Auditable`, :class:`Archivable` and :class:`Versionable`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins.

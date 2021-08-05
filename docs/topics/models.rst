@@ -298,35 +298,35 @@ Filtering shortcuts
     Previous versions of Djem used three different managers - ``objects``, ``live`` and ``archived`` - to provide access to querysets with various preset filters on the ``is_archived`` field. This didn't allow for applying the filters if a queryset was obtained by other means (e.g. via a ``ManyToManyField`` related manager) and made it more difficult to extend the manager (if the model inheriting from ``Archivable`` needed its own custom manager/queryset).
 
 
-.. _versioningmixin:
+.. _versionable:
 
-VersioningMixin
-===============
+Versionable
+===========
 
-The :class:`VersioningMixin` class is designed as a mixin for Django models, providing a ``version`` field that is automatically incremented on every save.
+The :class:`Versionable` class is designed as a mixin for Django models, providing a ``version`` field that is automatically incremented on every save.
 
 Usage
 -----
 
-To make use of :class:`VersioningMixin`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
+To make use of :class:`Versionable`, simply include it among your model's parent classes. It should be listed ahead of ``models.Model``:
 
 .. code-block:: python
 
     from django.db import models
-    from djem.models import VersioningMixin
+    from djem.models import Versionable
 
-    class ExampleModel(VersioningMixin, models.Model):
+    class ExampleModel(Versionable, models.Model):
 
         name = models.CharField(max_length=64)
 
-.. _versioningmixin-incrementing-version:
+.. _versionable-incrementing-version:
 
 Incrementing ``version``
 ------------------------
 
 Incrementation of the ``version`` field is done atomically, through the use of a Django ``F()`` expression, to avoid possible race conditions. See `Django documentation for F() expressions <https://docs.djangoproject.com/en/stable/ref/models/expressions/#django.db.models.F>`_.
 
-To ensure the ``version`` field is always kept current, :class:`VersioningMixin` overrides the :meth:`~VersioningMixin.save` method and the :meth:`~VersioningQuerySet.update` method of its custom queryset.
+To ensure the ``version`` field is always kept current, :class:`Versionable` overrides the :meth:`~Versionable.save` method and the :meth:`~VersionableQuerySet.update` method of its custom queryset.
 
 .. note::
 
@@ -335,7 +335,7 @@ To ensure the ``version`` field is always kept current, :class:`VersioningMixin`
 .. warning::
 
     Once an instance is saved and the ``F()`` expression is used to increment the version, the ``version`` field will become a Django ``Expression`` instance. At this point, it is no longer accessible as an integer. For the same reason an ``F()`` expression is used to perform the incrementation (race conditions), the new version cannot be retrieved from the database after the save and used to replace the ``Expression`` value. There is the possibility the version retrieved will not be the one that matches the rest of the values on the model. The only way to regain a usable ``version`` field after saving a model instance is requerying for the whole instance.
-    Attempting to access the ``version`` field after it has been incremented will raise a :exc:`VersioningMixin.AmbiguousVersionError` exception.
+    Attempting to access the ``version`` field after it has been incremented will raise a :exc:`Versionable.AmbiguousVersionError` exception.
 
 .. note::
 
@@ -347,7 +347,7 @@ Mixing Mixins
 
 A model can include any combination of the above mixins. However, since they all use custom managers/querysets to provide additional functionality unique to them, a model using multiple mixins will need to provide its own manager/queryset that incorporates the functionality of each. The custom querysets have been designed to make this as simple as possible, without any additional customisation necessary.
 
-For a ready-made combination of all three mixins (:ref:`auditable`, :ref:`archivable` and :ref:`versioningmixin`), see :ref:`staticabstract`.
+For a ready-made combination of all three mixins (:ref:`auditable`, :ref:`archivable` and :ref:`versionable`), see :ref:`staticabstract`.
 
 The following is an example of a model using the :ref:`auditable` and :ref:`archivable`:
 
@@ -375,10 +375,10 @@ The following is an example of a model using the :ref:`auditable` and :ref:`arch
 StaticAbstract
 ==============
 
-:class:`StaticAbstract` is a combination of :ref:`auditable`, :ref:`archivable` and :ref:`versioningmixin`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins, including:
+:class:`StaticAbstract` is a combination of :ref:`auditable`, :ref:`archivable` and :ref:`versionable`. It is designed as an abstract base class for models, rather than a mixin itself. It includes all the fields and functionality offered by each of the mixins, including:
 
 * :ref:`Maintaining the accuracy <auditable-maintaining-accuracy>` of ``date_modified`` and ``user_modified`` as changes are made.
-* Automatically and :ref:`atomically incrementing <versioningmixin-incrementing-version>` ``version`` as changes are made.
+* Automatically and :ref:`atomically incrementing <versionable-incrementing-version>` ``version`` as changes are made.
 * Allowing :ref:`archiving and unarchiving <archivable-archiving-unarchiving>`.
 * Providing :ref:`ownership checking <auditable-ownership-checking>`.
 
