@@ -168,9 +168,19 @@ class Loggable:
 
 class OLPMixin(Loggable):
     """
-    A mixin for a custom user model that enables additional advanced features
-    of the object-level permission system.
+    A companion to Django's ``PermissionsMixin`` that enables additional
+    advanced features of the object-level permission system. It is not
+    necessary to use this mixin in order to use object-level permissions,
+    it just provides additional functionality (such as logging permission
+    checks, optionally allowing superusers to be restricted by object-level
+    conditions, etc).
     """
+    
+    #
+    # NOTE: This does not *extend* `PermissionsMixin` so that it can be
+    # used along with Django's `AbstractUser`, which already includes
+    # `PermissionsMixin`.
+    #
     
     def __init__(self, *args, **kwargs):
         

@@ -28,13 +28,11 @@ Mixins
 ``OLPMixin``
 ------------
 
-.. class:: OLPMixin
+.. autoclass:: OLPMixin
+
+    Inherits instance-based logging functionality from :class:`Loggable`. For more information on the available features, see :doc:`../topics/permissions/advanced`.
 
     .. versionadded:: 0.7
-
-    A mixin for a custom user model that enables additional :doc:`advanced features <../topics/permissions/advanced>` of the object-level permission system.
-
-    Inherits instance-based logging functionality from :class:`Loggable`.
 
     .. method:: has_perm(perm, obj=None)
 
