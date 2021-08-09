@@ -5,10 +5,11 @@ import warnings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models import QuerySet
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from djem.models import TimeZoneField
+from djem.models import ArchivableQuerySet, AuditableQuerySet, MixableQuerySet, TimeZoneField
 from djem.utils.dt import TimeZoneHelper
 
 from .models import (
@@ -123,6 +124,78 @@ class VersioningMixinTestCase(TestCase):
                 'Use of VersioningQuerySet is deprecated, use VersionableQuerySet instead',
                 str(w[-1].message)
             )
+
+
+class MixableQuerySetTestCase(TestCase):
+    """
+    Tests for each included custom queryset class that makes use of the
+    MixableQueryset mixin, specifically around the use of `as_manager()`.
+    """
+    
+    def test_as_manager(self):
+        """
+        Test the as_manager() classmethod when the queryset it is called on
+        has a name ending in "queryset" and no extra querysets are provided.
+        It should return a standard Manager instance without "queryset" in
+        the name.
+        """
+        
+        manager = AuditableQuerySet.as_manager()
+        
+        self.assertEqual(manager.__class__.__name__, 'AuditableManager')
+        self.assertIs(manager._queryset_class, AuditableQuerySet)
+    
+    def test_as_manager__mixed(self):
+        """
+        Test the as_manager() classmethod when the queryset it is called on
+        has a name ending in "queryset" and extra querysets are provided. It
+        should return a combined Manager instance with a name that does not
+        contain "queryset", but does contain "AndFriends" to reflect the fact
+        it is the result of a combination.
+        """
+        
+        manager = ArchivableQuerySet.as_manager(AuditableQuerySet)
+        
+        self.assertEqual(manager.__class__.__name__, 'ArchivableAndFriendsManager')
+        self.assertTrue(issubclass(manager._queryset_class, ArchivableQuerySet))
+        self.assertTrue(issubclass(manager._queryset_class, AuditableQuerySet))
+    
+    def test_as_manager__unstripped_name(self):
+        """
+        Test the as_manager() classmethod when the queryset it is called on
+        does not have a name ending in "queryset" and no extra querysets are
+        provided. It should return a standard Manager instance with the
+        queryset's full name suffixed with "Manager".
+        """
+        
+        class OddlyNamed(MixableQuerySet, QuerySet):
+            pass
+        
+        manager = OddlyNamed.as_manager()
+        
+        self.assertEqual(manager.__class__.__name__, 'OddlyNamedManager')
+        self.assertIs(manager._queryset_class, OddlyNamed)
+    
+    def test_as_manager__unstripped_name__mixed(self):
+        """
+        Test the as_manager() classmethod when the queryset it is called on
+        does not have a name ending in "queryset" and extra querysets are
+        provided. It should return a combined Manager instance with a name
+        containing the queryset's full name, along with "AndFriends" to reflect
+        the fact it is the result of a combination.
+        """
+        
+        class OddlyNamed(MixableQuerySet, QuerySet):
+            pass
+        
+        class TestQuerySet(MixableQuerySet, QuerySet):
+            pass
+        
+        manager = OddlyNamed.as_manager(TestQuerySet)
+        
+        self.assertEqual(manager.__class__.__name__, 'OddlyNamedAndFriendsManager')
+        self.assertTrue(issubclass(manager._queryset_class, OddlyNamed))
+        self.assertTrue(issubclass(manager._queryset_class, TestQuerySet))
 
 
 class AuditableTestCase(TestCase):

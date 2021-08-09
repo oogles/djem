@@ -17,6 +17,7 @@ A number of features are renamed. In all cases, the old names remain available f
 * Added ``UNDEFINED`` constant
 * Added ``Loggable`` for instance-based logging
 * Added ``OLPMixin`` for custom user models, to support advanced OLP-related functionality
+* Added ``MixableQuerySet`` mixin for custom ``QuerySet`` classes
 * Added ``DJEM_UNIVERSAL_OLP`` setting
 * Added ``DJEM_PERM_LOG_VERBOSITY`` setting
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods

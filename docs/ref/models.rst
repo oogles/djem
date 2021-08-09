@@ -113,10 +113,22 @@ Mixins
 QuerySets
 =========
 
+``MixableQuerySet``
+-------------------
+
+.. autoclass:: MixableQuerySet
+
+    .. automethod:: as_manager
+
+
 ``AuditableQuerySet``
 ---------------------
 
 .. autoclass:: AuditableQuerySet
+
+    .. method:: as_manager
+
+        See :meth:`MixableQuerySet.as_manager`.
 
     .. automethod:: update
     .. automethod:: owned_by
@@ -126,6 +138,10 @@ QuerySets
 ----------------------
 
 .. autoclass:: ArchivableQuerySet
+
+    .. method:: as_manager
+
+        See :meth:`MixableQuerySet.as_manager`.
 
     .. automethod:: archived
 
@@ -140,6 +156,10 @@ QuerySets
 -----------------------
 
 .. autoclass:: VersionableQuerySet
+
+    .. method:: as_manager
+
+        See :meth:`MixableQuerySet.as_manager`.
 
     .. automethod:: update
 

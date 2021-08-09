@@ -345,11 +345,11 @@ To ensure the ``version`` field is always kept current, :class:`Versionable` ove
 Mixing Mixins
 =============
 
-A model can include any combination of the above mixins. However, since they all use custom managers/querysets to provide additional functionality unique to them, a model using multiple mixins will need to provide its own manager/queryset that incorporates the functionality of each. The custom querysets have been designed to make this as simple as possible, without any additional customisation necessary.
+A model can include any combination of the above mixins. However, since they all use custom managers/querysets to provide additional functionality unique to them, a model using multiple mixins will also need to specify its own manager/queryset that incorporates the functionality of each. The custom querysets have been designed to make this as simple as possible, without any additional customisation necessary. Each mixin supports a custom :meth:`~MixableQuerySet.as_manager` method that makes it even easier, as demonstrated below. This functionality is provided by the :class:`MixableQuerySet` mixin, which is also available for use in your own custom queryset classes.
 
 For a ready-made combination of all three mixins (:ref:`auditable`, :ref:`archivable` and :ref:`versionable`), see :ref:`staticabstract`.
 
-The following is an example of a model using the :ref:`auditable` and :ref:`archivable`:
+The following is an example of a model using both the :ref:`auditable` and :ref:`archivable` mixins:
 
 .. code-block:: python
 
@@ -357,17 +357,11 @@ The following is an example of a model using the :ref:`auditable` and :ref:`arch
     from djem.models import Archivable, Auditable
     from djem.managers import ArchivableQuerySet, AuditableQuerySet
 
-    class ExampleQuerySet(AuditableQuerySet, ArchivableQuerySet):
-
-        pass
-
-    ExampleManager = models.Manager.from_queryset(ExampleQuerySet)
-
     class ExampleModel(Auditable, Archivable, models.Model):
 
         name = models.CharField(max_length=64)
 
-        objects = ExampleManager()
+        objects = AuditableQuerySet.as_manager(ArchivableQuerySet)
 
 
 .. _staticabstract:

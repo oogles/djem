@@ -15,7 +15,7 @@ from djem.exceptions import ModelAmbiguousVersionError
 whitespace_regex = re.compile(r'\W+')
 
 __all__ = (
-    'Loggable', 'OLPMixin',
+    'Loggable', 'OLPMixin', 'MixableQuerySet',
     'Auditable', 'AuditableQuerySet', 'CommonInfoMixin', 'CommonInfoQuerySet',
     'Archivable', 'ArchivableQuerySet', 'ArchivableMixin',
     'Versionable', 'VersionableQuerySet', 'VersioningMixin', 'VersioningQuerySet',
@@ -261,7 +261,60 @@ class OLPMixin(Loggable):
             pass
 
 
-class AuditableQuerySet(models.QuerySet):
+class MixableQuerySet:
+    """
+    A mixin for ``QuerySet`` classes that simply provides an enhanced
+    :meth:`~MixableQuerySet.as_manager` method that can be used to combine
+    the queryset class with any number of other queryset classes automatically.
+    """
+    
+    @classmethod
+    def as_manager(cls, *other_querysets):
+        """
+        Similar to the ``as_manager`` classmethod `available on regular Django
+        queryset classes
+        <https://docs.djangoproject.com/en/stable/topics/db/managers/#creating-a-manager-with-queryset-methods>`_,
+        this returns an instance of ``Manager`` with a copy of the queryset's
+        methods. However, it also accepts *other* queryset classes as arguments
+        and includes *their* methods in the created ``Manager`` also. This
+        allows easily creating combinations of this queryset class with other
+        custom queryset classes, without needing to manually create an extra
+        class to do the grouping.
+        
+        This is only useful where the querysets being combined do not contain
+        conflicting methods. Method inheritance is supported (i.e. multiple
+        querysets can contain the same method and they will be resolved in
+        normal method resolution order), but depending on the logic of those
+        methods, they may not be compatible. In such cases, an extra class
+        resolving any incompatibilities is still required.
+        """
+        
+        #
+        # Mostly copied from Django's QuerySet.as_manager(), but extended to
+        # support combining querysets
+        #
+        
+        queryset = cls
+        base_name = cls.__name__
+        
+        # Slice "queryset" off the end of the base name if found. This just
+        # makes the name a little nicer (and shorter) in common cases.
+        if base_name.lower().endswith('queryset'):
+            base_name = base_name[:-8]
+        
+        if other_querysets:
+            # Create a single QuerySet that combines all given queryset classes
+            base_name = f'{base_name}AndFriends'
+            queryset = type(f'{base_name}QuerySet', (cls, *other_querysets), {})
+        
+        manager = models.Manager.from_queryset(queryset, f'{base_name}Manager')()
+        manager._built_with_as_manager = True
+        
+        return manager
+    as_manager.queryset_only = True
+
+
+class AuditableQuerySet(MixableQuerySet, models.QuerySet):
     """
     Provides custom functionality pertaining to the fields provided by
     :class:`Auditable`.
@@ -342,7 +395,7 @@ class Auditable(models.Model):
         on_delete=models.PROTECT
     )
     
-    objects = models.Manager.from_queryset(AuditableQuerySet)()
+    objects = AuditableQuerySet.as_manager()
     
     class Meta:
         abstract = True
@@ -421,7 +474,7 @@ class CommonInfoMixin(Auditable):
         abstract = True
 
 
-class ArchivableQuerySet(models.QuerySet):
+class ArchivableQuerySet(MixableQuerySet, models.QuerySet):
     """
     Provides custom functionality pertaining to the ``is_archived`` field
     provided by :class:`Archivable`.
@@ -451,7 +504,7 @@ class Archivable(models.Model):
     
     is_archived = models.BooleanField(default=False, db_index=True)
     
-    objects = models.Manager.from_queryset(ArchivableQuerySet)()
+    objects = ArchivableQuerySet.as_manager()
     
     class Meta:
         abstract = True
@@ -509,7 +562,7 @@ class ArchivableMixin(Archivable):
         abstract = True
 
 
-class VersionableQuerySet(models.QuerySet):
+class VersionableQuerySet(MixableQuerySet, models.QuerySet):
     """
     Provides custom functionality pertaining to the ``version`` field
     provided by :class:`Versionable`.
@@ -555,7 +608,7 @@ class Versionable(models.Model):
     
     version = models.PositiveIntegerField(editable=False, default=1)
     
-    objects = models.Manager.from_queryset(VersionableQuerySet)()
+    objects = VersionableQuerySet.as_manager()
     
     class Meta:
         abstract = True
@@ -624,7 +677,7 @@ class StaticAbstract(Auditable, Archivable, Versionable, models.Model):
     Archivable, and Versionable mixins.
     """
     
-    objects = models.Manager.from_queryset(StaticAbstractQuerySet)()
+    objects = StaticAbstractQuerySet.as_manager()
     
     class Meta:
         abstract = True
