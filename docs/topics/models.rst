@@ -84,10 +84,12 @@ The :meth:`Auditable.save` method is overridden to require a ``User`` instance a
 
     These fields will be updated even if the :meth:`~Auditable.save` method is passed a sequence of ``update_fields`` that does not include it (see `Django documentation for update_fields <https://docs.djangoproject.com/en/stable/ref/models/instances/#specifying-which-fields-to-save>`_). They will simply be appended to the list.
 
-Calling ``update()`` on the queryset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using the queryset
+~~~~~~~~~~~~~~~~~~
 
-Like :meth:`Auditable.save`, the ``Auditable`` queryset's :meth:`~AuditableQuerySet.update` method is also overridden to require a ``User`` instance as the first argument. Again, this allows the method to keep ``user_modified`` up to date as changes are made.
+Like :meth:`Auditable.save`, various methods on :class:`AuditableQuerySet` are also overridden to require a ``User`` instance as the first argument. Again, this allows the methods to set or update the user-based fields as necessary. These methods include :meth:`~AuditableQuerySet.create` and :meth:`~AuditableQuerySet.update`.
+
+The following demonstrates the use of the :meth:`~AuditableQuerySet.update` method:
 
 .. code-block:: python
 
@@ -155,7 +157,7 @@ Alternatively, :class:`~djem.forms.UserSavable` is a mixin for ``ModelForm``, an
 Caveats and workarounds
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Obviously any code that calls a model's ``save()`` method or a queryset's ``update()`` method will need to be updated to pass the ``user`` argument for models that incorporate :class:`Auditable`. This may not always be possible for third party code. :class:`~djem.forms.AuditableForm`/:class:`~djem.forms.UserSavable` solve this problem for one common occurrence, by providing wrappers around Django's ``ModelForm.save()`` method, but there are plenty of others. E.g. the queryset methods ``create()`` and ``get_or_create()``, which are not currently supported.
+Obviously any code that calls a model's ``save()`` method or various queryset methods (such as ``create()`` or ``update()``) will need to be altered to pass a user argument for models that incorporate :class:`Auditable`. This may not always be possible for third party code. :class:`~djem.forms.AuditableForm`/:class:`~djem.forms.UserSavable` solve this problem for one common occurrence, by providing wrappers around Django's ``ModelForm.save()`` method, but there are plenty of others.
 
 If it is not feasible to customise code that calls these methods, it *is* possible to disable the requirement of the ``user`` argument. This can be done by setting :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` to ``False`` in ``settings.py``:
 

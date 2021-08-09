@@ -20,6 +20,7 @@ A number of features are renamed. In all cases, the old names remain available f
 * Added ``MixableQuerySet`` mixin for custom ``QuerySet`` classes
 * Added ``DJEM_UNIVERSAL_OLP`` setting
 * Added ``DJEM_PERM_LOG_VERBOSITY`` setting
+* Added ``AuditableQuerySet`` ``create()`` method
 * Added ``ArchivableQuerySet`` ``archived()`` and ``unarchived()`` methods
 * Added ``ajax_login_required()`` decorator
 * Added ``UserSavable`` mixin for forms

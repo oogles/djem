@@ -320,12 +320,12 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
     :class:`Auditable`.
     """
     
-    def update(self, user=None, **kwargs):
+    def create(self, _user=None, **kwargs):
         """
-        Overridden to ensure the ``user_modified`` and ``date_modified`` fields
-        are always updated. The ``user`` argument is required and must be passed
-        a ``User`` instance, unless the ``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE``
-        setting is ``False``.
+        Overridden to ensure the ``user`` argument is provided to the ``save()``
+        call on the model instance. The first positional argument is the user
+        instance to pass through. It is required unless the
+        :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting is ``False``.
         """
         
         # TODO: Remove fallback setting in 1.0
@@ -334,13 +334,36 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
             'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
             getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
         )
-        if require_user and not user:
-            raise TypeError("save() requires the 'user' argument")
+        if require_user and not _user:
+            raise TypeError('create() requires the first positional argument to be a user model instance.')
+        
+        # Copied from QuerySet.create()
+        obj = self.model(**kwargs)
+        self._for_write = True
+        obj.save(_user, force_insert=True, using=self.db)
+        return obj
+    
+    def update(self, _user=None, **kwargs):
+        """
+        Overridden to ensure the ``user_modified`` and ``date_modified`` fields
+        are always updated. The first positional argument is the user instance
+        to update ``user_modified`` with. It is required unless the
+        :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting is ``False``.
+        """
+        
+        # TODO: Remove fallback setting in 1.0
+        require_user = getattr(
+            settings,
+            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
+            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
+        )
+        if require_user and not _user:
+            raise TypeError('update() requires the first positional argument to be a user model instance.')
         
         kwargs['date_modified'] = timezone.now()
         
-        if user:
-            kwargs['user_modified'] = user
+        if _user:
+            kwargs['user_modified'] = _user
         
         return super().update(**kwargs)
     

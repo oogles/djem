@@ -217,6 +217,8 @@ class AuditableTestCase(TestCase):
         self.user1 = make_user('test')
         self.user2 = make_user('test2')
     
+    # Model
+    
     def test_object_save__no_user__required(self):
         """
         Test the overridden ``save`` method correctly raises TypeError when
@@ -465,6 +467,94 @@ class AuditableTestCase(TestCase):
         self.assertEqual(obj2.date_created, obj1.date_created)
         self.assertGreater(obj2.date_modified, obj1.date_modified)
     
+    def test_object_owned_by(self):
+        """
+        Test the ``owned_by`` method of a model instance.
+        """
+        
+        obj1 = self.model()
+        obj1.save(self.user1)
+        
+        obj2 = self.model()
+        obj2.save(self.user2)
+        
+        with self.assertNumQueries(0):
+            self.assertTrue(obj1.owned_by(self.user1))
+            self.assertTrue(obj1.owned_by(self.user1.pk))
+            self.assertFalse(obj1.owned_by(self.user2))
+            
+            self.assertTrue(obj2.owned_by(self.user2))
+            self.assertTrue(obj2.owned_by(self.user2.pk))
+            self.assertFalse(obj2.owned_by(self.user1))
+    
+    # Queryset
+    
+    def test_queryset_create__user__required(self):
+        """
+        Test the overridden ``create`` method of the custom queryset passes
+        the given user through to the underlying ``save()`` call.
+        """
+        
+        self.assertEqual(self.model.objects.count(), 0)
+        
+        user = self.user1
+        
+        with self.assertNumQueries(1):
+            obj = self.model.objects.create(user)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+        self.assertEqual(obj.user_created_id, user.pk)
+        self.assertEqual(obj.user_modified_id, user.pk)
+    
+    def test_queryset_create__user__not_required(self):
+        """
+        Test the overridden ``create`` method of the custom queryset passes
+        the given user through to the underlying ``save()`` call, even when it
+        is not required.
+        """
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_create__user__required()
+    
+    def test_queryset_create__user__not_required__old_setting(self):
+        """
+        Test the overridden ``create`` method of the custom queryset passes
+        the given user through to the underlying ``save()`` call, even when it
+        is not required as per the old ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``
+        setting.
+        """
+        
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_create__user__required()
+    
+    def test_queryset_create__no_user__required(self):
+        """
+        Test the overridden ``create`` method of the custom queryset when the
+        required ``user`` argument is not provided. It should raise TypeError.
+        """
+        
+        with self.assertNumQueries(0):
+            with self.assertRaises(TypeError):
+                self.model.objects.create()
+    
+    def test_queryset_create__no_user__not_required(self):
+        """
+        Test the overridden ``create`` method of the custom queryset does not
+        attempt to pass a ``user`` argument to the underlying ``save()`` call
+        when no user is provided and it is flagged as not required.
+        """
+        
+        self.assertEqual(self.model.objects.count(), 0)
+        
+        user = self.user1
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            with self.assertNumQueries(1):
+                # No user argument used, so user-based fields must be set manually
+                self.model.objects.create(user_created=user, user_modified=user)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+    
     def test_queryset_update__user__required(self):
         """
         Test the overridden ``update`` method of the custom queryset
@@ -540,44 +630,6 @@ class AuditableTestCase(TestCase):
         self.assertEqual(self.model.objects.filter(user_modified=user).count(), 1)
         self.assertGreater(self.model.objects.first().date_modified, date_modified)
     
-    def test_manager_update(self):
-        """
-        Test the overridden ``update`` method of the custom queryset, accessed
-        from the custom manager.
-        """
-        
-        obj = self.model()
-        obj.save(self.user1)
-        date_modified = obj.date_modified
-        
-        self.assertEqual(self.model.objects.filter(user_modified=self.user1).count(), 1)
-        
-        with self.assertNumQueries(1):
-            self.model.objects.update(self.user2, field1=False)
-        
-        self.assertEqual(self.model.objects.filter(user_modified=self.user2).count(), 1)
-        self.assertGreater(self.model.objects.first().date_modified, date_modified)
-    
-    def test_object_owned_by(self):
-        """
-        Test the ``owned_by`` method of a model instance.
-        """
-        
-        obj1 = self.model()
-        obj1.save(self.user1)
-        
-        obj2 = self.model()
-        obj2.save(self.user2)
-        
-        with self.assertNumQueries(0):
-            self.assertTrue(obj1.owned_by(self.user1))
-            self.assertTrue(obj1.owned_by(self.user1.pk))
-            self.assertFalse(obj1.owned_by(self.user2))
-            
-            self.assertTrue(obj2.owned_by(self.user2))
-            self.assertTrue(obj2.owned_by(self.user2.pk))
-            self.assertFalse(obj2.owned_by(self.user1))
-    
     def test_queryset_owned_by(self):
         """
         Test the ``owned_by`` method of the custom queryset.
@@ -601,6 +653,43 @@ class AuditableTestCase(TestCase):
         
         with self.assertNumQueries(1):
             self.assertEqual(qs.owned_by(self.user1).owned_by(self.user2).count(), 0)
+    
+    # Manager
+    
+    def test_manager_create(self):
+        """
+        Test the overridden ``create`` method of the custom queryset, accessed
+        from the custom manager.
+        """
+        
+        self.assertEqual(self.model.objects.count(), 0)
+        
+        user = self.user1
+        
+        with self.assertNumQueries(1):
+            obj = self.model.objects.create(user)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+        self.assertEqual(obj.user_created_id, user.pk)
+        self.assertEqual(obj.user_modified_id, user.pk)
+    
+    def test_manager_update(self):
+        """
+        Test the overridden ``update`` method of the custom queryset, accessed
+        from the custom manager.
+        """
+        
+        obj = self.model()
+        obj.save(self.user1)
+        date_modified = obj.date_modified
+        
+        self.assertEqual(self.model.objects.filter(user_modified=self.user1).count(), 1)
+        
+        with self.assertNumQueries(1):
+            self.model.objects.update(self.user2, field1=False)
+        
+        self.assertEqual(self.model.objects.filter(user_modified=self.user2).count(), 1)
+        self.assertGreater(self.model.objects.first().date_modified, date_modified)
     
     def test_manager_owned_by(self):
         """
