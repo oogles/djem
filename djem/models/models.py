@@ -343,6 +343,36 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         obj.save(_user, force_insert=True, using=self.db)
         return obj
     
+    def _extract_model_params(self, defaults, **kwargs):
+        
+        # Used by get_or_create() to combine `defaults` and `kwargs` to form
+        # the params used by create(). Performs validation on fields, which
+        # the injected `_user` param fails. So pop `_user` from `defaults`
+        # before calling super(), and add it back afterwards.
+        
+        user = defaults.pop('_user')
+        params = super()._extract_model_params(defaults, **kwargs)
+        
+        params['_user'] = user
+        
+        return params
+    
+    def get_or_create(self, _user=None, defaults=None, **kwargs):
+        """
+        Overridden to ensure the ``user`` argument is provided to the ``save()``
+        call on the model instance, if a record needs to be created. The first
+        positional argument is the user instance to pass through. It is
+        required unless the :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE`
+        setting is ``False``.
+        """
+        
+        if defaults is None:
+            defaults = {}
+        
+        defaults['_user'] = _user
+        
+        return super().get_or_create(defaults, **kwargs)
+    
     def update(self, _user=None, **kwargs):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields

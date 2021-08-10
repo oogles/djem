@@ -131,6 +131,7 @@ QuerySets
         See :meth:`MixableQuerySet.as_manager`.
 
     .. automethod:: create
+    .. automethod:: get_or_create
     .. automethod:: update
     .. automethod:: owned_by
 

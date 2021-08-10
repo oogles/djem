@@ -500,7 +500,7 @@ class AuditableTestCase(TestCase):
         user = self.user1
         
         with self.assertNumQueries(1):
-            obj = self.model.objects.create(user)
+            obj = self.model.objects.all().create(user)
         
         self.assertEqual(self.model.objects.count(), 1)
         self.assertEqual(obj.user_created_id, user.pk)
@@ -535,7 +535,7 @@ class AuditableTestCase(TestCase):
         
         with self.assertNumQueries(0):
             with self.assertRaises(TypeError):
-                self.model.objects.create()
+                self.model.objects.all().create()
     
     def test_queryset_create__no_user__not_required(self):
         """
@@ -551,9 +551,220 @@ class AuditableTestCase(TestCase):
         with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
             with self.assertNumQueries(1):
                 # No user argument used, so user-based fields must be set manually
-                self.model.objects.create(user_created=user, user_modified=user)
+                self.model.objects.all().create(user_created=user, user_modified=user)
         
         self.assertEqual(self.model.objects.count(), 1)
+    
+    def test_queryset_get_or_create__get__user__required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        correctly retrieves the expected record when it exists, irrespective
+        of the given ``user`` argument.
+        """
+        
+        obj = self.model()
+        obj.save(self.user1)
+        date_modified = obj.date_modified
+        
+        with self.assertNumQueries(1):
+            obj, created = self.model.objects.all().get_or_create(self.user2, field1=True)
+        
+        self.assertFalse(created)
+        
+        # Object should not be modified, only retrieved
+        self.assertEqual(obj.user_modified_id, self.user1.pk)
+        self.assertEqual(obj.date_modified, date_modified)
+    
+    def test_queryset_get_or_create__get__user__not_required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        correctly retrieves the expected record when it exists, irrespective
+        of the given ``user`` argument.
+        """
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_get_or_create__get__user__required()
+    
+    def test_queryset_get_or_create__get__no_user__required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        correctly retrieves the expected record when it exists, irrespective
+        of the given ``user`` argument.
+        """
+        
+        obj = self.model()
+        obj.save(self.user1)
+        date_modified = obj.date_modified
+        
+        with self.assertNumQueries(1):
+            obj, created = self.model.objects.all().get_or_create(field1=True)
+        
+        self.assertFalse(created)
+        
+        # Object should not be modified, only retrieved
+        self.assertEqual(obj.user_modified_id, self.user1.pk)
+        self.assertEqual(obj.date_modified, date_modified)
+    
+    def test_queryset_get_or_create__get__no_user__not_required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        correctly retrieves the expected record when it exists, irrespective
+        of the given ``user`` argument.
+        """
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_get_or_create__get__no_user__required()
+    
+    def test_queryset_get_or_create__create__user__required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        passes the given user through to ``create()`` when there is no
+        existing record.
+        """
+        
+        user = self.user1
+        
+        # Create a record that doesn't match the lookup
+        obj = self.model(field1=True)
+        obj.save(self.user1)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+        
+        # Queries include the initial lookup, the insert, plus two additional
+        # queries for setting and releasing the savepoint used to handle
+        # potential get/create race conditions
+        with self.assertNumQueries(4):
+            obj, created = self.model.objects.all().get_or_create(user, field1=False)
+        
+        self.assertTrue(created)
+        
+        self.assertEqual(self.model.objects.count(), 2)
+        self.assertEqual(obj.user_created_id, user.pk)
+        self.assertEqual(obj.user_modified_id, user.pk)
+        self.assertFalse(obj.field1)
+        self.assertTrue(obj.field2)  # uses model default value
+    
+    def test_queryset_get_or_create__create__user__not_required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        passes the given user through to ``create()`` when there is no
+        existing record, even when it is not required.
+        """
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_get_or_create__create__user__required()
+    
+    def test_queryset_get_or_create__create__user__not_required__old_setting(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        passes the given user through to ``create()`` when there is no
+        existing record, even when it is not required as per the old
+        ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE`` setting.
+        """
+        
+        with self.settings(DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE=False):
+            self.test_queryset_get_or_create__create__user__required()
+    
+    def test_queryset_get_or_create__create__user__defaults(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        passes the given user through to ``create()`` when there is no
+        existing record, and when `defaults` are also provided.
+        """
+        
+        user = self.user1
+        
+        # Create a record that doesn't match the lookup
+        obj = self.model(field1=True)
+        obj.save(self.user1)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+        
+        # Queries include the initial lookup, the insert, plus two additional
+        # queries for setting and releasing the savepoint used to handle
+        # potential get/create race conditions
+        with self.assertNumQueries(4):
+            obj, created = self.model.objects.all().get_or_create(user, field1=False, defaults={'field2': False})
+        
+        self.assertTrue(created)
+        
+        self.assertEqual(self.model.objects.count(), 2)
+        self.assertEqual(obj.user_created_id, user.pk)
+        self.assertEqual(obj.user_modified_id, user.pk)
+        self.assertFalse(obj.field1)
+        self.assertFalse(obj.field2)  # modified by `defaults`
+    
+    def test_queryset_get_or_create__create__no_user__required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        when the required ``user`` argument is not provided. It should raise
+        TypeError.
+        """
+        
+        # Should execute a query to perform the lookup, then fail attempting
+        # the create. The extra three queries are for creating, rolling back,
+        # and releasing the savepoint used to handle potential get/create race
+        # conditions
+        with self.assertNumQueries(4):
+            with self.assertRaises(TypeError):
+                self.model.objects.all().get_or_create(field1=False)
+    
+    def test_queryset_get_or_create__create__no_user__not_required(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        does not attempt to pass a ``user`` argument through to ``create()``
+        when no user is provided and it is flagged as not required.
+        """
+        
+        self.assertEqual(self.model.objects.count(), 0)
+        
+        user = self.user1
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            # Queries include the initial lookup, the insert, plus two
+            # additional queries for setting and releasing the savepoint used
+            # to handle potential get/create race conditions
+            with self.assertNumQueries(4):
+                # No user argument used, so user-based fields must be set manually
+                obj, created = self.model.objects.all().get_or_create(
+                    user_created=user,
+                    user_modified=user
+                )
+        
+        self.assertTrue(created)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+        self.assertEqual(obj.user_created_id, user.pk)
+        self.assertEqual(obj.user_modified_id, user.pk)
+    
+    def test_queryset_get_or_create__create__no_user__defaults(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset
+        does not attempt to pass a ``user`` argument through to ``create()``
+        when no user is provided and it is flagged as not required, and when
+        `defaults` are also provided.
+        """
+        
+        self.assertEqual(self.model.objects.count(), 0)
+        
+        user = self.user1
+        
+        with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+            # Queries include the initial lookup, the insert, plus two
+            # additional queries for setting and releasing the savepoint used
+            # to handle potential get/create race conditions
+            with self.assertNumQueries(4):
+                # No user argument used, so user-based fields must be set manually
+                obj, created = self.model.objects.all().get_or_create(defaults={
+                    'user_created': user,
+                    'user_modified': user
+                })
+        
+        self.assertTrue(created)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+        self.assertEqual(obj.user_created_id, user.pk)
+        self.assertEqual(obj.user_modified_id, user.pk)
     
     def test_queryset_update__user__required(self):
         """
@@ -672,6 +883,52 @@ class AuditableTestCase(TestCase):
         self.assertEqual(self.model.objects.count(), 1)
         self.assertEqual(obj.user_created_id, user.pk)
         self.assertEqual(obj.user_modified_id, user.pk)
+    
+    def test_manager_get_or_create__get(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset,
+        accessed from the custom manager, when an existing record is found.
+        """
+        
+        obj = self.model()
+        obj.save(self.user1)
+        date_modified = obj.date_modified
+        
+        with self.assertNumQueries(1):
+            obj, created = self.model.objects.get_or_create(self.user2, field1=True)
+        
+        self.assertFalse(created)
+        
+        # Object should not be modified, only retrieved
+        self.assertEqual(obj.user_modified_id, self.user1.pk)
+        self.assertEqual(obj.date_modified, date_modified)
+    
+    def test_manager_get_or_create__create(self):
+        """
+        Test the overridden ``get_or_create`` method of the custom queryset,
+        accessed from the custom manager, when a new record is created.
+        """
+        
+        user = self.user1
+        
+        # Create a record that doesn't match the lookup
+        obj = self.model(field1=True)
+        obj.save(self.user1)
+        
+        self.assertEqual(self.model.objects.count(), 1)
+        
+        # Queries include the initial lookup, the insert, plus two additional
+        # queries for setting and releasing the savepoint used to handle
+        # potential get/create race conditions
+        with self.assertNumQueries(4):
+            obj, created = self.model.objects.all().get_or_create(user, field1=False)
+        
+        self.assertTrue(created)
+        
+        self.assertEqual(self.model.objects.count(), 2)
+        self.assertEqual(obj.user_created_id, user.pk)
+        self.assertEqual(obj.user_modified_id, user.pk)
+        self.assertFalse(obj.field1)
     
     def test_manager_update(self):
         """
