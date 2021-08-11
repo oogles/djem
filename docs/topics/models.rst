@@ -87,18 +87,25 @@ The :meth:`Auditable.save` method is overridden to require a ``User`` instance a
 Using the queryset
 ~~~~~~~~~~~~~~~~~~
 
-Like :meth:`Auditable.save`, various methods on :class:`AuditableQuerySet` are also overridden to require a ``User`` instance as the first argument. Again, this allows the methods to set or update the user-based fields as necessary. These methods include :meth:`~AuditableQuerySet.create`, :meth:`~AuditableQuerySet.get_or_create`, and :meth:`~AuditableQuerySet.update`.
+Like :meth:`Auditable.save`, various methods on :class:`AuditableQuerySet` are also overridden to require an additional argument providing a user model instance. Again, this allows the methods to set or update the user-based fields as necessary. These methods include :meth:`~AuditableQuerySet.create`, :meth:`~AuditableQuerySet.get_or_create`, and :meth:`~AuditableQuerySet.update`.
 
-The following demonstrates the use of the :meth:`~AuditableQuerySet.update` method:
+The following demonstrates the use of the :meth:`~AuditableQuerySet.create` and :meth:`~AuditableQuerySet.update` methods:
 
 .. code-block:: python
 
+    >>> alice = User.objects.get(username='alice')
     >>> bob = User.objects.get(username='bob')
-    >>> ExampleModel.objects.values_list('name', 'user_created__username', 'user_modified__username')
-    [("Good Example", "alice", "alice")]
-    >>> obj = ExampleModel.objects.filter(name='Good Example').update(bob, name='Great Example')
-    >>> ExampleModel.objects.values_list('name', 'user_created__username', 'user_modified__username')
-    [("Great Example", "alice", "bob")]
+    >>> obj = ExampleModel.objects.create(alice, name='Good Example')
+    >>> obj.user_created.username
+    'alice'
+    >>> obj.user_modified.username
+    'alice'
+    >>> ExampleModel.objects.filter(name='Good Example').update(bob, name='Great Example')
+    >>> obj.refresh_from_db()
+    >>> obj.user_created.username
+    'alice'
+    >>> obj.user_modified.username
+    'bob'
 
 Using forms
 ~~~~~~~~~~~

@@ -322,10 +322,11 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
     
     def create(self, _user=None, **kwargs):
         """
-        Overridden to ensure the ``user`` argument is provided to the ``save()``
-        call on the model instance. The first positional argument is the user
-        instance to pass through. It is required unless the
-        :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting is ``False``.
+        Overridden to ensure a user is provided to the ``save()`` call on the
+        model instance. The ``_user`` argument (named to reduce potential
+        conflicts with model field names) is the user instance to pass through.
+        It is required unless the :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE`
+        setting is ``False``.
         """
         
         # TODO: Remove fallback setting in 1.0
@@ -357,13 +358,13 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         
         return params
     
-    def get_or_create(self, _user=None, defaults=None, **kwargs):
+    def get_or_create(self, defaults=None, _user=None, **kwargs):
         """
-        Overridden to ensure the ``user`` argument is provided to the ``save()``
-        call on the model instance, if a record needs to be created. The first
-        positional argument is the user instance to pass through. It is
-        required unless the :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE`
-        setting is ``False``.
+        Overridden to ensure a user is provided to the ``save()`` call on the
+        model instance, if a record needs to be created. The ``_user`` argument
+        (named to reduce potential conflicts with model field names) is the
+        user instance to pass through. It is required unless the
+        :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting is ``False``.
         """
         
         if defaults is None:
@@ -376,8 +377,9 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
     def update(self, _user=None, **kwargs):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
-        are always updated. The first positional argument is the user instance
-        to update ``user_modified`` with. It is required unless the
+        are always updated. The ``_user`` argument (named to reduce potential
+        conflicts with model field names) is the user instance to update
+        ``user_modified`` with. It is required unless the
         :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting is ``False``.
         """
         
@@ -421,14 +423,14 @@ class Auditable(models.Model):
     """
     Model mixin that provides standard user and datetime fields (``user_created``,
     ``user_modified``, ``date_created`` and ``date_modified``) and overridden
-    instance and manager methods to enforce keeping those details up to date.
+    instance and queryset methods to enforce keeping those details up to date.
     
     WARNING: Models incorporating this mixin cannot be involved in any process
-    process that automatically calls ``save`` on the instance, or ``update`` on
-    on the manager/queryset, as it won't pass the required user argument.
-    For example, the queryset methods ``create`` and ``get_or_create`` will fail,
-    as will saves performed by ModelForms that aren't overridden to support the
-    custom signature.
+    process that automatically calls ``save()`` on the instance, or many
+    queryset methods that create/update record (``create()``, ``update()``,
+    etc), as it won't pass the required user argument. Any such processes will
+    require modification to support the custom method signatures, or the
+    enforcement of a known user will need to be disabled.
     """
     
     date_created = models.DateTimeField(editable=False, verbose_name='Date Created')
@@ -457,7 +459,7 @@ class Auditable(models.Model):
         """
         Overridden to ensure the ``user_modified`` and ``date_modified`` fields
         are always updated. The ``user`` argument is required and must be passed
-        a ``User`` instance, unless the ``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE``
+        a ``User`` instance, unless the :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE`
         setting is ``False``.
         """
         

@@ -567,7 +567,7 @@ class AuditableTestCase(TestCase):
         date_modified = obj.date_modified
         
         with self.assertNumQueries(1):
-            obj, created = self.model.objects.all().get_or_create(self.user2, field1=True)
+            obj, created = self.model.objects.all().get_or_create(None, self.user2, field1=True)
         
         self.assertFalse(created)
         
@@ -634,7 +634,7 @@ class AuditableTestCase(TestCase):
         # queries for setting and releasing the savepoint used to handle
         # potential get/create race conditions
         with self.assertNumQueries(4):
-            obj, created = self.model.objects.all().get_or_create(user, field1=False)
+            obj, created = self.model.objects.all().get_or_create(None, user, field1=False)
         
         self.assertTrue(created)
         
@@ -684,7 +684,8 @@ class AuditableTestCase(TestCase):
         # queries for setting and releasing the savepoint used to handle
         # potential get/create race conditions
         with self.assertNumQueries(4):
-            obj, created = self.model.objects.all().get_or_create(user, field1=False, defaults={'field2': False})
+            defaults = {'field2': False}
+            obj, created = self.model.objects.all().get_or_create(defaults, user, field1=False)
         
         self.assertTrue(created)
         
@@ -755,7 +756,7 @@ class AuditableTestCase(TestCase):
             # to handle potential get/create race conditions
             with self.assertNumQueries(4):
                 # No user argument used, so user-based fields must be set manually
-                obj, created = self.model.objects.all().get_or_create(defaults={
+                obj, created = self.model.objects.all().get_or_create({
                     'user_created': user,
                     'user_modified': user
                 })
@@ -895,7 +896,7 @@ class AuditableTestCase(TestCase):
         date_modified = obj.date_modified
         
         with self.assertNumQueries(1):
-            obj, created = self.model.objects.get_or_create(self.user2, field1=True)
+            obj, created = self.model.objects.get_or_create(None, self.user2, field1=True)
         
         self.assertFalse(created)
         
@@ -921,7 +922,7 @@ class AuditableTestCase(TestCase):
         # queries for setting and releasing the savepoint used to handle
         # potential get/create race conditions
         with self.assertNumQueries(4):
-            obj, created = self.model.objects.all().get_or_create(user, field1=False)
+            obj, created = self.model.objects.all().get_or_create(None, user, field1=False)
         
         self.assertTrue(created)
         
