@@ -87,7 +87,7 @@ The :meth:`Auditable.save` method is overridden to require a ``User`` instance a
 Using the queryset
 ~~~~~~~~~~~~~~~~~~
 
-Like :meth:`Auditable.save`, various methods on :class:`AuditableQuerySet` are also overridden to require an additional argument providing a user model instance. Again, this allows the methods to set or update the user-based fields as necessary. These methods include :meth:`~AuditableQuerySet.create`, :meth:`~AuditableQuerySet.get_or_create`, and :meth:`~AuditableQuerySet.update`.
+Like :meth:`Auditable.save`, various methods on :class:`AuditableQuerySet` are also overridden to require an additional argument providing a user model instance. Again, this allows the methods to set or update the user-based fields as necessary. These methods include :meth:`~AuditableQuerySet.create`, :meth:`~AuditableQuerySet.get_or_create`, :meth:`~AuditableQuerySet.update`, and :meth:`~AuditableQuerySet.update_or_create`.
 
 The following demonstrates the use of the :meth:`~AuditableQuerySet.create` and :meth:`~AuditableQuerySet.update` methods:
 

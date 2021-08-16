@@ -5,7 +5,8 @@ from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth.models import _user_has_perm
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, transaction
+from django.db.models.utils import resolve_callables
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
@@ -338,10 +339,16 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         if require_user and not _user:
             raise TypeError('create() requires the first positional argument to be a user model instance.')
         
-        # Copied from QuerySet.create()
+        #
+        # The below is copied from QuerySet.create() (as at Django 3.2.6) and
+        # changed to pass the `user` argument to save()
+        #
+        
         obj = self.model(**kwargs)
+        
         self._for_write = True
         obj.save(_user, force_insert=True, using=self.db)
+        
         return obj
     
     def _extract_model_params(self, defaults, **kwargs):
@@ -367,6 +374,8 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting is ``False``.
         """
         
+        # Add `_user` to `defaults` because `kwargs` are used in the lookup,
+        # but `defaults` eventually become keyword arguments passed to `create()`
         if defaults is None:
             defaults = {}
         
@@ -392,12 +401,56 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         if require_user and not _user:
             raise TypeError('update() requires the first positional argument to be a user model instance.')
         
-        kwargs['date_modified'] = timezone.now()
+        kwargs.setdefault('date_modified', timezone.now())
         
         if _user:
             kwargs['user_modified'] = _user
         
         return super().update(**kwargs)
+    
+    def update_or_create(self, defaults=None, _user=None, **kwargs):
+        """
+        Overridden to ensure a user is provided to the ``save()`` call on the
+        model instance, whether the record id being created or updated. The
+        ``_user`` argument (named to reduce potential conflicts with model
+        field names) is the user instance to pass through. It is required
+        unless the :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting
+        is ``False``.
+        """
+        
+        # TODO: Remove fallback setting in 1.0
+        require_user = getattr(
+            settings,
+            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
+            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
+        )
+        if require_user and not _user:
+            raise TypeError('create() requires the first positional argument to be a user model instance.')
+        
+        # Add `_user` to `kwargs` rather than `defaults` as `_user` is its own
+        # keyword argument to get_or_create() (which is called by super())
+        kwargs['_user'] = _user
+        
+        #
+        # The below is copied from QuerySet.update_or_create() (as at Django
+        # 3.2.6) and changed to pass the `user` argument to save()
+        #
+        
+        defaults = defaults or {}
+        self._for_write = True
+        with transaction.atomic(using=self.db):
+            # Lock the row so that a concurrent update is blocked until
+            # update_or_create() has performed its save.
+            obj, created = self.select_for_update().get_or_create(defaults, **kwargs)
+            if created:
+                return obj, created
+            
+            for k, v in resolve_callables(defaults):
+                setattr(obj, k, v)
+                
+            obj.save(_user, using=self.db)
+        
+        return obj, False
     
     def owned_by(self, user):
         """

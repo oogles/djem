@@ -133,6 +133,7 @@ QuerySets
     .. automethod:: create
     .. automethod:: get_or_create
     .. automethod:: update
+    .. automethod:: update_or_create
     .. automethod:: owned_by
 
 
