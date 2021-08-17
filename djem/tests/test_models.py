@@ -1453,9 +1453,9 @@ class VersionableTestCase(TestCase):
         return self.model.objects.create(**kwargs)
     
     @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
-    def test_save_version_increment(self):
+    def test_save__version_increment(self):
         """
-        Test the version field is correctly auto-incremented when the ``save``
+        Test the `version` field is correctly auto-incremented when the save()
         method on a model instance is called.
         """
         
@@ -1484,9 +1484,9 @@ class VersionableTestCase(TestCase):
         self.assertTrue(obj.field2)       # should not be modified (not listed in update_fields)
     
     @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
-    def test_multiple_save_version_increment(self):
+    def test_save_multiple__version_increment(self):
         """
-        Test the version field is correctly auto-incremented when the ``save``
+        Test the `version` field is correctly auto-incremented when the save()
         method on a model instance is called multiple times.
         """
         
@@ -1505,7 +1505,7 @@ class VersionableTestCase(TestCase):
     @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
     def test_version_inaccessible_after_increment(self):
         """
-        Test the version field is no longer accessible after it has been
+        Test the `version` field is no longer accessible after it has been
         atomically incremented.
         """
         
@@ -1521,29 +1521,9 @@ class VersionableTestCase(TestCase):
             bool(obj.version)  # bool() used purely to force evaluation of SimpleLazyObject
     
     @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
-    def test_manager_update_version_increment(self):
+    def test_queryset_update__version_increment(self):
         """
-        Test the version field is correctly auto-incremented when the ``update``
-        method on a model manager is called.
-        """
-        
-        obj = self.create_instance()
-        
-        # Test default value set correctly
-        self.assertEqual(obj.version, 1)
-        
-        # Increment value
-        with self.assertNumQueries(1):
-            self.model.objects.update(field1=False)
-        
-        # Test value incremented correctly
-        obj.refresh_from_db()
-        self.assertEqual(obj.version, 2)
-    
-    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
-    def test_queryset_update_version_increment(self):
-        """
-        Test the version field is correctly auto-incremented when the ``update``
+        Test the `version` field is correctly auto-incremented when the update()
         method on a model queryset is called.
         """
         
@@ -1555,6 +1535,49 @@ class VersionableTestCase(TestCase):
         # Increment value
         with self.assertNumQueries(1):
             self.model.objects.all().update(field1=False)
+        
+        # Test value incremented correctly
+        obj.refresh_from_db()
+        self.assertEqual(obj.version, 2)
+    
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
+    def test_queryset_update_or_create__version_increment(self):
+        """
+        Test the `version` field is correctly auto-incremented when the
+        update_or_create() method on a model queryset is called, and an
+        existing record is updated.
+        """
+        
+        obj = self.create_instance()
+        
+        # Test default value set correctly
+        self.assertEqual(obj.version, 1)
+        
+        # Increment value. Four queries are required due to the lookup, the
+        # update itself, plus creating/releasing the savepoint used to handle
+        # potential race conditions.
+        with self.assertNumQueries(4):
+            self.model.objects.all().update_or_create({'field1': False}, pk=obj.pk)
+        
+        # Test value incremented correctly
+        obj.refresh_from_db()
+        self.assertEqual(obj.version, 2)
+    
+    @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
+    def test_manager_update__version_increment(self):
+        """
+        Test the `version` field is correctly auto-incremented when the update()
+        method on a model manager is called.
+        """
+        
+        obj = self.create_instance()
+        
+        # Test default value set correctly
+        self.assertEqual(obj.version, 1)
+        
+        # Increment value
+        with self.assertNumQueries(1):
+            self.model.objects.update(field1=False)
         
         # Test value incremented correctly
         obj.refresh_from_db()
