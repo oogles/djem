@@ -1,4 +1,5 @@
 import re
+import warnings
 
 from django.apps import AppConfig, apps
 from django.template import engines
@@ -15,23 +16,20 @@ def setup_test_app(package, label=None):
     Setup a Django test app for the provided package to allow test-only models
     to be used.
     
-    This function should be called from myapp.tests.__init__ like so:
+    This function should be called from ``myapp.tests.__init__`` like so::
     
         setup_test_app(__package__)
     
-    Or, if a specific app label is required, like so:
+    This will create an app with the label "myapp_tests". If a specific app
+    label is required, it can be provided explicitly::
     
         setup_test_app(__package__, 'mytests')
     
-    Models defined within the package also require their app labels manually
-    set to match, e.g.:
-    
-        class MyTestModel(models.Model):
-            
-            # ...
-            
-            class Meta:
-                app_label = 'mytests'
+    Using either of the above, models can be placed in ``myapp.tests.models``
+    and be discovered and used just like regular models by the test suite. As
+    long as ``myapp.tests`` is not imported by anything that forms part of the
+    standard Django runtime environment, these models will not be picked up in
+    that environment, and will be isolated to the test suite only.
     """
     
     #
@@ -57,7 +55,7 @@ def setup_test_app(package, label=None):
         # necessary (vs raising an exception) as there are certain conditions
         # that can cause this function to be run multiple times (e.g. errors
         # during Django's initialisation can cause this).
-        return
+        warnings.warn(f'Attempted setup of duplicate test app "{label}".', RuntimeWarning)
     
     app_config = AppConfig.create(package)
     app_config.apps = apps

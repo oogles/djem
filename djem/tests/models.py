@@ -16,9 +16,6 @@ class AuditableTest(Auditable, models.Model):
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
     
-    class Meta:
-        app_label = 'djemtest'
-    
     def _user_can_change_auditabletest(self, user):
         
         return user.pk == self.user_created_id
@@ -31,9 +28,6 @@ class ArchivableTest(Archivable, models.Model):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
-    
-    class Meta:
-        app_label = 'djemtest'
 
 
 class VersionableTest(Versionable, models.Model):
@@ -43,9 +37,6 @@ class VersionableTest(Versionable, models.Model):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
-    
-    class Meta:
-        app_label = 'djemtest'
 
 
 class StaticTest(StaticAbstract):
@@ -56,9 +47,6 @@ class StaticTest(StaticAbstract):
     
     field1 = models.BooleanField(default=True)
     field2 = models.BooleanField(default=True)
-    
-    class Meta:
-        app_label = 'djemtest'
 
 
 class TimeZoneTest(models.Model):
@@ -74,9 +62,6 @@ class TimeZoneTest(models.Model):
         ('Australia/Melbourne', 'Australia/Melbourne'),
         ('invalid', 'Invalid'),
     ))
-    
-    class Meta:
-        app_label = 'djemtest'
 
 
 class LogTest(Loggable, models.Model):
@@ -85,9 +70,6 @@ class LogTest(Loggable, models.Model):
     """
     
     field = models.BooleanField(default=True)
-    
-    class Meta:
-        app_label = 'djemtest'
 
 
 class CustomUser(OLPMixin, AbstractUser):
@@ -99,9 +81,6 @@ class CustomUser(OLPMixin, AbstractUser):
     # the same fields on the regular auth.User model
     groups = models.ManyToManyField(Group, related_name='+')
     user_permissions = models.ManyToManyField(Permission, related_name='+')
-    
-    class Meta:
-        app_label = 'djemtest'
 
 
 class UserLogTest(models.Model):
@@ -110,7 +89,6 @@ class UserLogTest(models.Model):
     """
     
     class Meta:
-        app_label = 'djemtest'
         permissions = (
             ('mlp_log', 'Permission with no object-level checks'),
             ('olp_log', 'Permission with object-level checks and additional logging'),
@@ -141,7 +119,6 @@ class OLPTest(models.Model):
     group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)
     
     class Meta:
-        app_label = 'djemtest'
         permissions = (
             ('open_olptest', 'Completely open to anyone'),
             ('closed_olptest', 'Completely closed to everyone (except super users)'),
@@ -205,7 +182,6 @@ class UniversalOLPTest(models.Model):
     group = models.ForeignKey(Group, null=True, on_delete=models.PROTECT)
     
     class Meta:
-        app_label = 'djemtest'
         permissions = (
             ('open_universalolptest', 'Completely open to anyone'),
             ('closed_universalolptest', 'Completely closed to everyone (except super users)'),

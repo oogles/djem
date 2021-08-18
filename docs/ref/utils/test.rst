@@ -4,12 +4,23 @@ Test Utils
 
 .. module:: djem.utils.tests
 
+
+``setup_test_app()``
+====================
+
+.. versionadded:: 0.7
+
+.. autofunction:: setup_test_app
+
+    This solution is adapted from Simon Charette's `comment on Django ticket #7835 <https://code.djangoproject.com/ticket/7835#comment:46>`_.
+
+
 ``MessagingRequestFactory``
 ===========================
 
-.. class:: MessagingRequestFactory
+.. versionadded:: 0.6
 
-    .. versionadded:: 0.6
+.. class:: MessagingRequestFactory
 
     An extension of Django's ``RequestFactory`` `helper for tests <https://docs.djangoproject.com/en/stable/topics/testing/advanced/#the-request-factory>`_ that enables the use of the messages framework within the generated request. It does not use the standard message storage backend (as per the ``MESSAGE_STORAGE`` setting), but rather a memory-only backend that does not involve the use of sessions, cookies or any other means of persistent storage of the messages. Thus, messages need to be read in the same request they were added, or they will be lost.
 
@@ -61,9 +72,9 @@ Test Utils
 ``TemplateRendererMixin``
 =========================
 
-.. class:: TemplateRendererMixin
+.. versionadded:: 0.6
 
-    .. versionadded:: 0.6
+.. class:: TemplateRendererMixin
 
     A mixin for ``TestCase`` classes whose tests render templates from strings (as opposed to rendering them from files), using the Django template engine.
 

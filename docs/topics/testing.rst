@@ -6,6 +6,39 @@ Testing
 
 Djem includes some utilities that make writing certain types of tests easier. They are used internally within Djem's own test suite, but may well be useful elsewhere.
 
+
+Test-only models
+================
+
+.. versionadded:: 0.7
+
+It is often the case that tests are required for code that deals with models generically, and concrete example models to use in those tests may not exist. Django does not (yet) explicitly support defining models purely for testing. That is, models that do not get picked up by ``manage.py makemigrations`` or otherwise affect the live database, but only exist in the isolated test environment. But, thanks to the discussion on `Django ticket #7835 <https://code.djangoproject.com/ticket/7835>`_, the community has developed several workarounds.
+
+Djem includes an adaption of one of the cleanest solutions (at time of writing, at least), `provided by Simon Charette <https://code.djangoproject.com/ticket/7835#comment:46>`_: :func:`setup_test_app`. It requires the use of a ``tests`` package, rather than just a ``test.py`` module, but otherwise all that is necessary is a simple function call.
+
+Assuming a Django app with the name ``myapp``, simply place the following in ``myapp.tests.__init__``:
+
+.. code-block:: python
+
+    from djem.utils.tests import setup_test_app
+
+    setup_test_app(__package__)
+
+This will configure Django with an extra app, named ``myapp_tests``, and any models defined in ``myapp.tests.models`` will get picked up by the test database creation routine and added to the test database as part of this temporary app. These models can then be freely used in the test suite just like a regular model, but will not affect the live database.
+
+If the default app label (created by appending ``_tests`` to the containing app's own app label) is not suitable, it can be provided explicitly:
+
+.. code-block:: python
+
+    from djem.utils.tests import setup_test_app
+
+    setup_test_app(__package__, 'mytests')
+
+.. warning::
+
+    If the tests package, ``myapp.tests`` in the above examples, is imported by anything that forms part of the standard Django runtime environment (such as within a ``models.py`` module, or anything imported *by* a ``models.py`` module), the test-only models will **not** remain isolated to the test suite. It should not be necessary to import anything from within the test suite anywhere else in the project.
+
+
 Enhanced request factory
 ========================
 

@@ -1,4 +1,5 @@
 import pytz
+import warnings
 
 from django.apps import apps
 from django.test import SimpleTestCase
@@ -185,7 +186,15 @@ class SetupTestAppTestCase(SimpleTestCase):
         setup_test_app(self.package, '__test_label__')
         self.assertEqual(len(apps.app_configs), n + 1)
         
-        setup_test_app(self.package, '__test_label__')
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')  # ensure all warnings are triggered
+            
+            setup_test_app(self.package, '__test_label__')
+            
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[0].message, 'Attempted setup of duplicate test app "__test_label__".')
+            self.assertTrue(w[0].category, RuntimeWarning)
+        
         self.assertEqual(len(apps.app_configs), n + 1)
         
         # Uninstall the app again to avoid polluting other tests
@@ -215,7 +224,15 @@ class SetupTestAppTestCase(SimpleTestCase):
         setup_test_app(self.package)
         self.assertEqual(len(apps.app_configs), n + 1)
         
-        setup_test_app(self.package)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')  # ensure all warnings are triggered
+            
+            setup_test_app(self.package)
+            
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[0].message, 'Attempted setup of duplicate test app "djem_tests".')
+            self.assertTrue(w[0].category, RuntimeWarning)
+        
         self.assertEqual(len(apps.app_configs), n + 1)
         
         # Uninstall the app again to avoid polluting other tests
