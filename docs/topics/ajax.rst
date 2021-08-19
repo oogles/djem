@@ -11,6 +11,10 @@ Django's built in ``login_required()`` decorator is not well suited to AJAX requ
 
 Djem provides a simple alternate decorator, :func:`ajax_login_required`, to use on views that are the target of AJAX requests. Instead of issuing a redirect if the user is not authenticated, it returns a ``HttpForbiddenResponse``.
 
+.. versionadded:: 0.7
+
+    The :func:`ajax_login_required` decorator.
+
 
 Responding to AJAX requests
 ===========================

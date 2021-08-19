@@ -19,6 +19,10 @@ The :class:`Auditable` class is designed as a mixin for Django models, providing
 * Support for :ref:`ownership checking <auditable-ownership-checking>`.
 * A custom manager/queryset to assist with maintaining accuracy and checking ownership.
 
+.. versionchanged:: 0.7
+
+    The :class:`Auditable` mixin was previously called ``CommonInfoMixin``. The old name is still available for backwards compatibility, but is considered deprecated.
+
 .. warning::
 
     Using :class:`Auditable` can break code that automatically calls methods such as the model's :meth:`~Auditable.save` method, or the queryset's :meth:`~AuditableQuerySet.update` method. See :ref:`Auditable-maintaining-accuracy` for a description of the caveats of ``Auditable``, and workarounds.
@@ -107,6 +111,10 @@ The following demonstrates the use of the :meth:`~AuditableQuerySet.create` and 
     >>> obj.user_modified.username
     'bob'
 
+.. versionadded:: 0.7
+
+    The :meth:`~AuditableQuerySet.create`, :meth:`~AuditableQuerySet.get_or_create`, and :meth:`~AuditableQuerySet.update_or_create` queryset methods.
+
 Using forms
 ~~~~~~~~~~~
 
@@ -161,6 +169,14 @@ Alternatively, :class:`~djem.forms.UserSavable` is a mixin for ``ModelForm``, an
             form.save()
         #...
 
+.. versionchanged:: 0.7
+
+    :class:`~djem.forms.AuditableForm` was previously called ``CommonInfoForm``. The old name is still available for backwards compatibility, but is considered deprecated.
+
+.. versionadded:: 0.7
+
+    :class:`~djem.forms.UserSavable`
+
 Caveats and workarounds
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -173,6 +189,10 @@ If it is not feasible to customise code that calls these methods, it *is* possib
     DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE = False
 
 This allows the use of ``Auditable`` and all related functionality without the strict requirement of passing the ``user`` argument to methods that save/update the record. If passed, it will still be used as described above, but not providing it will not raise an exception. Of course, the methods won't automatically populate the appropriate fields, either. This means that ``user_created`` and ``user_modified`` will need to be manually populated when creating, and ``user_modified`` will need to be manually populated when updating.
+
+.. versionchanged:: 0.7
+
+    :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` was previously called ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``. The old setting is still available for backwards compatibility, but is considered deprecated.
 
 .. warning::
 
@@ -246,6 +266,10 @@ The :class:`Archivable` class is designed as a mixin for Django models, providin
 * A custom manager/queryset with shortcuts for filtering on the ``is_archived`` field.
 * Support for easily :ref:`archiving and unarchiving <archivable-archiving-unarchiving>` an instance.
 
+.. versionchanged:: 0.7
+
+    The :class:`Archivable` mixin was previously called ``ArchivableMixin``. The old name is still available for backwards compatibility, but is considered deprecated.
+
 Usage
 -----
 
@@ -314,6 +338,10 @@ Versionable
 
 The :class:`Versionable` class is designed as a mixin for Django models, providing a ``version`` field that is automatically incremented on every save.
 
+.. versionchanged:: 0.7
+
+    The :class:`Versionable` mixin was previously called ``VersioningMixin``. The old name is still available for backwards compatibility, but is considered deprecated.
+
 Usage
 -----
 
@@ -335,11 +363,11 @@ Incrementing ``version``
 
 Incrementation of the ``version`` field is done atomically, through the use of a Django ``F()`` expression, to avoid possible race conditions. See `Django documentation for F() expressions <https://docs.djangoproject.com/en/stable/ref/models/expressions/#django.db.models.F>`_.
 
-To ensure the ``version`` field is always kept current, :class:`Versionable` overrides the :meth:`~Versionable.save` method and the :meth:`~VersionableQuerySet.update` method of its custom queryset.
+To ensure the ``version`` field is always kept current, :class:`Versionable` overrides the :meth:`~Versionable.save` method and the :meth:`~VersionableQuerySet.update` method of its custom queryset. The ``update_or_create()`` method, while not overridden, will also increment the version appropriately.
 
 .. note::
 
-    The ``version`` field will be updated even if the ``save`` method is passed a sequence of ``update_fields`` that does not include it (see `Django documentation for update_fields <https://docs.djangoproject.com/en/stable/ref/models/instances/#specifying-which-fields-to-save>`_). It will simply be appended to the list.
+    The ``version`` field will be updated even if the ``save()`` method is passed a sequence of ``update_fields`` that does not include it (see `Django documentation for update_fields <https://docs.djangoproject.com/en/stable/ref/models/instances/#specifying-which-fields-to-save>`_). It will simply be appended to the list.
 
 .. warning::
 
@@ -371,6 +399,10 @@ The following is an example of a model using both the :ref:`auditable` and :ref:
         name = models.CharField(max_length=64)
 
         objects = AuditableQuerySet.as_manager(ArchivableQuerySet)
+
+.. versionadded:: 0.7
+
+    :class:`MixableQuerySet` and its custom :meth:`~MixableQuerySet.as_manager` method. Previously, mixin querysets had to be combined manually.
 
 
 .. _staticabstract:

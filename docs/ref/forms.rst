@@ -9,11 +9,17 @@ Form Classes and Mixins
 ``UserSavable``
 ===============
 
+.. versionadded:: 0.7
+
 .. autoclass:: UserSavable
 
 
 ``AuditableForm``
 =================
+
+.. versionchanged:: 0.7
+
+    Renamed from ``CommonInfoForm``. The old name is still available for backwards compatibility, but is considered deprecated.
 
 .. autoclass:: AuditableForm
 

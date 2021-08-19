@@ -8,6 +8,8 @@ AJAX
 ``ajax_login_required``
 =======================
 
+.. versionadded:: 0.7
+
 .. autofunction:: ajax_login_required
 
 

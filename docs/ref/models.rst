@@ -12,11 +12,11 @@ Mixins
 ``Loggable``
 ------------
 
+.. versionadded:: 0.7
+
 .. autoclass:: Loggable
 
     Adds :doc:`instance-based logging <../topics/logging>` support to any model.
-
-    .. versionadded:: 0.7
 
     .. automethod:: start_log
     .. automethod:: end_log
@@ -28,11 +28,11 @@ Mixins
 ``OLPMixin``
 ------------
 
+.. versionadded:: 0.7
+
 .. autoclass:: OLPMixin
 
     Inherits instance-based logging functionality from :class:`Loggable`. For more information on the available features, see :doc:`../topics/permissions/advanced`.
-
-    .. versionadded:: 0.7
 
     .. method:: has_perm(perm, obj=None)
 
@@ -46,6 +46,10 @@ Mixins
 
 ``Auditable``
 -------------
+
+.. versionchanged:: 0.7
+
+    Renamed from ``CommonInfoMixin``. The old name is still available for backwards compatibility, but is considered deprecated.
 
 .. class:: Auditable()
 
@@ -72,6 +76,10 @@ Mixins
 ``Archivable``
 --------------
 
+.. versionchanged:: 0.7
+
+    Renamed from ``ArchivableMixin``. The old name is still available for backwards compatibility, but is considered deprecated.
+
 .. class:: Archivable()
 
     ``Archivable`` is a model mixin class that provides:
@@ -90,6 +98,10 @@ Mixins
 
 ``Versionable``
 ---------------
+
+.. versionchanged:: 0.7
+
+    Renamed from ``VersioningMixin``. The old name is still available for backwards compatibility, but is considered deprecated.
 
 .. class:: Versionable()
 
@@ -116,6 +128,8 @@ QuerySets
 ``MixableQuerySet``
 -------------------
 
+.. versionadded:: 0.7
+
 .. autoclass:: MixableQuerySet
 
     .. automethod:: as_manager
@@ -124,6 +138,10 @@ QuerySets
 ``AuditableQuerySet``
 ---------------------
 
+.. versionchanged:: 0.7
+
+    Renamed from ``CommonInfoQuerySet``. The old name is still available for backwards compatibility, but is considered deprecated.
+
 .. autoclass:: AuditableQuerySet
 
     .. method:: as_manager
@@ -131,9 +149,18 @@ QuerySets
         See :meth:`MixableQuerySet.as_manager`.
 
     .. automethod:: create
+
+        .. versionadded:: 0.7
+
     .. automethod:: get_or_create
+
+        .. versionadded:: 0.7
+
     .. automethod:: update
     .. automethod:: update_or_create
+
+        .. versionadded:: 0.7
+
     .. automethod:: owned_by
 
 
@@ -157,6 +184,10 @@ QuerySets
 
 ``VersionableQuerySet``
 -----------------------
+
+.. versionchanged:: 0.7
+
+    Renamed from ``VersioningQuerySet``. The old name is still available for backwards compatibility, but is considered deprecated.
 
 .. autoclass:: VersionableQuerySet
 

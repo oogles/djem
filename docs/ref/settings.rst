@@ -10,6 +10,10 @@ The following settings can be added to your project's ``settings.py`` file to cu
 ``DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE``
 =======================================
 
+.. versionchanged:: 0.7
+
+    Renamed from ``DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE``. The old setting is still available for backwards compatibility, but is considered deprecated.
+
 Default: ``True``
 
 By default, the :meth:`~djem.models.Auditable.save` method of :class:`~djem.models.Auditable` and various methods of :class:`~djem.models.AuditableQuerySet` (e.g. :meth:`~djem.models.AuditableQuerySet.create`, :meth:`~djem.models.AuditableQuerySet.update`, etc) require being passed a user model instance, so they can automatically set the ``user_created`` and/or ``user_modified`` fields that ``Auditable`` provides. This behaviour can cause issues if you are using third party code that calls any of these methods, as it will not pass this required argument.
