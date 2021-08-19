@@ -6,9 +6,17 @@ from django.conf import settings
 from django.contrib.auth.models import _user_has_perm
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
-from django.db.models.utils import resolve_callables
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
+
+try:
+    from django.db.models.utils import resolve_callables
+except ImportError:  # pragma: no cover
+    # Backport resolve_callables from Django 3.1+
+    # TODO: Remove once Django 3.1+ becomes the minimum supported version
+    def resolve_callables(mapping):
+        for k, v in mapping.items():
+            yield k, v() if callable(v) else v
 
 from djem.auth import get_user_log_verbosity
 from djem.exceptions import ModelAmbiguousVersionError
