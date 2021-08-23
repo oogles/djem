@@ -1,4 +1,4 @@
-__version__ = '0.7.0a'
+__version__ = '0.7.0'
 
 # Shortcuts to quick-use utils
 from djem.utils.inspect import pp  # NOQA
