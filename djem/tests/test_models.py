@@ -140,12 +140,6 @@ class MixableQuerySetTestCase(TestCase):
         the name.
         """
         
-        #This is a deliberate linting error, and a deliberate broken test
-        
-        
-        self.fail('testing')
-        
-        
         manager = AuditableQuerySet.as_manager()
         
         self.assertEqual(manager.__class__.__name__, 'AuditableManager')
