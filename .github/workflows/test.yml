@@ -1,4 +1,4 @@
-name: Test
+name: tests  # displayed on README badge
 
 on: [push, pull_request]
 
@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         include:
+          # Keep this version matrix in line with tox.ini
           - python-version: 3.6
             django-version: Django==2.2
           - python-version: 3.6
@@ -46,11 +47,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies (${{ matrix.django-version }})
+      - name: Install dependencies
         run: pip install coverage ${{ matrix.django-version }}
       - name: Run tests
         run: |
