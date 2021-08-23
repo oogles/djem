@@ -30,9 +30,9 @@ Documentation
 Full documentation can be found at: https://djem.readthedocs.io.
 
 
-.. |build| image:: https://travis-ci.org/oogles/djem.svg?branch=master
+.. |build| image:: https://github.com/oogles/djem/actions/workflows/test.yml/badge.svg
     :alt: Build status
-    :target: https://travis-ci.org/oogles/djem
+    :target: https://github.com/oogles/djem/actions/
 
 .. |coverage| image:: https://coveralls.io/repos/github/oogles/djem/badge.svg?branch=master
     :alt: Test suite coverage

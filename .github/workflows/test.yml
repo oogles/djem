@@ -1,0 +1,65 @@
+name: tests  # displayed on README badge
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Keep this version matrix in line with tox.ini
+          - python-version: 3.6
+            django-version: Django==2.2
+          - python-version: 3.6
+            django-version: Django==3.0
+          - python-version: 3.6
+            django-version: Django==3.1
+          - python-version: 3.6
+            django-version: Django==3.2
+
+          - python-version: 3.7
+            django-version: Django==2.2
+          - python-version: 3.7
+            django-version: Django==3.0
+          - python-version: 3.7
+            django-version: Django==3.1
+          - python-version: 3.7
+            django-version: Django==3.2
+
+          - python-version: 3.8
+            django-version: Django==2.2
+          - python-version: 3.8
+            django-version: Django==3.0
+          - python-version: 3.8
+            django-version: Django==3.1
+          - python-version: 3.8
+            django-version: Django==3.2
+
+          - python-version: 3.9
+            django-version: Django==2.2
+          - python-version: 3.9
+            django-version: Django==3.0
+          - python-version: 3.9
+            django-version: Django==3.1
+          - python-version: 3.9
+            django-version: Django==3.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: pip install coverage coveralls ${{ matrix.django-version }}
+      - name: Run tests
+        run: |
+          coverage run --branch manage.py test --no-input
+          coverage report --skip-covered
+      - name: Coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          coveralls --service=github
+
