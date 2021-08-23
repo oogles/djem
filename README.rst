@@ -34,9 +34,9 @@ Full documentation can be found at: https://djem.readthedocs.io.
     :alt: Build status
     :target: https://github.com/oogles/djem/actions/
 
-.. |coverage| image:: https://coveralls.io/repos/github/oogles/djem/badge.svg?branch=master
+.. |coverage| image:: https://coveralls.io/repos/github/oogles/djem/badge.svg?branch=main
     :alt: Test suite coverage
-    :target: https://coveralls.io/github/oogles/djem?branch=master
+    :target: https://coveralls.io/github/oogles/djem?branch=main
 
 .. |docs| image:: https://readthedocs.org/projects/djem/badge/?version=latest
     :alt: Latest documentation build
