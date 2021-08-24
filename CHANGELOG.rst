@@ -2,7 +2,13 @@
 Change Log
 ==========
 
-0.7 (unreleased)
+0.7.1 (2021-08-25)
+==================
+
+* Fixed readthedocs configuration
+* Fixed README badges
+
+0.7 (2021-08-24)
 ================
 
 A number of features are renamed. In all cases, the old names remain available for backwards compatibility, but are deprecated.
