@@ -1,2 +1,12 @@
+version: 2
+
+# Build documentation in the docs/ directory with Sphinx
+sphinx:
+   configuration: docs/conf.py
+
+# Include PDF, ePUB, and zipped HTML downloadable formats
+formats: all
+
 python:
-    version: 3
+  install:
+    - requirements: docs/requirements.txt
