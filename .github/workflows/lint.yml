@@ -34,3 +34,16 @@ jobs:
         with:
           linters: isort
           run: isort --check --diff .
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - run: python -m pip install bandit
+      - name: bandit
+        run: bandit -r -q -x tests .
