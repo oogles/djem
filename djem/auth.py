@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, resolve_url
 DEFAULT_403 = getattr(settings, 'DJEM_DEFAULT_403', False)
 
 
-def get_user_log_verbosity():
+def _get_user_log_verbosity():
     
     return getattr(settings, 'DJEM_PERM_LOG_VERBOSITY', 0)
 
@@ -23,7 +23,7 @@ class ObjectPermissionsBackend:
     
     def _get_model_permission(self, perm, user_obj):
         
-        verbosity = get_user_log_verbosity()
+        verbosity = _get_user_log_verbosity()
         if not verbosity:
             access = user_obj.has_perm(perm)
         else:
@@ -115,7 +115,7 @@ class ObjectPermissionsBackend:
             # that may be present in object-level access methods). The usual
             # automatic log started as part of OLPMixin.has_perm() will not
             # have been created, so this acts as a replacement.
-            log_verbosity = get_user_log_verbosity()
+            log_verbosity = _get_user_log_verbosity()
             if log_verbosity:
                 user_obj.start_log('temp-{0}'.format(obj.pk))
             
