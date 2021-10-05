@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.7.2 (2021-10-05)
+==================
+
+* Removed public ``djem.auth.get_user_log_verbosity()`` function due to the apparent potential for causing cyclic imports, as observed in real world usage.
+
 0.7.1 (2021-08-25)
 ==================
 

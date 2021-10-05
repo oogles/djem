@@ -18,7 +18,6 @@ except ImportError:  # pragma: no cover
         for k, v in mapping.items():
             yield k, v() if callable(v) else v
 
-from djem.auth import get_user_log_verbosity
 from djem.exceptions import ModelAmbiguousVersionError
 
 whitespace_regex = re.compile(r'\W+')
@@ -254,7 +253,7 @@ class OLPMixin(Loggable):
     
     def has_perm(self, perm, obj=None):
         
-        verbosity = get_user_log_verbosity()
+        verbosity = getattr(settings, 'DJEM_PERM_LOG_VERBOSITY', 0)
         
         if verbosity:
             return self.logged_has_perm(perm, obj, verbosity)
