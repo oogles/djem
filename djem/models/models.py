@@ -32,6 +32,16 @@ __all__ = (
 )
 
 
+def _is_user_required():
+    
+    # TODO: Remove fallback setting in 1.0
+    return getattr(
+        settings,
+        'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
+        getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
+    )
+
+
 class Loggable:
     """
     A mixin for creating, storing, and retrieving logs on an instance. Named
@@ -338,13 +348,7 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         setting is ``False``.
         """
         
-        # TODO: Remove fallback setting in 1.0
-        require_user = getattr(
-            settings,
-            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
-            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
-        )
-        if require_user and not _user:
+        if _is_user_required() and not _user:
             raise TypeError('create() requires the first positional argument to be a user model instance.')
         
         #
@@ -400,13 +404,7 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting is ``False``.
         """
         
-        # TODO: Remove fallback setting in 1.0
-        require_user = getattr(
-            settings,
-            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
-            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
-        )
-        if require_user and not _user:
+        if _is_user_required() and not _user:
             raise TypeError('update() requires the first positional argument to be a user model instance.')
         
         kwargs.setdefault('date_modified', timezone.now())
@@ -426,13 +424,7 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         is ``False``.
         """
         
-        # TODO: Remove fallback setting in 1.0
-        require_user = getattr(
-            settings,
-            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
-            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
-        )
-        if require_user and not _user:
+        if _is_user_required() and not _user:
             raise TypeError('create() requires the first positional argument to be a user model instance.')
         
         # Add `_user` to `kwargs` rather than `defaults` as `_user` is its own
@@ -524,13 +516,7 @@ class Auditable(models.Model):
         setting is ``False``.
         """
         
-        # TODO: Remove fallback setting in 1.0
-        require_user = getattr(
-            settings,
-            'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
-            getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
-        )
-        if require_user and not user:
+        if _is_user_required() and not user:
             raise TypeError("save() requires the 'user' argument")
         
         now = timezone.now()
