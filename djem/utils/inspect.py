@@ -5,7 +5,7 @@ import types
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Manager, Model, QuerySet
 from django.db.models.fields import NOT_PROVIDED
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from djem.utils.table import Table
 
@@ -200,7 +200,7 @@ class ObjectTable(InspectTable):
         elif isinstance(v, types.MethodType):
             v = 'pp({0}.{1})'.format(cls.__name__, attr)
         else:
-            v = force_text(v)
+            v = force_str(v)
         
         return v
     
@@ -245,7 +245,7 @@ class ObjectTable(InspectTable):
                 title = '{0}()'.format(attr)
                 append_to = methods
             else:
-                title = force_text(attr)
+                title = force_str(attr)
                 append_to = other
             
             if is_magic:

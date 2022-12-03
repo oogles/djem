@@ -1,7 +1,7 @@
 import shutil
 import textwrap
 
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 
 class NOT_PROVIDED:
@@ -102,9 +102,9 @@ class Table:
     def _update_col_metadata(self, col_data, value=NOT_PROVIDED, heading=NOT_PROVIDED):
         
         if value is not NOT_PROVIDED:
-            width = len(force_text(value))
+            width = len(force_str(value))
         elif heading is not NOT_PROVIDED:
-            heading = force_text(heading)
+            heading = force_str(heading)
             width = 0
             
             col_data['heading'] = heading
@@ -319,7 +319,7 @@ class Table:
             else:
                 row_str = []
                 for i, col in enumerate(self._columns):
-                    value = force_text(row[i]).replace('\n', '\\n').replace('\r', '\\r')
+                    value = force_str(row[i]).replace('\n', '\\n').replace('\r', '\\r')
                     width = col['render_width']
                     
                     if len(value) > width:
