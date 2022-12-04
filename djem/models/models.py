@@ -520,7 +520,7 @@ class Auditable(models.Model):
             self.user_modified = user
             update_fields.append('user_modified')
         
-        if self.pk is None:
+        if self._state.adding:
             if self.date_created is None:
                 self.date_created = now
             
@@ -713,9 +713,9 @@ class Versionable(models.Model):
         
         incremented = False
         
-        if self.pk:
+        if not self._state.adding:
             # Increment the version of this record. Does not happen on initial
-            # save (when self.pk is None) as it is set to 1 by default.
+            # save, as it is set to 1 by default.
             self.version = models.F('version') + 1
             incremented = True
             
