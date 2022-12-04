@@ -1,8 +1,7 @@
 FROM python:3.10-slim-buster
 ENV PYTHONUNBUFFERED=1
 
-RUN apt-get update && apt-get -y install \ 
-    nano
+RUN apt-get update && apt-get -y install nano make
 
 WORKDIR /opt/app
 
