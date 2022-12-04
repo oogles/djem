@@ -2,6 +2,14 @@
 Change Log
 ==========
 
+0.8.0 (unreleased)
+==================
+
+* Added compatibility with Django versions 4.0 and 4.1
+* Dropped support for Django versions below 3.2
+* Updated ``Auditable`` and ``Versionable`` to use ``self._state.adding`` to differentiate between records being added or updated
+* Switched development environment from Vagrant to Docker
+
 0.7.2 (2021-10-05)
 ==================
 
