@@ -4,11 +4,6 @@
 .env
 joggerenv.cfg
 
-# Vagrant
-.vagrant/
-provision/env.sh
-provision/conf/user/.gitconfig
-
 # Sphinx documentation
 docs/_build/
 
