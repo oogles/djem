@@ -4,6 +4,9 @@
 .env
 joggerenv.cfg
 
+# Docker shared volumes
+.volumes
+
 # Sphinx documentation
 docs/_build/
 
