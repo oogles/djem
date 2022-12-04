@@ -1,8 +1,7 @@
 *.pyc
-node_modules
 
 # Environment settings
-env.py
+.env
 joggerenv.cfg
 
 # Vagrant

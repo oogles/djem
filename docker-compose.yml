@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  
+  db:
+    image: postgres
+    volumes:
+      - .volumes/data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=djem
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+  
+  djem:
+    container_name: djem
+    build: .
+    ports:
+      - 8460:8460
+    volumes:
+      - .:/opt/app
+    
+    stdin_open: true
+    tty: true
+    
+    depends_on:
+      - db
