@@ -16,6 +16,8 @@ def docker_down(settings, stdout, stderr):
 
 
 tasks = {
+    'release': ReleaseTask,
+    
     # Docker tasks. Run on the host to control Docker.
     'up': 'docker compose up --wait',
     'stop': 'docker compose stop',
@@ -25,6 +27,5 @@ tasks = {
     # Dev tasks. Run on the guest to aid development.
     'docs': DocsTask,
     'lint': LintTask,
-    'test': TestTask,
-    'release': ReleaseTask
+    'test': TestTask
 }
