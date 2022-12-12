@@ -7,11 +7,6 @@ register = Library()
 DEFAULT_FORM_FIELD_TAG = 'div'
 
 
-#
-# ifperm and ifnotperm are extremely similar to, and mostly copied directly
-# from Django's ifequal and ifnotequal tags in django.template.defaulttags.
-#
-
 class IfPermNode(Node):
     
     child_nodelists = ('nodelist_true', 'nodelist_false')
