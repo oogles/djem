@@ -2,6 +2,7 @@ from functools import wraps
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin
 from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied
@@ -15,11 +16,7 @@ def _get_user_log_verbosity():
     return getattr(settings, 'DJEM_PERM_LOG_VERBOSITY', 0)
 
 
-class ObjectPermissionsBackend:
-    
-    def authenticate(self, *args, **kwargs):
-        
-        return None
+class ObjectPermissionsBackend(BaseBackend):
     
     def _get_model_permission(self, perm, user_obj):
         
