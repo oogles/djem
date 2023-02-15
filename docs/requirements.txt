@@ -1,2 +1,2 @@
 # Minimal requirements necessary for building documentation
-Django==3.2.16
+Django==3.2.18
