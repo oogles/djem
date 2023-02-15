@@ -1,10 +1,10 @@
 <ol class="pagination">
     {% if page.has_previous %}
         <li class="pagination__first">
-            <a href="?page=1">First</a>
+            <a href="?page=1">{% block first_label %}First{% endblock %}</a>
         </li>
         <li class="pagination__previous">
-            <a href="?page={{ page.previous_page_number }}">Previous</a>
+            <a href="?page={{ page.previous_page_number }}">{% block previous_label %}Previous{% endblock %}</a>
         </li>
     {% endif %}
 
@@ -14,10 +14,10 @@
 
     {% if page.has_next %}
         <li class="pagination__next">
-            <a href="?page={{ page.next_page_number }}">Next</a>
+            <a href="?page={{ page.next_page_number }}">{% block next_label %}Next{% endblock %}</a>
         </li>
         <li class="pagination__last">
-            <a href="?page={{ page.paginator.num_pages }}">Last</a>
+            <a href="?page={{ page.paginator.num_pages }}">{% block last_label %}Last{% endblock %}</a>
         </li>
     {% endif %}
 </ol>

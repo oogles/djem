@@ -2,6 +2,11 @@
 Change Log
 ==========
 
+0.9.0 (unreleased)
+==================
+
+* Improved customisability of pagination template
+
 0.8.0 (2022-12-12)
 ==================
 
