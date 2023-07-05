@@ -1,5 +1,6 @@
 import pytz
 import warnings
+from copy import deepcopy
 
 from django.apps import apps
 from django.test import SimpleTestCase
@@ -19,6 +20,19 @@ class UndefinedTestCase(SimpleTestCase):
     def test_print(self):
         
         self.assertEqual(str(UNDEFINED), '<undefined>')
+    
+    def test_deepcopy__direct(self):
+        
+        clone = deepcopy(UNDEFINED)
+        
+        self.assertIs(clone, UNDEFINED)
+    
+    def test_deepcopy__indirect(self):
+        
+        dict = {'value': UNDEFINED}
+        clone = deepcopy(dict)
+        
+        self.assertIs(clone['value'], UNDEFINED)
 
 
 class TimeZoneHelperTestCase(SimpleTestCase):

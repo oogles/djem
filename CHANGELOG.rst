@@ -6,6 +6,7 @@ Change Log
 ==================
 
 * Improved customisability of pagination template
+* Updated ``UNDEFINED`` to ensure it cannot be deep copied (it will always be the same instance)
 
 0.8.0 (2022-12-12)
 ==================
