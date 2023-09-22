@@ -635,7 +635,17 @@ class Archivable(models.Model):
         # RestrictedError if any references are through protected/restricted
         # foreign keys.
         using = kwargs.get('using') or router.db_for_write(self.__class__, instance=self)
-        UnarchivedCollector(using=using).collect([self])
+        
+        try:
+            UnarchivedCollector(using=using).collect([self])
+        except (models.ProtectedError, models.RestrictedError) as e:
+            # Replace use of "delete" in the exception message with "archive"
+            msg, objs = e.args
+            msg = msg.replace('delete', 'archive')
+            
+            # Reconstruct the exceptions with the new message and the original
+            # `protected_objects`/`restricted_objects` value
+            raise type(e)(msg, objs)
         
         if 'update_fields' in kwargs:
             kwargs['update_fields'] = set(kwargs['update_fields']).union(('is_archived',))

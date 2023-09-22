@@ -1511,7 +1511,12 @@ class RelatedArchivableTestCase(TestCase):
         obj = ArchivableTest.objects.create(is_archived=False)
         RelatedArchivableTest.objects.create(archivable_protected=obj, is_archived=False)
         
-        with self.assertRaises(ProtectedError):
+        msg = (
+            "Cannot archive some instances of model 'ArchivableTest' because"
+            " they are referenced through protected foreign keys:"
+            " 'RelatedArchivableTest.archivable_protected'."
+        )
+        with self.assertRaisesMessage(ProtectedError, msg):
             obj.archive()
         
         obj.refresh_from_db()
@@ -1527,7 +1532,12 @@ class RelatedArchivableTestCase(TestCase):
         obj = ArchivableTest.objects.create(is_archived=False)
         RelatedTest.objects.create(archivable_protected=obj)
         
-        with self.assertRaises(ProtectedError):
+        msg = (
+            "Cannot archive some instances of model 'ArchivableTest' because"
+            " they are referenced through protected foreign keys:"
+            " 'RelatedTest.archivable_protected'."
+        )
+        with self.assertRaisesMessage(ProtectedError, msg):
             obj.archive()
         
         obj.refresh_from_db()
@@ -1557,7 +1567,12 @@ class RelatedArchivableTestCase(TestCase):
         obj = ArchivableTest.objects.create(is_archived=False)
         RelatedArchivableTest.objects.create(archivable_restricted=obj, is_archived=False)
         
-        with self.assertRaises(RestrictedError):
+        msg = (
+            "Cannot archive some instances of model 'ArchivableTest' because"
+            " they are referenced through restricted foreign keys:"
+            " 'RelatedArchivableTest.archivable_restricted'."
+        )
+        with self.assertRaisesMessage(RestrictedError, msg):
             obj.archive()
         
         obj.refresh_from_db()
@@ -1573,7 +1588,12 @@ class RelatedArchivableTestCase(TestCase):
         obj = ArchivableTest.objects.create(is_archived=False)
         RelatedTest.objects.create(archivable_restricted=obj)
         
-        with self.assertRaises(RestrictedError):
+        msg = (
+            "Cannot archive some instances of model 'ArchivableTest' because"
+            " they are referenced through restricted foreign keys:"
+            " 'RelatedTest.archivable_restricted'."
+        )
+        with self.assertRaisesMessage(RestrictedError, msg):
             obj.archive()
         
         obj.refresh_from_db()
