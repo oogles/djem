@@ -5,22 +5,73 @@ import warnings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.db.models import QuerySet
+from django.db.models import ProtectedError, QuerySet, RestrictedError
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from djem.models import ArchivableQuerySet, AuditableQuerySet, MixableQuerySet, TimeZoneField
+from djem.models.models import UnarchivedCollector
 from djem.utils.dt import TimeZoneHelper
 
 from .models import (
-    ArchivableTest, AuditableTest, LogTest, StaticTest, TimeZoneTest,
-    VersionableTest
+    ArchivableTest, AuditableTest, LogTest, RelatedArchivableTest, RelatedTest,
+    StaticTest, TimeZoneTest, VersionableTest
 )
 
 
 def make_user(username):
     
     return get_user_model().objects.create_user(username, 'fakepassword')
+
+
+class UnarchivedCollectorTestCase(TestCase):
+    
+    def test_archivable(self):
+        """
+        Test the overridden related_objects() method for a model that uses the
+        Archivable mixin.
+        """
+        
+        collector = UnarchivedCollector('default')
+        
+        obj = ArchivableTest.objects.create()
+        
+        # The collector should find all unarchived or non-archivable records
+        # related to `obj`
+        r1 = RelatedTest.objects.create(archivable_protected=obj)
+        r2 = RelatedArchivableTest.objects.create(archivable_protected=obj, is_archived=False)
+        RelatedArchivableTest.objects.create(archivable_protected=obj, is_archived=True)
+        
+        try:
+            collector.collect([obj])
+        except ProtectedError as e:
+            results = e.protected_objects
+        
+        self.assertCountEqual(results, (r1, r2))
+    
+    def test_non_archivable(self):
+        """
+        Test the overridden related_objects() method for a model that does not
+        use the Archivable mixin.
+        """
+        
+        collector = UnarchivedCollector('default')
+        
+        user = make_user('test')
+        obj = AuditableTest.objects.create(user)
+        
+        # The collector should find all unarchived or non-archivable records
+        # related to `obj`
+        r1 = RelatedTest.objects.create(auditable_protected=obj)
+        r2 = RelatedArchivableTest.objects.create(auditable_protected=obj, is_archived=False)
+        RelatedArchivableTest.objects.create(auditable_protected=obj, is_archived=True)
+        
+        try:
+            collector.collect([obj])
+        except ProtectedError as e:
+            results = e.protected_objects
+        
+        self.assertCountEqual(results, (r1, r2))
 
 
 class CommonInfoMixinTestCase(TestCase):
@@ -1301,10 +1352,9 @@ class ArchivableTestCase(TestCase):
         
         # Change the fields and archive the record - the changes to the fields
         # should not be saved
-        with self.assertNumQueries(1):
-            obj.field1 = False
-            obj.field2 = False
-            obj.archive()
+        obj.field1 = False
+        obj.field2 = False
+        obj.archive()
         
         obj.refresh_from_db()
         self.assertTrue(obj.is_archived)
@@ -1327,10 +1377,9 @@ class ArchivableTestCase(TestCase):
         
         # Change the fields and archive the record - only the to "field1" should
         # be saved
-        with self.assertNumQueries(1):
-            obj.field1 = False
-            obj.field2 = False
-            obj.archive(update_fields=('field1',))
+        obj.field1 = False
+        obj.field2 = False
+        obj.archive(update_fields=('field1',))
         
         obj.refresh_from_db()
         self.assertTrue(obj.is_archived)
@@ -1429,6 +1478,106 @@ class ArchivableTestCase(TestCase):
         
         with self.assertNumQueries(1):
             self.assertEqual(self.model.objects.filter(field1=True).unarchived().count(), 2)
+
+
+class RelatedArchivableTestCase(TestCase):
+    """
+    Tests the behaviour of the ``Archivable`` class when other models have
+    relationships to it. Separated from ArchivableTestCase because these tests
+    are not applicable to the below subclasses of ArchivableTestCase.
+    """
+    
+    def test_archive__protected__archived(self):
+        """
+        Test the ``archive()`` method of an instance, when inbound protected
+        foreign keys exist from archived records. It should allow the archival.
+        """
+        
+        obj = ArchivableTest.objects.create(is_archived=False)
+        RelatedArchivableTest.objects.create(archivable_protected=obj, is_archived=True)
+        
+        obj.archive()
+        
+        obj.refresh_from_db()
+        self.assertEqual(obj.is_archived, True)
+    
+    def test_archive__protected__unarchived(self):
+        """
+        Test the ``archive()`` method of an instance, when inbound protected
+        foreign keys exist from unarchived records. It should prevent the
+        archival.
+        """
+        
+        obj = ArchivableTest.objects.create(is_archived=False)
+        RelatedArchivableTest.objects.create(archivable_protected=obj, is_archived=False)
+        
+        with self.assertRaises(ProtectedError):
+            obj.archive()
+        
+        obj.refresh_from_db()
+        self.assertEqual(obj.is_archived, False)
+    
+    def test_archive__protected__non_archivable(self):
+        """
+        Test the ``archive()`` method of an instance, when inbound protected
+        foreign keys exist from non-archivable records (not using the
+        Archivable mixin). It should prevent the archival.
+        """
+        
+        obj = ArchivableTest.objects.create(is_archived=False)
+        RelatedTest.objects.create(archivable_protected=obj)
+        
+        with self.assertRaises(ProtectedError):
+            obj.archive()
+        
+        obj.refresh_from_db()
+        self.assertEqual(obj.is_archived, False)
+    
+    def test_archive__restricted__archived(self):
+        """
+        Test the ``archive()`` method of an instance, when inbound restricted
+        foreign keys exist from archived records. It should allow the archival.
+        """
+        
+        obj = ArchivableTest.objects.create(is_archived=False)
+        RelatedArchivableTest.objects.create(archivable_restricted=obj, is_archived=True)
+        
+        obj.archive()
+        
+        obj.refresh_from_db()
+        self.assertEqual(obj.is_archived, True)
+    
+    def test_archive__restricted__unarchived(self):
+        """
+        Test the ``archive()`` method of an instance, when inbound restricted
+        foreign keys exist from unarchived records. It should prevent the
+        archival.
+        """
+        
+        obj = ArchivableTest.objects.create(is_archived=False)
+        RelatedArchivableTest.objects.create(archivable_restricted=obj, is_archived=False)
+        
+        with self.assertRaises(RestrictedError):
+            obj.archive()
+        
+        obj.refresh_from_db()
+        self.assertEqual(obj.is_archived, False)
+    
+    def test_archive__restricted__non_archivable(self):
+        """
+        Test the ``archive()`` method of an instance, when inbound restricted
+        foreign keys exist from non-archivable records (not using the
+        Archivable mixin). It should prevent the archival.
+        """
+        
+        obj = ArchivableTest.objects.create(is_archived=False)
+        RelatedTest.objects.create(archivable_restricted=obj)
+        
+        with self.assertRaises(RestrictedError):
+            obj.archive()
+        
+        obj.refresh_from_db()
+        self.assertEqual(obj.is_archived, False)
 
 
 class VersionableTestCase(TestCase):

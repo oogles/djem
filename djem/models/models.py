@@ -5,7 +5,8 @@ from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth.models import _user_has_perm
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models, transaction
+from django.db import models, router, transaction
+from django.db.models.deletion import Collector
 from django.db.models.utils import resolve_callables
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
@@ -31,6 +32,23 @@ def _is_user_required():
         'DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE',
         getattr(settings, 'DJEM_COMMON_INFO_REQUIRE_USER_ON_SAVE', True)  # backwards compat.
     )
+
+
+class UnarchivedCollector(Collector):
+    
+    def related_objects(self, related_model, related_fields, objs):
+        """
+        Overridden to filter out archived objects from the queryset used to
+        collect related objects.
+        """
+        
+        queryset = super().related_objects(related_model, related_fields, objs)
+        
+        # Filter out archived objects
+        if issubclass(related_model, Archivable):
+            queryset = queryset.filter(is_archived=False)
+        
+        return queryset
 
 
 class Loggable:
@@ -612,6 +630,12 @@ class Archivable(models.Model):
         field, whether it was provided to this method or not. If provided, it
         is extended, not replaced.
         """
+        
+        # Collect objects referencing this one. Will raise ProtectedError or
+        # RestrictedError if any references are through protected/restricted
+        # foreign keys.
+        using = kwargs.get('using') or router.db_for_write(self.__class__, instance=self)
+        UnarchivedCollector(using=using).collect([self])
         
         if 'update_fields' in kwargs:
             kwargs['update_fields'] = set(kwargs['update_fields']).union(('is_archived',))

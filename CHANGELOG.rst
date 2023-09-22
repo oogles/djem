@@ -7,6 +7,7 @@ Change Log
 
 * Improved customisability of pagination template
 * Updated ``UNDEFINED`` to ensure it cannot be deep copied (it will always be the same instance)
+* Updated the ``Archivable.archive()`` method to raise ``ProtectedError`` and ``RestrictedError`` as ``delete()`` would, when inbound foreign keys using ``on_delete=models.PROTECT`` or ``on_delete=models.RESTRICT`` are detected against unarchived records
 
 0.8.0 (2022-12-12)
 ==================

@@ -49,6 +49,36 @@ class StaticTest(StaticAbstract):
     field2 = models.BooleanField(default=True)
 
 
+class RelatedArchivableTest(Archivable, models.Model):
+    """
+    This model provides a concrete model with relationships to other test
+    models, for testing protected/restricted foreign key detection in
+    ``archive()`` (for archivable related records).
+    """
+    
+    # FKs to ArchivableTest
+    archivable_protected = models.ForeignKey(ArchivableTest, on_delete=models.PROTECT, null=True, related_name='+')
+    archivable_restricted = models.ForeignKey(ArchivableTest, on_delete=models.RESTRICT, null=True, related_name='+')
+    
+    # FKs to AuditableTest
+    auditable_protected = models.ForeignKey(AuditableTest, on_delete=models.PROTECT, null=True, related_name='+')
+
+
+class RelatedTest(models.Model):
+    """
+    This model provides a concrete model with relationships to other test
+    models, for testing protected/restricted foreign key detection in
+    ``archive()`` (for non-archivable related records).
+    """
+    
+    # FKs to ArchivableTest
+    archivable_protected = models.ForeignKey(ArchivableTest, on_delete=models.PROTECT, null=True, related_name='+')
+    archivable_restricted = models.ForeignKey(ArchivableTest, on_delete=models.RESTRICT, null=True, related_name='+')
+    
+    # FKs to AuditableTest
+    auditable_protected = models.ForeignKey(AuditableTest, on_delete=models.PROTECT, null=True, related_name='+')
+
+
 class TimeZoneTest(models.Model):
     """
     This model provides some TimeZoneFields for testing.
