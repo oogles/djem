@@ -51,6 +51,30 @@ class UnarchivedCollector(Collector):
         return queryset
 
 
+class _TaggableStr(str):
+    
+    def __new__(cls, value, tags=None):
+        
+        obj = super().__new__(cls, value)
+        
+        # Ensure tags are stored as a tuple to be consistent the immutability
+        # of string objects
+        obj.tags = tuple(tags) if tags else ()
+        
+        return obj
+    
+    def __repr__(self):
+        
+        output = super().__repr__()
+        
+        if self.tags:
+            tags = ','.join(sorted(self.tags))
+            
+            output = f'{output}, tags={tags}'
+        
+        return output
+
+
 class Loggable:
     """
     A mixin for creating, storing, and retrieving logs on an instance. Named
@@ -122,12 +146,14 @@ class Loggable:
         except KeyError:
             raise KeyError('No active log to discard.')
     
-    def log(self, *lines):
+    def log(self, *lines, tag=None):
         """
         Append to the currently active log. Each given argument will be added
-        as a separate line to the log.
+        as a separate line to the log. If ``tag`` is specified, each added line
+        will be tagged with the given value.
         
         :param lines: Individual lines to add to the log.
+        :param tag: A tag to apply to each line.
         """
         
         # Pop to get the last item
@@ -137,7 +163,9 @@ class Loggable:
             raise KeyError('No active log to append to. Has one been started?')
         
         # Append to the log
-        log.extend(lines)
+        tags = (tag, ) if tag else None
+        for line in lines:
+            log.append(_TaggableStr(line, tags=tags))
         
         # Put back in the active logs dict
         self._active_logs[name] = log

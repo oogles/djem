@@ -6,11 +6,11 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import ProtectedError, QuerySet, RestrictedError
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
 from djem.models import ArchivableQuerySet, AuditableQuerySet, MixableQuerySet, TimeZoneField
-from djem.models.models import UnarchivedCollector
+from djem.models.models import UnarchivedCollector, _TaggableStr
 from djem.utils.dt import TimeZoneHelper
 
 from .models import (
@@ -72,6 +72,29 @@ class UnarchivedCollectorTestCase(TestCase):
             results = e.protected_objects
         
         self.assertCountEqual(results, (r1, r2))
+
+
+class TaggableStrTestCase(SimpleTestCase):
+    
+    def test_no_tags(self):
+        
+        obj = _TaggableStr('test')
+        
+        self.assertEqual(obj, 'test')
+        self.assertEqual(obj.tags, ())
+        
+        self.assertEqual(str(obj), 'test')
+        self.assertEqual(repr(obj), "'test'")
+    
+    def test_tags(self):
+        
+        obj = _TaggableStr('test', ['tag1', 'tag2'])
+        
+        self.assertEqual(obj, 'test')
+        self.assertEqual(obj.tags, ('tag1', 'tag2'))
+        
+        self.assertEqual(str(obj), 'test')
+        self.assertEqual(repr(obj), "'test', tags=tag1,tag2")
 
 
 class CommonInfoMixinTestCase(TestCase):
@@ -1770,7 +1793,7 @@ class StaticTestCase(AuditableTestCase, ArchivableTestCase, VersionableTestCase)
         return obj
 
 
-class LogTestCase(TestCase):
+class LoggableTestCase(TestCase):
     
     def setUp(self):
         
@@ -1991,14 +2014,14 @@ class LogTestCase(TestCase):
         
         obj.log('first line', 'second line', 'third line')
         self.assertEqual(
-            obj._active_logs['test_log'],
-            ['first line', 'second line', 'third line']
+            [repr(line) for line in obj._active_logs['test_log']],
+            ["'first line'", "'second line'", "'third line'"]
         )
         
-        obj.log('fourth line')
+        obj.log('fourth line', tag='error')
         self.assertEqual(
-            obj._active_logs['test_log'],
-            ['first line', 'second line', 'third line', 'fourth line']
+            [repr(line) for line in obj._active_logs['test_log']],
+            ["'first line'", "'second line'", "'third line'", "'fourth line', tags=error"]
         )
     
     def test_log__nested(self):
@@ -2012,41 +2035,41 @@ class LogTestCase(TestCase):
         obj.start_log('test_log')
         obj.log('first line 1', 'second line 1', 'third line 1')
         self.assertEqual(
-            obj._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1']
+            [repr(line) for line in obj._active_logs['test_log']],
+            ["'first line 1'", "'second line 1'", "'third line 1'"]
         )
         
         obj.start_log('nested_log')
         obj.log('first line 2', 'second line 2', 'third line 2')
         self.assertEqual(
-            obj._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1']
+            [repr(line) for line in obj._active_logs['test_log']],
+            ["'first line 1'", "'second line 1'", "'third line 1'"]
         )
         self.assertEqual(
-            obj._active_logs['nested_log'],
-            ['first line 2', 'second line 2', 'third line 2']
+            [repr(line) for line in obj._active_logs['nested_log']],
+            ["'first line 2'", "'second line 2'", "'third line 2'"]
         )
         
-        obj.log('fourth line 2')
+        obj.log('fourth line 2', tag='error')
         self.assertEqual(
-            obj._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1']
+            [repr(line) for line in obj._active_logs['test_log']],
+            ["'first line 1'", "'second line 1'", "'third line 1'"]
         )
         self.assertEqual(
-            obj._active_logs['nested_log'],
-            ['first line 2', 'second line 2', 'third line 2', 'fourth line 2']
+            [repr(line) for line in obj._active_logs['nested_log']],
+            ["'first line 2'", "'second line 2'", "'third line 2'", "'fourth line 2', tags=error"]
         )
         
         obj.end_log()
         
-        obj.log('fourth line 1')
+        obj.log('fourth line 1', tag='error')
         self.assertEqual(
-            obj._active_logs['test_log'],
-            ['first line 1', 'second line 1', 'third line 1', 'fourth line 1']
+            [repr(line) for line in obj._active_logs['test_log']],
+            ["'first line 1'", "'second line 1'", "'third line 1'", "'fourth line 1', tags=error"]
         )
         self.assertEqual(
-            obj._finished_logs['nested_log'],
-            ['first line 2', 'second line 2', 'third line 2', 'fourth line 2']
+            [repr(line) for line in obj._finished_logs['nested_log']],
+            ["'first line 2'", "'second line 2'", "'third line 2'", "'fourth line 2', tags=error"]
         )
     
     def test_log__unstarted(self):
