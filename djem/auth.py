@@ -31,7 +31,7 @@ class ObjectPermissionsBackend(BaseBackend):
             log = user_obj.get_last_log(raw=True)
             log.pop()
             log.append('Model-level Result: {}\n'.format('Granted' if access else 'Denied'))
-            user_obj.log(*log)
+            user_obj.log(*log, tag='auto')
         
         return access
     

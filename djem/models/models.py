@@ -263,28 +263,32 @@ class OLPMixin(Loggable):
     
     def logged_has_perm(self, perm, obj=None, verbosity=1):
         
-        log_key = 'auto-{}'.format(perm)
+        log_key = f'auto-{perm}'
         if obj:
-            log_key = '{}-{}'.format(log_key, obj.pk)
-
+            log_key = f'{log_key}-{obj.pk}'
+        
         self.start_log(log_key)
         
         if verbosity > 1:
-            perm_log = 'Permission: {}'.format(perm)
-            user_log = 'User: {} ({})'.format(self.get_username(), self.pk)
+            log_lines = [
+                f'Permission: {perm}',
+                f'User: {self.get_username()} ({self.pk})'
+            ]
             
             if obj:
-                self.log(perm_log, user_log, 'Object: {} ({})\n'.format(str(obj), obj.pk))
-            else:
-                user_log = '{}\n'.format(user_log)
-                self.log(perm_log, user_log)
+                log_lines.append(f'Object: {str(obj)} ({obj.pk})')
+            
+            log_lines.append('')  # blank line
+            
+            self.log(*log_lines, tag='auto')
         
         has_perm, log_entry = self._check_perm(perm, obj)
         
         if log_entry:
-            self.log(log_entry)
+            self.log(log_entry, tag='auto')
         
-        self.log('\nRESULT: {}'.format('Permission Granted' if has_perm else 'Permission Denied'))
+        result = 'Permission Granted' if has_perm else 'Permission Denied'
+        self.log(f'\nRESULT: {result}', tag='auto')
         self.end_log()
         
         return has_perm

@@ -214,8 +214,10 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            '\nRESULT: Permission Denied'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'\\nRESULT: Permission Denied', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
@@ -242,14 +244,16 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', f'auto-djemtest.olp_log-{obj.pk}']
         )
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Model-level Result: Granted\n',
-            'This permission is restricted.',
-            '\nRESULT: Permission Denied'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Model-level Result: Granted\\n', tags=auto",
+            "'This permission is restricted.'",  # untagged
+            "'\\nRESULT: Permission Denied', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
@@ -271,9 +275,11 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Active superuser: Implicit permission',
-            '\nRESULT: Permission Granted'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Active superuser: Implicit permission', tags=auto",
+            "'\\nRESULT: Permission Granted', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=1)
@@ -298,9 +304,11 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Active superuser: Implicit permission',
-            '\nRESULT: Permission Granted'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Active superuser: Implicit permission', tags=auto",
+            "'\\nRESULT: Permission Granted', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=1, DJEM_UNIVERSAL_OLP=True)
@@ -322,9 +330,11 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Active superuser: Implicit permission (model-level)',
-            '\nRESULT: Permission Granted'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Active superuser: Implicit permission (model-level)', tags=auto",
+            "'\\nRESULT: Permission Granted', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=1, DJEM_UNIVERSAL_OLP=True)
@@ -350,15 +360,17 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', f'auto-djemtest.olp_log-{obj.pk}']
         )
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Active superuser: Implicit permission (model-level)',
-            'Model-level Result: Granted\n',
-            'This permission is restricted.',
-            '\nRESULT: Permission Denied'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Active superuser: Implicit permission (model-level)', tags=auto",
+            "'Model-level Result: Granted\\n', tags=auto",
+            "'This permission is restricted.'",  # untagged
+            "'\\nRESULT: Permission Denied', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
@@ -378,10 +390,13 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Permission: djemtest.mlp_log',
-            'User: test.user ({})\n'.format(self.user.pk),
-            '\nRESULT: Permission Denied'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Permission: djemtest.mlp_log', tags=auto",
+            f"'User: test.user ({self.user.pk})', tags=auto",
+            "'', tags=auto",
+            "'\\nRESULT: Permission Denied', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
@@ -408,17 +423,20 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', f'auto-djemtest.olp_log-{obj.pk}']
         )
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Permission: djemtest.olp_log',
-            'User: test.user ({})'.format(self.user.pk),
-            'Object: Log Test #{0} ({0})\n'.format(obj.pk),
-            'Model-level Result: Granted\n',
-            'This permission is restricted.',
-            '\nRESULT: Permission Denied'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Permission: djemtest.olp_log', tags=auto",
+            f"'User: test.user ({self.user.pk})', tags=auto",
+            f"'Object: Log Test #{obj.pk} ({obj.pk})', tags=auto",
+            "'', tags=auto",
+            "'Model-level Result: Granted\\n', tags=auto",
+            "'This permission is restricted.'",  # untagged
+            "'\\nRESULT: Permission Denied', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
@@ -440,11 +458,14 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Permission: djemtest.mlp_log',
-            'User: test.user ({})\n'.format(self.user.pk),
-            'Active superuser: Implicit permission',
-            '\nRESULT: Permission Granted'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Permission: djemtest.mlp_log', tags=auto",
+            f"'User: test.user ({self.user.pk})', tags=auto",
+            "'', tags=auto",
+            "'Active superuser: Implicit permission', tags=auto",
+            "'\\nRESULT: Permission Granted', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2)
@@ -469,12 +490,15 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Permission: djemtest.olp_log',
-            'User: test.user ({})'.format(self.user.pk),
-            'Object: Log Test #{0} ({0})\n'.format(obj.pk),
-            'Active superuser: Implicit permission',
-            '\nRESULT: Permission Granted'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Permission: djemtest.olp_log', tags=auto",
+            f"'User: test.user ({self.user.pk})', tags=auto",
+            f"'Object: Log Test #{obj.pk} ({obj.pk})', tags=auto",
+            "'', tags=auto",
+            "'Active superuser: Implicit permission', tags=auto",
+            "'\\nRESULT: Permission Granted', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2, DJEM_UNIVERSAL_OLP=True)
@@ -496,11 +520,14 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 1)
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Permission: djemtest.mlp_log',
-            'User: test.user ({})\n'.format(self.user.pk),
-            'Active superuser: Implicit permission (model-level)',
-            '\nRESULT: Permission Granted'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Permission: djemtest.mlp_log', tags=auto",
+            f"'User: test.user ({self.user.pk})', tags=auto",
+            "'', tags=auto",
+            "'Active superuser: Implicit permission (model-level)', tags=auto",
+            "'\\nRESULT: Permission Granted', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=2, DJEM_UNIVERSAL_OLP=True)
@@ -526,18 +553,21 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(len(user._finished_logs), 2)
         self.assertEqual(
             list(user._finished_logs.keys()),
-            ['auto-djemtest.olp_log', 'auto-djemtest.olp_log-{0}'.format(obj.pk)]
+            ['auto-djemtest.olp_log', f'auto-djemtest.olp_log-{obj.pk}']
         )
         
         log = user.get_last_log(raw=True)
-        self.assertEqual(log, [
-            'Permission: djemtest.olp_log',
-            'User: test.user ({})'.format(self.user.pk),
-            'Object: Log Test #{0} ({0})\n'.format(obj.pk),
-            'Active superuser: Implicit permission (model-level)',
-            'Model-level Result: Granted\n',
-            'This permission is restricted.',
-            '\nRESULT: Permission Denied'
+        
+        # Use repr() to verify the log lines are tagged appropriately
+        self.assertEqual([repr(line) for line in log], [
+            "'Permission: djemtest.olp_log', tags=auto",
+            f"'User: test.user ({self.user.pk})', tags=auto",
+            f"'Object: Log Test #{obj.pk} ({obj.pk})', tags=auto",
+            "'', tags=auto",
+            "'Active superuser: Implicit permission (model-level)', tags=auto",
+            "'Model-level Result: Granted\\n', tags=auto",
+            "'This permission is restricted.'",  # untagged
+            "'\\nRESULT: Permission Denied', tags=auto"
         ])
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=0)
