@@ -34,6 +34,20 @@ def _is_user_required():
     )
 
 
+def _process_log(log, tags, raw):
+    
+    tags = set(tags) if tags else set()
+    
+    # Run the list comprehension whether or not there are tags to filter by,
+    # so that the returned list is always a copy of the original
+    log = [line for line in log if not tags or tags.intersection(line.tags)]
+    
+    if raw:
+        return log
+    
+    return '\n'.join(log)
+
+
 class UnarchivedCollector(Collector):
     
     def related_objects(self, related_model, related_fields, objs):
@@ -100,7 +114,7 @@ class Loggable:
         """
         
         if name in self._active_logs:
-            raise ValueError('A log named "{0}" is already active.'.format(name))
+            raise ValueError(f'A log named "{name}" is already active.')
         
         self._active_logs[name] = []
     
@@ -170,7 +184,7 @@ class Loggable:
         # Put back in the active logs dict
         self._active_logs[name] = log
     
-    def get_log(self, name, raw=False):
+    def get_log(self, name, tags=None, raw=False):
         """
         Return the named log, as a string. The log must have been ended (via
         ``end_log()``) in order to retrieve it.
@@ -180,7 +194,11 @@ class Loggable:
         internally, allowing it to be safely manipulated without affecting the
         original log.
         
+        Whether returning a string or a list, use ``tags`` to filter the
+        included lines to just those with at least one of the given tags.
+        
         :param name: The name of the log to retrieve.
+        :param tags: An iterable of tags to filter the log by.
         :param raw: ``True`` to return the log as a list. Returned as a string by default.
         :return: The log, either as a string or a list.
         """
@@ -188,14 +206,11 @@ class Loggable:
         try:
             log = self._finished_logs[name]
         except KeyError:
-            raise KeyError('No log found for "{0}". Has it been finished?'.format(name))
+            raise KeyError(f'No log found for "{name}". Has it been finished?')
         
-        if raw:
-            return list(log)  # return a copy
-        
-        return '\n'.join(log)
+        return _process_log(log, tags, raw)
     
-    def get_last_log(self, raw=False):
+    def get_last_log(self, tags=None, raw=False):
         """
         Return the most recently finished log, as a string.
         
@@ -204,6 +219,10 @@ class Loggable:
         internally, allowing it to be safely manipulated without affecting the
         original log.
         
+        Whether returning a string or a list, use ``tags`` to filter the
+        included lines to just those with at least one of the given tags.
+        
+        :param tags: An iterable of tags to filter the log by.
         :param raw: ``True`` to return the log as a list. Returned as a string by default.
         :return: The log, either as a string or a list.
         """
@@ -216,10 +235,7 @@ class Loggable:
         
         self._finished_logs[name] = log
         
-        if raw:
-            return list(log)  # return a copy
-        
-        return '\n'.join(log)
+        return _process_log(log, tags, raw)
 
 
 class OLPMixin(Loggable):

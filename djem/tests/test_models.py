@@ -2099,6 +2099,28 @@ class LoggableTestCase(TestCase):
         raw_log = obj.get_log('test_log', raw=True)
         self.assertEqual(raw_log, ['first line', 'second line'])
     
+    def test_get_log__tag_filter(self):
+        """
+        Test the get_log() method when the `tags` argument is used to filter
+        the returned lines by tag. It should return the filtered log entry for
+        the named log.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('test_log')
+        obj.log('first line')
+        obj.log('second line', tag='tag1')
+        obj.log('third line', tag='tag2')
+        obj.log('fourth line', tag='tag1')
+        obj.end_log()
+        
+        log = obj.get_log('test_log', tags=('tag1', ))
+        self.assertEqual(log, 'second line\nfourth line')
+        
+        raw_log = obj.get_log('test_log', tags=('tag1', ), raw=True)
+        self.assertEqual(raw_log, ['second line', 'fourth line'])
+    
     def test_get_log__unstarted(self):
         """
         Test the get_log() method when no log by the given name has been started.
@@ -2123,8 +2145,8 @@ class LoggableTestCase(TestCase):
     
     def test_get_last_log(self):
         """
-        Test the get_last_log() method. It should return the log entry for most
-        recently finished log.
+        Test the get_last_log() method. It should return the log entry for
+        the most recently finished log.
         """
         
         obj = self.obj
@@ -2152,6 +2174,46 @@ class LoggableTestCase(TestCase):
         self.assertEqual(len(obj._finished_logs), 3)
         
         self.assertEqual(obj.get_log('log-2'), 'log 2')
+    
+    def test_get_last_log__tag_filter(self):
+        """
+        Test the get_last_log() method when the `tags` argument is used to
+        filter the returned lines by tag. It should return the filtered log
+        entry for the most recently finished log.
+        """
+        
+        obj = self.obj
+        
+        obj.start_log('log-1')
+        obj.log('first line 1')
+        obj.log('second line 1', tag='tag1')
+        obj.log('third line 1', tag='tag2')
+        obj.log('fourth line 1', tag='tag1')
+        obj.end_log()
+        
+        self.assertEqual(obj.get_last_log(tags=('tag1', )), 'second line 1\nfourth line 1')
+        self.assertEqual(obj.get_last_log(tags=('tag1', ), raw=True), ['second line 1', 'fourth line 1'])
+        
+        obj.start_log('log-2')
+        obj.log('first line 2')
+        obj.log('second line 2', tag='tag1')
+        obj.log('third line 2', tag='tag2')
+        obj.log('fourth line 2', tag='tag1')
+        obj.end_log()
+        
+        obj.start_log('log-3')
+        obj.log('first line 3')
+        obj.log('second line 3', tag='tag1')
+        obj.log('third line 3', tag='tag2')
+        obj.log('fourth line 3', tag='tag1')
+        obj.end_log()
+        
+        self.assertEqual(obj.get_last_log(tags=('tag1', )), 'second line 3\nfourth line 3')
+        self.assertEqual(obj.get_last_log(tags=('tag1', ), raw=True), ['second line 3', 'fourth line 3'])
+        
+        # Ensure all three logs are still there to retrieve again later if
+        # necessary
+        self.assertEqual(len(obj._finished_logs), 3)
     
     def test_get_last_log__none_finished(self):
         """
