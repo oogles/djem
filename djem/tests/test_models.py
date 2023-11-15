@@ -1874,11 +1874,14 @@ class LoggableTestCase(TestCase):
         self.assertEqual(len(obj._active_logs), 1)
         self.assertEqual(len(obj._finished_logs), 0)
         
-        obj.end_log()
+        name, log = obj.end_log()
         
         self.assertEqual(len(obj._active_logs), 0)
         self.assertEqual(len(obj._finished_logs), 1)
         self.assertEqual(obj._finished_logs['test_log'], [])
+        
+        self.assertEqual(name, 'test_log')
+        self.assertIsNot(log, obj._finished_logs['test_log'])  # should be a copy
     
     def test_end_log__nested(self):
         """
@@ -2098,6 +2101,10 @@ class LoggableTestCase(TestCase):
         
         raw_log = obj.get_log('test_log', raw=True)
         self.assertEqual(raw_log, ['first line', 'second line'])
+        
+        # Ensure the log list returned by get_last_log() is a copy of the
+        # underlying list
+        self.assertIsNot(raw_log, obj._finished_logs['test_log'])
     
     def test_get_log__tag_filter(self):
         """
@@ -2120,6 +2127,10 @@ class LoggableTestCase(TestCase):
         
         raw_log = obj.get_log('test_log', tags=('tag1', ), raw=True)
         self.assertEqual(raw_log, ['second line', 'fourth line'])
+        
+        # Ensure the log list returned by get_last_log() is a copy of the
+        # underlying list
+        self.assertIsNot(raw_log, obj._finished_logs['test_log'])
     
     def test_get_log__unstarted(self):
         """
@@ -2173,7 +2184,12 @@ class LoggableTestCase(TestCase):
         # necessary
         self.assertEqual(len(obj._finished_logs), 3)
         
-        self.assertEqual(obj.get_log('log-2'), 'log 2')
+        # Ensure the log list returned by get_last_log() is a copy of the
+        # underlying list
+        self.assertIsNot(
+            obj.get_last_log(raw=True),
+            obj._finished_logs['log-3']
+        )
     
     def test_get_last_log__tag_filter(self):
         """
@@ -2214,6 +2230,13 @@ class LoggableTestCase(TestCase):
         # Ensure all three logs are still there to retrieve again later if
         # necessary
         self.assertEqual(len(obj._finished_logs), 3)
+        
+        # Ensure the log list returned by get_last_log() is a copy of the
+        # underlying list
+        self.assertIsNot(
+            obj.get_last_log(tags=('tag1', ), raw=True),
+            obj._finished_logs['log-3']
+        )
     
     def test_get_last_log__none_finished(self):
         """

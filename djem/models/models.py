@@ -148,7 +148,7 @@ class Loggable:
         
         self._finished_logs[name] = log
         
-        return name, log
+        return name, log.copy()
     
     def discard_log(self):
         """
