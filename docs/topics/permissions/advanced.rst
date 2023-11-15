@@ -156,6 +156,23 @@ And with a :setting:`DJEM_PERM_LOG_VERBOSITY` of ``2``:
 
     RESULT: Permission Denied
 
+Tags
+----
+
+Automatically generated log entries :ref:`utilise tagging <instance-based-logging-tags>`, and are given the ``'auto'`` tag. This allows them to be easily identified and filtered out if desired. Reproducing the above high-verbosity log output, highlighting which lines are tagged, gives:
+
+.. code-block:: text
+
+    [tag:auto] Permission: inventory.delete_product
+    [tag:auto] User: user.name (54)
+    [tag:auto] Object: PROD123 (1375)
+    [tag:auto]
+    [tag:auto] Model-level Result: Granted
+    [tag:auto]
+    Cannot delete active product lines
+    [tag:auto]
+    [tag:auto] RESULT: Permission Denied
+
 Log names
 ---------
 

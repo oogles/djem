@@ -141,6 +141,46 @@ Of course, sometimes it *is* useful to explicitly handle nested logs. Instead of
         ...
 
 
+.. _instance-based-logging-tags:
+
+Tagging log entries
+===================
+
+In some cases, the *entire* log may not be relevant. For example, you may want to display a concise reason for a permission check failure, while ignoring any additional log entries (such as those added when using :ref:`automatic permission check logging <permissions-advanced-logging>`). In such cases, it is possible to tag individual log entries and then retrieve only those entries with a given tag.
+
+Tagging can be done by passing the ``tag`` argument to :meth:`~Loggable.log`. The named tag will be applied to all lines added with the same call. The lines with the tag can then be retrieved using :meth:`~Loggable.get_log` or :meth:`~Loggable.get_last_log`, using the ``tags`` argument. E.g.:
+
+.. code-block:: python
+    
+    def some_process(user):
+        
+        user.start_log('some-process')
+        user.log('Starting the process')
+        
+        result = do_something()
+        if not result:
+            user.log('No result!', tag='error')
+        
+        user.log('Ending the process')
+        user.end_log()
+        
+        return result
+
+After calling the above function, the log can be retrieved using:
+
+.. code-block:: python
+    
+    # Full log
+    >>> user.get_log('some-process')
+    'Starting the process\nNo result!\nEnding the process'
+    
+    # Only the error
+    >>> user.get_log('some-process', tags=['error'])
+    'No result!'
+
+Note that if multiple tags are passed to :meth:`~Loggable.get_log` or :meth:`~Loggable.get_last_log`, lines with *any* of the given tags will be returned.
+
+
 .. _instance-based-logging-names:
 
 Duplicate names
