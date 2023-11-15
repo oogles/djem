@@ -13,8 +13,6 @@ services:
   djem:
     container_name: djem
     build: .
-    ports:
-      - 8460:8460
     volumes:
       - .:/opt/app
     
