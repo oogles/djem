@@ -1,2 +1,3 @@
 # Minimal requirements necessary for building documentation
 Django==3.2.23
+sphinx_rtd_theme==0.5.2
