@@ -2,7 +2,7 @@
 Djem Documentation
 ==================
 
-Djem is a collection of useful stuff for Django projects. It supports Django 3.2+.
+Djem is a collection of useful stuff for Django projects. It supports Django 3.2+ and Python 3.9+.
 
 
 Installation

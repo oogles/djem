@@ -5,6 +5,8 @@ Change Log
 0.9.0 (unreleased)
 ==================
 
+The minimum supported version of Python is now 3.9.
+
 This release contains the following **backwards incompatible** changes:
 
 * Migrated from ``pytz`` to ``zoneinfo`` for ``TimeZoneField``/``TimeZoneHelper``.

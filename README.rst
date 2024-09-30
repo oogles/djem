@@ -4,7 +4,7 @@ Djem
 |build| |coverage| |docs| |pypi| |license|
 |pyversions| |djversions|
 
-A collection of useful stuff for Django projects. It supports Django 3.2+.
+A collection of useful stuff for Django projects. It supports Django 3.2+ and Python 3.9+.
 
 
 Installation
