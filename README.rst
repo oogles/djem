@@ -4,14 +4,7 @@ Djem
 |build| |coverage| |docs| |pypi| |license|
 |pyversions| |djversions|
 
-A collection of useful stuff for Django projects.
-
-
-Requirements
-------------
-
-* Django 3.2+
-* `pytz <http://pytz.sourceforge.net/>`_ is required to make use of ``TimeZoneField``
+A collection of useful stuff for Django projects. It supports Django 3.2+.
 
 
 Installation
