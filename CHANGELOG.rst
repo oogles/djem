@@ -5,6 +5,12 @@ Change Log
 0.9.0 (unreleased)
 ==================
 
+This release contains the following **backwards incompatible** changes:
+
+* Migrated from ``pytz`` to ``zoneinfo`` for ``TimeZoneField``/``TimeZoneHelper``.
+
+In addition, it also contains:
+
 * Improved customisability of pagination template
 * Updated ``UNDEFINED`` to ensure it cannot be deep copied (it will always be the same instance)
 * Updated the ``Archivable.archive()`` method to raise ``ProtectedError`` and ``RestrictedError`` as ``delete()`` would, when inbound foreign keys using ``on_delete=models.PROTECT`` or ``on_delete=models.RESTRICT`` are detected against unarchived records

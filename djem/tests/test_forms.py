@@ -190,7 +190,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertTrue(form.is_valid())
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
-        self.assertEqual(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
+        self.assertEqual(form.cleaned_data['timezone'].name, 'Australia/Sydney')
     
     def test_submit__modelform_invalid(self):
         """
@@ -216,7 +216,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertTrue(form.is_valid())
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
-        self.assertEqual(form.cleaned_data['timezone'].tz.zone, 'Australia/Sydney')
+        self.assertEqual(form.cleaned_data['timezone'].name, 'Australia/Sydney')
     
     def test_submit__form__invalid(self):
         """
@@ -316,7 +316,7 @@ class TimeZoneFieldFormTestCase(TestCase):
         
         self.assertTrue(form.is_valid())
         self.assertIsInstance(form.cleaned_data['timezone'], TimeZoneHelper)
-        self.assertEqual(form.cleaned_data['timezone'].tz.zone, tz)
+        self.assertEqual(form.cleaned_data['timezone'].name, tz)
     
     def test_custom_choices__invalid(self):
         """

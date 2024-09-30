@@ -1,6 +1,6 @@
 import datetime
-import pytz
 import warnings
+from zoneinfo import ZoneInfo
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -2343,7 +2343,7 @@ class TimeZoneFieldTestCase(TestCase):
         o = TimeZoneTest()
         
         self.assertIsInstance(o.timezone2, TimeZoneHelper)
-        self.assertEqual(o.timezone2.tz.zone, 'Australia/Sydney')
+        self.assertEqual(o.timezone2.name, 'Australia/Sydney')
     
     def test_set__string(self):
         
@@ -2360,7 +2360,7 @@ class TimeZoneFieldTestCase(TestCase):
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone, TimeZoneHelper)
-        self.assertEqual(o.timezone.tz.zone, 'Australia/Sydney')
+        self.assertEqual(o.timezone.name, 'Australia/Sydney')
     
     def test_set__string__invalid_timezone(self):
         
@@ -2392,24 +2392,24 @@ class TimeZoneFieldTestCase(TestCase):
         
         o = TimeZoneTest()
         
-        o.timezone = pytz.UTC
+        o.timezone = datetime.timezone.utc
         
         # Not becoming a TimeZoneHelper until read back from the database is
         # consistent with the behaviour of fields like IntegerField,
         # DecimalField, etc
-        self.assertIs(o.timezone, pytz.UTC)
+        self.assertIs(o.timezone, datetime.timezone.utc)
         
         o.save()
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone, TimeZoneHelper)
-        self.assertIs(o.timezone.tz.zone, 'UTC')
+        self.assertEqual(o.timezone.name, 'UTC')
     
     def test_set__timezone(self):
         
         o = TimeZoneTest()
         
-        tz = pytz.timezone('Australia/Sydney')
+        tz = ZoneInfo('Australia/Sydney')
         
         o.timezone = tz
         
@@ -2422,7 +2422,7 @@ class TimeZoneFieldTestCase(TestCase):
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone, TimeZoneHelper)
-        self.assertEqual(o.timezone.tz.zone, 'Australia/Sydney')
+        self.assertEqual(o.timezone.name, 'Australia/Sydney')
     
     def test_set__helper(self):
         
@@ -2432,25 +2432,28 @@ class TimeZoneFieldTestCase(TestCase):
         
         o.timezone = tz
         
+        # Not becoming a TimeZoneHelper until read back from the database is
+        # consistent with the behaviour of fields like IntegerField,
+        # DecimalField, etc
         self.assertIs(o.timezone, tz)
         
         o.save()
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone, TimeZoneHelper)
-        self.assertEqual(o.timezone.tz.zone, 'Australia/Sydney')
+        self.assertEqual(o.timezone.name, 'Australia/Sydney')
     
     def test_set__None__null_true(self):
         
         o = TimeZoneTest()
         
-        o.timezone3 = pytz.UTC
+        o.timezone3 = datetime.timezone.utc
         
         o.save()
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone3, TimeZoneHelper)
-        self.assertIs(o.timezone3.tz, pytz.UTC)
+        self.assertIs(o.timezone3.tz, ZoneInfo('UTC'))
         
         o.timezone3 = None
         o.save()
@@ -2469,13 +2472,13 @@ class TimeZoneFieldTestCase(TestCase):
         
         o = TimeZoneTest()
         
-        o.timezone = pytz.UTC
+        o.timezone = datetime.timezone.utc
         
         o.save()
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone, TimeZoneHelper)
-        self.assertIs(o.timezone.tz, pytz.UTC)
+        self.assertIs(o.timezone.tz, ZoneInfo('UTC'))
         
         o.timezone = None
         o.save()
@@ -2496,13 +2499,13 @@ class TimeZoneFieldTestCase(TestCase):
         
         o = TimeZoneTest()
         
-        o.timezone3 = pytz.UTC
+        o.timezone3 = datetime.timezone.utc
         
         o.save()
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone3, TimeZoneHelper)
-        self.assertIs(o.timezone3.tz, pytz.UTC)
+        self.assertIs(o.timezone3.tz, ZoneInfo('UTC'))
         
         o.timezone3 = ''
         o.save()
@@ -2522,13 +2525,13 @@ class TimeZoneFieldTestCase(TestCase):
         
         o = TimeZoneTest()
         
-        o.timezone = pytz.UTC
+        o.timezone = datetime.timezone.utc
         
         o.save()
         o.refresh_from_db()
         
         self.assertIsInstance(o.timezone, TimeZoneHelper)
-        self.assertIs(o.timezone.tz, pytz.UTC)
+        self.assertIs(o.timezone.tz, ZoneInfo('UTC'))
         
         o.timezone = ''
         o.save()

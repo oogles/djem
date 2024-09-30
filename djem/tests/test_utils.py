@@ -1,6 +1,7 @@
-import pytz
+import datetime
 import warnings
 from copy import deepcopy
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.apps import apps
 from django.test import SimpleTestCase
@@ -42,36 +43,35 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         Test constructing a TimeZoneHelper object with a valid timezone string.
         """
         
-        tz = 'Australia/Sydney'
-        helper = TimeZoneHelper(tz)
+        helper = TimeZoneHelper('Australia/Sydney')
         
-        self.assertEqual(helper.tz.zone, tz)
+        self.assertEqual(helper.tz.key, 'Australia/Sydney')
     
     def test_init__bad_string(self):
         """
         Test constructing a TimeZoneHelper object with an invalid timezone string.
         """
         
-        with self.assertRaises(pytz.UnknownTimeZoneError):
+        with self.assertRaises(ZoneInfoNotFoundError):
             TimeZoneHelper('fail')
     
     def test_init__UTC(self):
         """
-        Test constructing a TimeZoneHelper object with the pytz UTC singleton.
+        Test constructing a TimeZoneHelper object with the UTC singleton.
         """
         
-        tz = pytz.UTC
+        tz = datetime.timezone.utc
         helper = TimeZoneHelper(tz)
         
         self.assertIs(helper.tz, tz)
     
     def test_init__timezone(self):
         """
-        Test constructing a TimeZoneHelper object with a valid pytz timezone
+        Test constructing a TimeZoneHelper object with a valid ZoneInfo
         instance.
         """
         
-        tz = pytz.timezone('Australia/Sydney')
+        tz = ZoneInfo('Australia/Sydney')
         helper = TimeZoneHelper(tz)
         
         self.assertIs(helper.tz, tz)
@@ -82,50 +82,30 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         timezones.
         """
         
-        self.assertEqual(TimeZoneHelper(pytz.UTC).name, 'UTC')
+        self.assertEqual(TimeZoneHelper(datetime.timezone.utc).name, 'UTC')
         self.assertEqual(TimeZoneHelper('Australia/Sydney').name, 'Australia/Sydney')
         self.assertEqual(TimeZoneHelper('US/Eastern').name, 'US/Eastern')
     
     def test_now__utc(self):
         """
         Test the TimeZoneHelper ``now`` method, using the UTC timezone.
-        NOTE: This test is subject to some inaccuracy if run at the precise
-        moment that caused the two compared datetimes to generate on either
-        side of a minute interval.
         """
         
-        fmt = '%Y-%m-%d %H:%M'
-        
-        # Generate the two "now" times as close together as possibly to minimise
-        # the difference between them. Compare them with minute-resolution as
-        # this is enough to detect timezone mismatches and the chance they will
-        # generated either side of a minute interval is less than with seconds.
         now = timezone.now()
-        helper_now = TimeZoneHelper(pytz.UTC).now()
+        helper_now = TimeZoneHelper(datetime.timezone.utc).now()
         
-        self.assertEqual(helper_now.strftime(fmt), now.strftime(fmt))
+        self.assertAlmostEqual(helper_now, now, delta=datetime.timedelta(seconds=1))
     
     def test_now__local(self):
         """
         Test the TimeZoneHelper ``now`` method, using a local timezone.
-        NOTE: This test is subject to some inaccuracy if run at the precise
-        moment that caused the two compared datetimes to generate on either
-        side of a minute interval.
         """
         
-        fmt = '%Y-%m-%d %H:%M'
-        
-        # Generate the two "now" times as close together as possibly to minimise
-        # the difference between them. Compare them with minute-resolution as
-        # this is enough to detect timezone mismatches and the chance they will
-        # generated either side of a minute interval is less than with seconds.
         now = timezone.now()
         helper_now = TimeZoneHelper('Australia/Sydney').now()
+        local_now = now.astimezone(ZoneInfo('Australia/Sydney'))
         
-        local = pytz.timezone('Australia/Sydney')
-        local_now = local.normalize(now.astimezone(local))
-        
-        self.assertEqual(helper_now.strftime(fmt), local_now.strftime(fmt))
+        self.assertAlmostEqual(helper_now, local_now, delta=datetime.timedelta(seconds=1))
     
     def test_today__utc(self):
         """
@@ -138,7 +118,7 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         # It would be pretty unlucky for these two datetimes to generate
         # either side of a day interval.
         today = timezone.now().date()
-        helper_today = TimeZoneHelper(pytz.UTC).today()
+        helper_today = TimeZoneHelper(datetime.timezone.utc).today()
         
         self.assertEqual(helper_today, today)
     
@@ -153,10 +133,8 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         # It would be pretty unlucky for these two datetimes to generate
         # either side of a day interval.
         now = timezone.now()
-        local = pytz.timezone('Australia/Sydney')
-        local_today = local.normalize(now.astimezone(local)).date()
-        
         helper_today = TimeZoneHelper('Australia/Sydney').today()
+        local_today = now.astimezone(ZoneInfo('Australia/Sydney')).date()
         
         self.assertEqual(helper_today, local_today)
     
@@ -165,7 +143,7 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         Test coercing TimeZoneHelper to a string.
         """
         
-        self.assertEqual(str(TimeZoneHelper(pytz.UTC)), 'UTC')
+        self.assertEqual(str(TimeZoneHelper(datetime.timezone.utc)), 'UTC')
         self.assertEqual(str(TimeZoneHelper('Australia/Sydney')), 'Australia/Sydney')
         self.assertEqual(str(TimeZoneHelper('US/Eastern')), 'US/Eastern')
 

@@ -1,6 +1,6 @@
 from django.db import models
 
-from djem.utils.dt import PYTZ_AVAILABLE, TIMEZONE_CHOICES, get_tz_helper
+from djem.utils.dt import TIMEZONE_CHOICES, get_tz_helper
 
 __all__ = ('TimeZoneField', )
 
@@ -13,9 +13,9 @@ class TimeZoneField(models.Field):
     functionality for that timezone.
     
     Valid inputs:
-     - A timezone string (accepted by pytz.timezone())
-     - An instance of pytz.tzinfo.BaseTzInfo
-     - The pytz.UTC singleton
+     - A timezone string (accepted by ZoneInfo())
+     - An instance of ZoneInfo
+     - The datetime.timezone.utc singleton
      - An instance of djem.utils.dt.TimeZoneHelper
      - None and the empty string (both representing a null value)
     
@@ -24,15 +24,12 @@ class TimeZoneField(models.Field):
     instantiated with the stored timezone.
     """
     
-    description = "A pytz timezone"
+    description = 'A timezone'
     
     CHOICES = TIMEZONE_CHOICES
     MAX_LENGTH = 63
     
     def __init__(self, verbose_name=None, **kwargs):
-        
-        if not PYTZ_AVAILABLE:  # pragma: no cover
-            raise RuntimeError('TimeZoneField requires pytz to be installed.')
         
         kwargs.setdefault('choices', self.CHOICES)
         kwargs.setdefault('max_length', self.MAX_LENGTH)
@@ -83,7 +80,7 @@ class TimeZoneField(models.Field):
             else:
                 return ''
         
-        return helper.tz.zone
+        return helper.name
     
     def validate(self, value, model_instance):
         
@@ -92,4 +89,4 @@ class TimeZoneField(models.Field):
         
         # Only pass the helper's timezone name into the super call - it will
         # be checked for its presence in self.choices
-        super().validate(value.tz.zone, model_instance)
+        super().validate(value.name, model_instance)
