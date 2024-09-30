@@ -11,6 +11,7 @@ This release contains the following **backwards incompatible** changes:
 
 In addition, it also contains:
 
+* Added compatibility with Django versions 4.2 and 5.0
 * Improved customisability of pagination template
 * Updated ``UNDEFINED`` to ensure it cannot be deep copied (it will always be the same instance)
 * Updated the ``Archivable.archive()`` method to raise ``ProtectedError`` and ``RestrictedError`` as ``delete()`` would, when inbound foreign keys using ``on_delete=models.PROTECT`` or ``on_delete=models.RESTRICT`` are detected against unarchived records

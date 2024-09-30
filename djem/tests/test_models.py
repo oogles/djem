@@ -2325,7 +2325,7 @@ class TimeZoneFieldTestCase(TestCase):
         
         f = TimeZoneField(choices=choices, max_length=32)
         
-        self.assertEqual(f.choices, choices)
+        self.assertCountEqual(f.choices, choices)
         self.assertEqual(f.max_length, 32)
     
     def test_init__verbose_name(self):
