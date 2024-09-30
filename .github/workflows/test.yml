@@ -17,11 +17,14 @@ jobs:
           'Django>=4.0,<4.1', 'Django>=4.1,<4.2', 'Django>=4.2,<5.0',
           'Django>=5.0,<5.1'
         ]
+        exclude:
+          - python-version: '3.9'
+            django-version: 'Django>=5.0,<5.1'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
