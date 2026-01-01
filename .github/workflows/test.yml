@@ -18,12 +18,23 @@ jobs:
           'Django>=6.0,<6.1'
         ]
         exclude:
+          # Django 4.x max version 3.13 (3.14+ actively incompatible)
+          - python-version: '3.14'
+            django-version: 'Django>=4.2,<5.0'
+          # Django 5.x min version 3.10, max version 3.13 (3.14+ actively incompatible)
           - python-version: '3.9'
             django-version: 'Django>=5.0,<5.1'
           - python-version: '3.9'
             django-version: 'Django>=5.1,<5.2'
           - python-version: '3.9'
             django-version: 'Django>=5.2,<6.0'
+          - python-version: '3.14'
+            django-version: 'Django>=5.0,<5.1'
+          - python-version: '3.14'
+            django-version: 'Django>=5.1,<5.2'
+          - python-version: '3.14'
+            django-version: 'Django>=5.2,<6.0'
+          # Django 6.x min version 3.12
           - python-version: '3.9'
             django-version: 'Django>=6.0,<6.1'
           - python-version: '3.10'
