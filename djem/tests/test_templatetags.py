@@ -1065,7 +1065,10 @@ class FormFieldTestCase(TemplateRendererMixin, TestCase):
             'form': self.form({})  # bind form
         })
         
-        self.assertIn('<ul class="errorlist"><li>This field is required.</li></ul>', output)
+        self.assertIn(
+            '<ul class="errorlist" id="id_required_field_error"><li>This field is required.</li></ul>',
+            output
+        )
     
     def test_help_text(self):
         """
@@ -1348,7 +1351,10 @@ class CheckboxTestCase(TemplateRendererMixin, TestCase):
             'form': self.form({})  # bind form
         })
         
-        self.assertIn('<ul class="errorlist"><li>This field is required.</li></ul>', output)
+        self.assertIn(
+            '<ul class="errorlist" id="id_required_field_error"><li>This field is required.</li></ul>',
+            output
+        )
     
     def test_help_text(self):
         """

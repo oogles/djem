@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',      # for tests
     
     'djem',
+    'djem_dev',  # for dev utils, such as extended auto-imports in `shell` command
 ]
 
 DATABASES = {
@@ -37,18 +38,3 @@ TEMPLATES = [{
 }]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'  # suppress system check warning
-
-# Add django-extensions to INSTALLED_APPS if it is present. This provides extra
-# dev tools, e.g. shell_plus, but isn't required - e.g. for testing.
-try:
-    import django_extensions  # noqa: F401 (import unused)
-except ImportError:
-    pass
-else:
-    INSTALLED_APPS.append('django_extensions')
-    
-    SHELL_PLUS_POST_IMPORTS = (
-        ('djem.utils.dev', 'Developer'),
-        ('djem.utils.mon', 'Mon'),
-        ('djem.utils.inspect', 'pp'),
-    )

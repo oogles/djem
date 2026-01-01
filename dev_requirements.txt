@@ -1,6 +1,5 @@
 # Django
-Django==4.2.27  # keep in sync with docs/requirements.txt
-django-extensions==3.2.1
+Django==5.2.9  # keep in sync with docs/requirements.txt
 tzdata==2025.3
 
 # Testing/Linting
@@ -19,4 +18,4 @@ build==0.9.0
 twine==4.0.2
 
 # Task runner
-task-jogger==1.1.1
+task-jogger==2.0.2
