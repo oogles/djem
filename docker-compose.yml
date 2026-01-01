@@ -1,10 +1,12 @@
-version: "3.9"
 services:
   
   db:
-    image: postgres
+    # Pin major version to avoid data incompatibility issues preventing the
+    # container from starting (existing data in old formats not compatible
+    # with new versions)
+    image: postgres:18
     volumes:
-      - .volumes/data/db:/var/lib/postgresql/data
+      - .volumes/db:/var/lib/postgresql
     environment:
       - POSTGRES_DB=djem
       - POSTGRES_USER=${DB_USER}

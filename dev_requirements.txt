@@ -1,6 +1,7 @@
 # Django
-Django==3.2.16  # keep in sync with docs/requirements.txt
+Django==4.2.27  # keep in sync with docs/requirements.txt
 django-extensions==3.2.1
+tzdata==2025.3
 
 # Testing/Linting
 bandit==1.7.4
