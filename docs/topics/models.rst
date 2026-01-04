@@ -200,27 +200,25 @@ This allows the use of ``Auditable`` and all related functionality without the s
 
 .. note::
 
-    As the accuracy of the ``user_modified`` field is often irrelevant in tests, setting :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` to ``False`` using `override_settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.override_settings>`_ can help make updating model instances in tests a bit easier.
+    As the accuracy of the ``user_modified`` field is often irrelevant in tests, setting :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` to ``False`` using `override_settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.override_settings>`_ can help make updating model instances in tests a bit easier. However, be aware that this may mask bugs in the code being tested, if the ``user`` argument is typically required outside a test environment, but has been missed. Therefore, it is recommended to use `SimpleTestCase.settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.SimpleTestCase.settings>`_ to disable the requirement only when creating/updating test records.
 
     E.g.
 
     .. code-block:: python
-
-        from django.test import TestCase, override_settings
-
-        # For the whole TestCase:
-
-        @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
+        
+        from django.test import TestCase
+        
         class ExampleTestCase(TestCase):
-            # ...
-
-        # For specific tests:
-
-        class ExampleTestCase(TestCase):
-
-            @override_settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False)
+            
             def test_something(self):
-                # ...
+                
+                # Create test records without requiring `user` argument
+                with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
+                    obj = ExampleModel(name='Test Example')
+                    obj.save()  # No user argument needed
+                
+                # Test code without masking missing `user` arguments
+                do_something(obj)
 
 An additional caveat is that there may not always be a known user when a change is being made to a ``Auditable`` record, e.g. during a system-triggered background process. Situations such as these may be solved by setting :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` as described above, and taking responsibility for keeping ``user_modified`` up to date when necessary, or by creating a "system" user that can be passed in during these operations.
 
@@ -439,9 +437,9 @@ TimeZoneField
 
 In forms, a :class:`TimeZoneField` is represented by a ``TypedChoiceField``, and rendered using a ``Select`` widget by default.
 
-.. note::
+.. versionchanged:: 0.9
 
-    Use of :class:`TimeZoneField` requires `pytz <http://pytz.sourceforge.net/>`_ to be installed. It will raise an exception during instantiation if ``pytz`` is not available.
+    The :class:`TimeZoneField` now uses the standard library's `zoneinfo <https://docs.python.org/3/library/zoneinfo.html#module-zoneinfo>`_ package. It previously required the third party `pytz <http://pytz.sourceforge.net/>`_ library to be installed.
 
 .. note::
 
@@ -474,7 +472,7 @@ Available Timezones
 
 :class:`TimeZoneField` is a reasonably light wrapper around a ``CharField``, providing a default value for the ``choices`` argument. The default choices are taken from `pytz.common_timezones <http://pytz.sourceforge.net/#helpers>`_.
 
-These choices can be modified in the same way as any other ``CharField``. However, they need to be valid timezone name strings as per the Olson tz database, `used by pytz <http://pytz.sourceforge.net/#introduction>`_.
+These choices can be modified in the same way as any other ``CharField``. However, they need to be valid timezone name strings as recognised by ``zoneinfo``, which references either system timezone data or, on systems that have no available timezone data, the separate `tzdata <https://pypi.org/project/tzdata/>`_ package.
 
 For example, using a very limited set of timezones:
 
