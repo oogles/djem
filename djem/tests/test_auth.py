@@ -7,7 +7,11 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
 from django.views import View
 
-from djem.auth import ObjectPermissionsBackend, PermissionRequiredMixin, permission_required
+from djem.auth import (
+    ObjectPermissionsBackend,
+    PermissionRequiredMixin,
+    permission_required,
+)
 
 from .models import CustomUser, OLPTest, UniversalOLPTest, UserLogTest
 
@@ -689,14 +693,14 @@ class OLPTestCase(TestCase):
         user.set_password('blahblahblah')
         user.save()
         
-        self.assertTrue(authenticate(username='test1', password='blahblahblah'))
+        self.assertTrue(authenticate(username='test1', password='blahblahblah'))  # noqa: S106
     
     def test_auth__invalid(self):
         """
         Test the backend does not interfere with invalid user authentication.
         """
         
-        self.assertFalse(authenticate(username='test1', password='badpassword'))
+        self.assertFalse(authenticate(username='test1', password='badpassword'))  # noqa: S106
     
     def test_has_perm__no_model_level(self):
         """

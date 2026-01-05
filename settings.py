@@ -1,7 +1,7 @@
 # Minimal settings file to allow the running of tests, execution of migrations,
 # and several other useful management commands.
 
-SECRET_KEY = 'abcde12345'  # nosec
+SECRET_KEY = 'abcde12345'  # noqa: S105
 
 # Needs to point to something to allow tests to perform url resolving. The file
 # doesn't actually need to contain any urls (but does need to define "urlpatterns").

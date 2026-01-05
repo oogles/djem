@@ -4,7 +4,12 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from djem.forms import AuditableForm, CommonInfoForm, TimeZoneField, UserSavable
+from djem.forms import (
+    AuditableForm,
+    CommonInfoForm,
+    TimeZoneField,
+    UserSavable,
+)
 from djem.utils.dt import TIMEZONE_CHOICES, TimeZoneHelper
 
 from .models import StaticTest, TimeZoneTest

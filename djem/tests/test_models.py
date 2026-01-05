@@ -9,13 +9,24 @@ from django.db.models import ProtectedError, QuerySet, RestrictedError
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
-from djem.models import ArchivableQuerySet, AuditableQuerySet, MixableQuerySet, TimeZoneField
+from djem.models import (
+    ArchivableQuerySet,
+    AuditableQuerySet,
+    MixableQuerySet,
+    TimeZoneField,
+)
 from djem.models.models import UnarchivedCollector, _TaggableStr
 from djem.utils.dt import TimeZoneHelper
 
 from .models import (
-    ArchivableTest, AuditableTest, LogTest, RelatedArchivableTest, RelatedTest,
-    StaticTest, TimeZoneTest, VersionableTest
+    ArchivableTest,
+    AuditableTest,
+    LogTest,
+    RelatedArchivableTest,
+    RelatedTest,
+    StaticTest,
+    TimeZoneTest,
+    VersionableTest,
 )
 
 

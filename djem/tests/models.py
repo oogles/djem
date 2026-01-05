@@ -3,8 +3,13 @@ from django.core.exceptions import PermissionDenied
 from django.db import models
 
 from djem.models import (
-    Archivable, Auditable, Loggable, OLPMixin, StaticAbstract, TimeZoneField,
-    Versionable
+    Archivable,
+    Auditable,
+    Loggable,
+    OLPMixin,
+    StaticAbstract,
+    TimeZoneField,
+    Versionable,
 )
 
 
@@ -165,7 +170,7 @@ class OLPTest(models.Model):
     def _user_can_open_olptest(self, user):
         
         # For tests using inactive and super users (neither should reach this point)
-        assert user.is_active or not user.is_superuser, 'Not supposed to get here'
+        assert user.is_active or not user.is_superuser, 'Not supposed to get here'  # noqa: S101
         
         return True
     
@@ -228,7 +233,7 @@ class UniversalOLPTest(models.Model):
     def _user_can_open_universalolptest(self, user):
         
         # For tests using inactive and super users (neither should reach this point)
-        assert user.is_active or not user.is_superuser, 'Not supposed to get here'
+        assert user.is_active or not user.is_superuser, 'Not supposed to get here'  # noqa: S101
         
         return True
     

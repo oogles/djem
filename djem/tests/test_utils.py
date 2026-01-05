@@ -30,8 +30,8 @@ class UndefinedTestCase(SimpleTestCase):
     
     def test_deepcopy__indirect(self):
         
-        dict = {'value': UNDEFINED}
-        clone = deepcopy(dict)
+        val = {'value': UNDEFINED}
+        clone = deepcopy(val)
         
         self.assertIs(clone['value'], UNDEFINED)
 

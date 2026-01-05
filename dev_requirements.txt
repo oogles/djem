@@ -3,10 +3,8 @@ Django==5.2.9  # keep in sync with docs/requirements.txt
 tzdata==2025.3
 
 # Testing/Linting
-bandit==1.7.4
 coverage==7.13.1
-flake8==6.0.0
-isort==5.10.1
+ruff==0.14.10
 tox==4.32.0
 
 # Documentation

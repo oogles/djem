@@ -10,6 +10,57 @@ exclude_also = [
     "def __repr__"
 ]
 
+[tool.jogger.lint]
+fable_exclude = [
+    "./.volumes/*",
+    "./.ruff_cache/*",
+    "./htmlcov/*",
+    "./docs/_build/*"
+]
+
+[tool.ruff]
+line-length = 79
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = [
+    "A",   # flake8-builtins
+    "C90", # McCabe complexity
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "FLY", # flynt (static-join-to-f-string)
+    "I",   # isort
+    "S",   # flake8-bandit (security)
+    "W",   # pycodestyle warnings
+]
+ignore = [
+    "W293" # blank line contains whitespace
+]
+
+# As of Ruff version 0.14.10, there are many useful rules such as E303 & W391
+# that are still in preview. Enable all preview rules for now.
+preview = true
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 119
+max-doc-length = 119
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.isort]
+section-order = [
+    "future",
+    "standard-library",
+    "django",
+    "third-party",
+    "first-party",
+    "local-folder"
+]
+
+[tool.ruff.lint.isort.sections]
+"django" = ["django"]
+
 [build-system]
 requires = [
     "setuptools>=42",

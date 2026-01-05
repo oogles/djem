@@ -55,7 +55,7 @@ def setup_test_app(package, label=None):
         # necessary (vs raising an exception) as there are certain conditions
         # that can cause this function to be run multiple times (e.g. errors
         # during Django's initialisation can cause this).
-        warnings.warn(f'Attempted setup of duplicate test app "{label}".', RuntimeWarning)
+        warnings.warn(f'Attempted setup of duplicate test app "{label}".', RuntimeWarning, stacklevel=2)
     
     app_config = AppConfig.create(package)
     app_config.apps = apps

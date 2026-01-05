@@ -3,7 +3,9 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth.backends import BaseBackend
-from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    PermissionRequiredMixin as DjangoPermissionRequiredMixin,
+)
 from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, resolve_url

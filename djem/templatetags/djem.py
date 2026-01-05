@@ -1,6 +1,11 @@
 from django.conf import settings
 from django.template import Library, loader
-from django.template.base import Node, NodeList, TemplateSyntaxError, token_kwargs
+from django.template.base import (
+    Node,
+    NodeList,
+    TemplateSyntaxError,
+    token_kwargs,
+)
 
 register = Library()
 

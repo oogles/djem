@@ -1,6 +1,6 @@
 # Minimal settings file to allow the generation of documentation on readthedocs.org.
 
-SECRET_KEY = 'abcde12345'  # nosec
+SECRET_KEY = 'abcde12345'  # noqa: S105
 
 # Need to point at something
 ROOT_URLCONF = 'djem.tests'

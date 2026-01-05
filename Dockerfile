@@ -1,4 +1,4 @@
-FROM python:3.10-slim-trixie
+FROM python:3.13-slim-trixie
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get -y install nano make
