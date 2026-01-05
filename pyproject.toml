@@ -1,3 +1,15 @@
+[tool.coverage.run]
+source = ["djem"]
+
+# Keep .coverage directory out of the shared folder. This avoids needing to
+# sync all the files and configure them to be ignored.
+data_file = "/tmp/.coverage"
+
+[tool.coverage.report]
+exclude_also = [
+    "def __repr__"
+]
+
 [build-system]
 requires = [
     "setuptools>=42",

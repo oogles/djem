@@ -4,7 +4,7 @@ tzdata==2025.3
 
 # Testing/Linting
 bandit==1.7.4
-coverage==6.5.0
+coverage==7.13.1
 flake8==6.0.0
 isort==5.10.1
 tox==4.32.0
