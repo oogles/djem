@@ -53,13 +53,13 @@ class OLPMixinTestCase(TestCase):
         
         # Django's MLP cache attributes should not exist
         with self.assertRaises(AttributeError):
-            getattr(user, '_user_perm_cache')
+            user._user_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_group_perm_cache')
+            user._group_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_perm_cache')
+            user._perm_cache  # noqa: B018
         
         # Clear the cache
         user.clear_perm_cache()
@@ -67,13 +67,13 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(user._olp_cache, {})
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_user_perm_cache')
+            user._user_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_group_perm_cache')
+            user._group_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_perm_cache')
+            user._perm_cache  # noqa: B018
     
     def test_clear_perm_cache__mlp(self):
         """
@@ -101,13 +101,13 @@ class OLPMixinTestCase(TestCase):
         
         # Django's MLP cache attributes should not exist
         with self.assertRaises(AttributeError):
-            getattr(user, '_user_perm_cache')
+            user._user_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_group_perm_cache')
+            user._group_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_perm_cache')
+            user._perm_cache  # noqa: B018
         
         # Check a model-level permission - the MLP caches only should populate
         user.has_perm('djemtest.open_olptest')
@@ -121,13 +121,13 @@ class OLPMixinTestCase(TestCase):
         user.clear_perm_cache()
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_user_perm_cache')
+            user._user_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_group_perm_cache')
+            user._group_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_perm_cache')
+            user._perm_cache  # noqa: B018
     
     def test_clear_perm_cache__olp(self):
         """
@@ -155,13 +155,13 @@ class OLPMixinTestCase(TestCase):
         
         # Django's MLP cache attributes should not exist
         with self.assertRaises(AttributeError):
-            getattr(user, '_user_perm_cache')
+            user._user_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_group_perm_cache')
+            user._group_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_perm_cache')
+            user._perm_cache  # noqa: B018
         
         # Check an object-level permission - the OLP and MLP caches should populate
         obj = OLPTest.objects.create()
@@ -179,13 +179,13 @@ class OLPMixinTestCase(TestCase):
         self.assertEqual(user._olp_cache, {})
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_user_perm_cache')
+            user._user_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_group_perm_cache')
+            user._group_perm_cache  # noqa: B018
         
         with self.assertRaises(AttributeError):
-            getattr(user, '_perm_cache')
+            user._perm_cache  # noqa: B018
     
     @override_settings(DJEM_PERM_LOG_VERBOSITY=0)
     def test_has_perm__logging__0(self):
@@ -670,7 +670,7 @@ class OLPTestCase(TestCase):
         
         # The cache attribute on the user does not exist by default
         with self.assertRaises(AttributeError):
-            getattr(user, '_olp_cache')
+            user._olp_cache  # noqa: B018
     
     def cache_reset_test(self, user):
         

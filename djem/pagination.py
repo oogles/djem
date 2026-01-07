@@ -14,9 +14,9 @@ def get_page(number, object_list, per_page=None, **kwargs):
     if per_page is None:
         try:
             per_page = settings.DJEM_DEFAULT_PAGE_LENGTH
-        except AttributeError:
+        except AttributeError as e:
             msg = 'The "per_page" argument is required unless DJEM_DEFAULT_PAGE_LENGTH is set.'
-            raise TypeError(msg)
+            raise TypeError(msg) from e
     
     paginator = Paginator(object_list, per_page, **kwargs)
     

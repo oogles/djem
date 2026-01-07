@@ -50,10 +50,9 @@ def _get_stat_table_data(monitor, stat):
         for child in children:
             total = child.stats[total_key]
             
+            pc = 0
             if parent_total:
                 pc = total / parent_total * 100
-            else:
-                pc = 0
             
             data.append((
                 f'{indent_str}{child.name}',
@@ -353,9 +352,9 @@ class Mon:
         
         try:
             m = cls.monitors[name]
-        except KeyError:
+        except KeyError as e:
             msg = 'Attempted to end a monitor that was never started.'
-            raise Exception(msg)
+            raise Exception(msg) from e
         
         m.stop()
         

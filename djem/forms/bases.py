@@ -69,6 +69,10 @@ class CommonInfoForm(AuditableForm):
     
     def __init__(self, *args, **kwargs):
         
-        warnings.warn('Use of CommonInfoForm is deprecated, use AuditableForm instead.', DeprecationWarning)
+        warnings.warn(
+            'Use of CommonInfoForm is deprecated, use AuditableForm instead.',
+            DeprecationWarning,
+            stacklevel=2
+        )
         
         super().__init__(*args, **kwargs)

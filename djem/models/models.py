@@ -141,9 +141,9 @@ class Loggable:
         # Pop from active logs to move to finished logs
         try:
             name, log = self._active_logs.popitem()
-        except KeyError:
+        except KeyError as e:
             msg = 'No active log to finish.'
-            raise KeyError(msg)
+            raise KeyError(msg) from e
         
         # If a log with the same name has been finished previously, remove it
         # from the finished logs dict before adding this one, so that this one
@@ -162,9 +162,9 @@ class Loggable:
         
         try:
             self._active_logs.popitem()
-        except KeyError:
+        except KeyError as e:
             msg = 'No active log to discard.'
-            raise KeyError(msg)
+            raise KeyError(msg) from e
     
     def log(self, *lines, tag=None):
         """
@@ -179,9 +179,9 @@ class Loggable:
         # Pop to get the last item
         try:
             name, log = self._active_logs.popitem()
-        except KeyError:
+        except KeyError as e:
             msg = 'No active log to append to. Has one been started?'
-            raise KeyError(msg)
+            raise KeyError(msg) from e
         
         # Append to the log
         tags = (tag, ) if tag else None
@@ -212,9 +212,9 @@ class Loggable:
         
         try:
             log = self._finished_logs[name]
-        except KeyError:
+        except KeyError as e:
             msg = f'No log found for "{name}". Has it been finished?'
-            raise KeyError(msg)
+            raise KeyError(msg) from e
         
         return _process_log(log, tags, raw)
     
@@ -238,9 +238,9 @@ class Loggable:
         # Pop to get the last item, but put it straight back
         try:
             name, log = self._finished_logs.popitem()
-        except KeyError:
+        except KeyError as e:
             msg = 'No finished logs to retrieve.'
-            raise KeyError(msg)
+            raise KeyError(msg) from e
         
         self._finished_logs[name] = log
         
@@ -536,7 +536,11 @@ class CommonInfoQuerySet(AuditableQuerySet):
     
     def __init__(self, *args, **kwargs):
         
-        warnings.warn('Use of CommonInfoQuerySet is deprecated, use AuditableQuerySet instead.', DeprecationWarning)
+        warnings.warn(
+            'Use of CommonInfoQuerySet is deprecated, use AuditableQuerySet instead.',
+            DeprecationWarning,
+            stacklevel=2
+        )
         
         super().__init__(*args, **kwargs)
 
@@ -605,7 +609,8 @@ class Auditable(models.Model):
             
             if user:
                 try:
-                    self.user_created
+                    # Query for an existing user_created, replace if not found
+                    self.user_created  # noqa: B018
                 except ObjectDoesNotExist:
                     self.user_created = user
         
@@ -641,7 +646,11 @@ class CommonInfoMixin(Auditable):
     
     def __init__(self, *args, **kwargs):
         
-        warnings.warn('Use of CommonInfoMixin is deprecated, use Auditable instead.', DeprecationWarning)
+        warnings.warn(
+            'Use of CommonInfoMixin is deprecated, use Auditable instead.',
+            DeprecationWarning,
+            stacklevel=2
+        )
         
         super().__init__(*args, **kwargs)
 
@@ -706,7 +715,7 @@ class Archivable(models.Model):
             
             # Reconstruct the exceptions with the new message and the original
             # `protected_objects`/`restricted_objects` value
-            raise type(e)(msg, objs)
+            raise type(e)(msg, objs) from None
         
         if 'update_fields' in kwargs:
             kwargs['update_fields'] = set(kwargs['update_fields']).union(('is_archived',))
@@ -745,7 +754,11 @@ class ArchivableMixin(Archivable):
     
     def __init__(self, *args, **kwargs):
         
-        warnings.warn('Use of ArchivableMixin is deprecated, use Archivable instead.', DeprecationWarning)
+        warnings.warn(
+            'Use of ArchivableMixin is deprecated, use Archivable instead.',
+            DeprecationWarning,
+            stacklevel=2
+        )
         
         super().__init__(*args, **kwargs)
 
@@ -772,7 +785,11 @@ class VersioningQuerySet(VersionableQuerySet):
     
     def __init__(self, *args, **kwargs):
         
-        warnings.warn('Use of VersioningQuerySet is deprecated, use VersionableQuerySet instead.', DeprecationWarning)
+        warnings.warn(
+            'Use of VersioningQuerySet is deprecated, use VersionableQuerySet instead.',
+            DeprecationWarning,
+            stacklevel=2
+        )
         
         super().__init__(*args, **kwargs)
 
@@ -845,7 +862,11 @@ class VersioningMixin(Versionable):
     
     def __init__(self, *args, **kwargs):
         
-        warnings.warn('Use of VersioningMixin is deprecated, use Versionable instead.', DeprecationWarning)
+        warnings.warn(
+            'Use of VersioningMixin is deprecated, use Versionable instead.',
+            DeprecationWarning,
+            stacklevel=2
+        )
         
         super().__init__(*args, **kwargs)
 

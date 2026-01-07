@@ -14,7 +14,7 @@ class GetPageTestCase(TestCase):
         
         user = get_user_model().objects.create_user('test')
         
-        for i in range(23):
+        for _ in range(23):
             AuditableTest().save(user)
         
         cls.object_list = AuditableTest.objects.order_by('pk')

@@ -86,7 +86,7 @@ class UserSavableTestCase(TestCase):
         # Test save_m2m method is inaccessible, as it should be after a
         # commit=True save
         with self.assertRaises(AttributeError):
-            form.save_m2m
+            form.save_m2m  # noqa: B018
     
     def test_save_commit__false(self):
         """

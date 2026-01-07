@@ -368,11 +368,7 @@ class ModelTable(InspectTable):
         
         field_name = field.name.lower()
         
-        for f in self.field_filters:
-            if f in field_name:
-                return True
-        
-        return False
+        return any(f in field_name for f in self.field_filters)
     
     def _get_field_flags(self, field):
         

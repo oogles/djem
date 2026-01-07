@@ -194,10 +194,10 @@ def _check_perms(perms, user, view_kwargs):
                     content_type__app_label=perm_app,
                     codename=perm_code
                 )
-            except (ValueError, Permission.DoesNotExist):
+            except (ValueError, Permission.DoesNotExist) as e:
                 # Treat malformed (missing a '.') or non-existent
                 # permission names as permission denied
-                raise PermissionDenied
+                raise PermissionDenied from e
             
             model = perm_obj.content_type.model_class()
             

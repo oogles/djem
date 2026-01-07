@@ -818,7 +818,7 @@ class PaginateTestCase(TemplateRendererMixin, TestCase):
         
         user = get_user_model().objects.create_user('test')
         
-        for i in range(23):
+        for _ in range(23):
             AuditableTest().save(user)
         
         # All tests will use the same Paginator with 5 results per page

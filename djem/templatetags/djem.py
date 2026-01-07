@@ -133,7 +133,7 @@ def _transform_kwargs(kwargs):
     attribute names, e.g. data-*.
     """
     
-    return {key.replace('_', '-'): kwargs[key] for key in kwargs.keys()}
+    return {key.replace('_', '-'): kwargs[key] for key in kwargs}
 
 
 @register.inclusion_tag('djem/form_field.html')
