@@ -55,7 +55,8 @@ class AuditableForm(UserSavable, forms.ModelForm):
         
         # User is required for bound forms
         if self.is_bound and not user:
-            raise TypeError('Bound {0} instances require a "user" argument.'.format(self.__class__.__name__))
+            msg = f'Bound {self.__class__.__name__} instances require a "user" argument.'
+            raise TypeError(msg)
         
         # Set self.user regardless of whether or not the form is bound. Child
         # forms may well require the user when the form is unbound as well.

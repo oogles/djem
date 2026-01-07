@@ -502,4 +502,5 @@ def get_tz_helper(value):
     try:
         return TimeZoneHelper(value)
     except ZoneInfoNotFoundError:
-        raise ValidationError('Invalid timezone "{0}".'.format(value))
+        msg = f'Invalid timezone "{value}".'
+        raise ValidationError(msg)

@@ -100,7 +100,7 @@ class ObjectPermissionsBackend(BaseBackend):
             content_type__model=obj._meta.model_name,
         ).values_list('content_type__app_label', 'codename')
         
-        perms_for_model = ['{0}.{1}'.format(app, name) for app, name in perms_for_model]
+        perms_for_model = [f'{app}.{name}' for app, name in perms_for_model]
         
         if user_obj.is_superuser and not getattr(settings, 'DJEM_UNIVERSAL_OLP', False):
             # Superusers get all permissions, regardless of obj or from_name,

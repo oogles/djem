@@ -51,6 +51,7 @@ class MessageMiddleware:
         if hasattr(request, '_messages'):  # pragma: no cover
             unstored_messages = request._messages.update(response)
             if unstored_messages and settings.DEBUG:
-                raise ValueError('Not all temporary messages could be stored.')
+                msg = 'Not all temporary messages could be stored.'
+                raise ValueError(msg)
         
         return response

@@ -63,7 +63,7 @@ def inspectf(func):
         path=func.__code__.co_filename
     )
     
-    return '\n\n'.join((signature, func.__doc__ if func.__doc__ else '[no doc string]', defined))
+    return '\n\n'.join((signature, func.__doc__ or '[no doc string]', defined))
 
 
 class InspectTable:
@@ -98,7 +98,7 @@ class InspectTable:
     
     def populate_data(self, table):
         
-        raise NotImplementedError()
+        raise NotImplementedError
     
     def build(self):
         
@@ -108,8 +108,7 @@ class InspectTable:
         
         preamble = self.get_preamble()
         if preamble:
-            output.append(preamble)
-            output.append('')
+            output.extend((preamble, ''))
         
         if not self.get_data_row_count():
             output.append(self.get_empty_string())
@@ -559,18 +558,15 @@ class ModelTable(InspectTable):
         hierarchy = self.hierarchy
         pk_hierarchy = self.pk_hierarchy
         
+        display_hierarchy = '\n - '.join([c['display_name'] for c in hierarchy[:-1]])
+        unique_together = m._meta.unique_together or 'None'
+        ordering = m._meta.ordering or 'None'
+        
         lines = [
             'Model: {0}'.format(m.__name__),
-            '\nInherits From:',
-            ' - {0}'.format(
-                '\n - '.join([c['display_name'] for c in hierarchy[:-1]])
-            ),
-            '\nUnique Together: {0}'.format(
-                m._meta.unique_together if m._meta.unique_together else 'None'
-            ),
-            'Default Ordering: {0}'.format(
-                m._meta.ordering if m._meta.ordering else 'None'
-            ),
+            f'\nInherits From:\n - {display_hierarchy}',
+            f'\nUnique Together: {unique_together}',
+            f'Default Ordering: {ordering}',
             '\n\nPK: {0} {1}'.format(
                 m._meta.pk.name,
                 ' ({0})'.format(' -> '.join(pk_hierarchy)) if len(pk_hierarchy) > 1 else ''

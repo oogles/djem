@@ -20,7 +20,8 @@ def _get_query_count():
 def _get_stat_table_data(monitor, stat):
     
     if stat not in ('time', 'queries', 'mem'):
-        raise TypeError('Unknown statistic "{0}".'.format(stat))
+        msg = f'Unknown statistic "{stat}".'
+        raise TypeError(msg)
     
     total_key = 'total_{0}'.format(stat)
     min_key = 'min_{0}'.format(stat)
@@ -132,7 +133,8 @@ class M:
     def _update_stats(self):
         
         if not self.end_time:
-            raise Exception('Monitor not started or still running.')
+            msg = 'Monitor not started or still running.'
+            raise Exception(msg)
         
         stats = self.stats
         runtime = self.get_seconds()
@@ -209,12 +211,14 @@ class M:
             self.parent.active_children -= 1
         
         if self.active_children > 0:
-            raise Exception('Cannot end a monitor with running children.')
+            msg = 'Cannot end a monitor with running children.'
+            raise Exception(msg)
     
     def get_mem_usage(self):
         
         if self.start_mem is None:
-            raise Exception('Monitor not started.')
+            msg = 'Monitor not started.'
+            raise Exception(msg)
         
         end_mem = self.end_mem
         if not end_mem:
@@ -225,7 +229,8 @@ class M:
     def get_query_count(self):
         
         if self.start_queries is None:
-            raise Exception('Monitor not started.')
+            msg = 'Monitor not started.'
+            raise Exception(msg)
         
         end_queries = self.end_queries
         if not end_queries:
@@ -236,7 +241,8 @@ class M:
     def get_runtime(self):
         
         if self.start_time is None:
-            raise Exception('Monitor not started.')
+            msg = 'Monitor not started.'
+            raise Exception(msg)
         
         end_time = self.end_time
         if not end_time:
@@ -356,7 +362,8 @@ class Mon:
         try:
             m = cls.monitors[name]
         except KeyError:
-            raise Exception('Attempted to end a monitor that was never started!')
+            msg = 'Attempted to end a monitor that was never started.'
+            raise Exception(msg)
         
         m.stop()
         

@@ -5,7 +5,9 @@ class Command(shell.Command):
     
     def get_auto_imports(self):
         
-        return super().get_auto_imports() + [
+        imports = super().get_auto_imports()
+        
+        imports.extend((
             'django.db.models.Avg',
             'django.db.models.Case',
             'django.db.models.Count',
@@ -23,4 +25,6 @@ class Command(shell.Command):
             'djem.utils.dev.Developer',
             'djem.utils.inspect.pp',
             'djem.utils.mon.Mon',
-        ]
+        ))
+        
+        return imports

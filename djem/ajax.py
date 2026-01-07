@@ -53,7 +53,8 @@ class AjaxResponse(JsonResponse):
             data = {}
         
         if not isinstance(data, dict):
-            raise TypeError('Non-dict data types are not supported')
+            msg = 'Non-dict data types are not supported'
+            raise TypeError(msg)
         
         if success is not None:
             data['success'] = bool(success)

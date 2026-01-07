@@ -50,7 +50,8 @@ def do_ifperm(parser, token, negate):
     
     bits = list(token.split_contents())
     if len(bits) != 4:
-        raise TemplateSyntaxError("%r takes three arguments" % bits[0])
+        msg = f'{bits[0]!r} takes three arguments'
+        raise TemplateSyntaxError(msg)
     
     end_tag = 'end' + bits[0]
     nodelist_true = parser.parse(('else', end_tag))
@@ -224,7 +225,8 @@ def checkbox(parser, token):
     
     bits = list(token.split_contents())
     if len(bits) < 2:
-        raise TemplateSyntaxError('{0!r} takes at least one argument'.format(bits[0]))
+        msg = f'{bits[0]!r} takes at least one argument'
+        raise TemplateSyntaxError(msg)
     
     nodelist = parser.parse(('endcheckbox',))
     parser.next_token()  # consume {{ endcheckbox }}

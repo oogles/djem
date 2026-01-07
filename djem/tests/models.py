@@ -204,7 +204,7 @@ class OLPTest(models.Model):
     
     def _user_can_deny_olptest(self, user):
         
-        raise PermissionDenied()
+        raise PermissionDenied
 
  
 class UniversalOLPTest(models.Model):
@@ -267,4 +267,4 @@ class UniversalOLPTest(models.Model):
     
     def _user_can_deny_universalolptest(self, user):
         
-        raise PermissionDenied()
+        raise PermissionDenied

@@ -65,14 +65,17 @@ class UnarchivedCollector(Collector):
         return queryset
 
 
-class _TaggableStr(str):
+# str preferred over collections.UserString as parent class because the
+# functionality being added is minimal and the goal is to be essentially
+# indistinguishable from a regular string for most intents and purposes.
+class _TaggableStr(str):  # noqa: FURB189
     
     def __new__(cls, value, tags=None):
         
         obj = super().__new__(cls, value)
         
-        # Ensure tags are stored as a tuple to be consistent the immutability
-        # of string objects
+        # Ensure tags are stored as a tuple to be consistent with the
+        # immutability of string objects
         obj.tags = tuple(tags) if tags else ()
         
         return obj
@@ -114,7 +117,8 @@ class Loggable:
         """
         
         if name in self._active_logs:
-            raise ValueError(f'A log named "{name}" is already active.')
+            msg = f'A log named "{name}" is already active.'
+            raise ValueError(msg)
         
         self._active_logs[name] = []
     
@@ -138,7 +142,8 @@ class Loggable:
         try:
             name, log = self._active_logs.popitem()
         except KeyError:
-            raise KeyError('No active log to finish.')
+            msg = 'No active log to finish.'
+            raise KeyError(msg)
         
         # If a log with the same name has been finished previously, remove it
         # from the finished logs dict before adding this one, so that this one
@@ -158,7 +163,8 @@ class Loggable:
         try:
             self._active_logs.popitem()
         except KeyError:
-            raise KeyError('No active log to discard.')
+            msg = 'No active log to discard.'
+            raise KeyError(msg)
     
     def log(self, *lines, tag=None):
         """
@@ -174,7 +180,8 @@ class Loggable:
         try:
             name, log = self._active_logs.popitem()
         except KeyError:
-            raise KeyError('No active log to append to. Has one been started?')
+            msg = 'No active log to append to. Has one been started?'
+            raise KeyError(msg)
         
         # Append to the log
         tags = (tag, ) if tag else None
@@ -206,7 +213,8 @@ class Loggable:
         try:
             log = self._finished_logs[name]
         except KeyError:
-            raise KeyError(f'No log found for "{name}". Has it been finished?')
+            msg = f'No log found for "{name}". Has it been finished?'
+            raise KeyError(msg)
         
         return _process_log(log, tags, raw)
     
@@ -231,7 +239,8 @@ class Loggable:
         try:
             name, log = self._finished_logs.popitem()
         except KeyError:
-            raise KeyError('No finished logs to retrieve.')
+            msg = 'No finished logs to retrieve.'
+            raise KeyError(msg)
         
         self._finished_logs[name] = log
         
@@ -292,7 +301,7 @@ class OLPMixin(Loggable):
             ]
             
             if obj:
-                log_lines.append(f'Object: {str(obj)} ({obj.pk})')
+                log_lines.append(f'Object: {obj!s} ({obj.pk})')
             
             log_lines.append('')  # blank line
             
@@ -316,7 +325,7 @@ class OLPMixin(Loggable):
         if verbosity:
             return self.logged_has_perm(perm, obj, verbosity)
         
-        has_perm, log_entry = self._check_perm(perm, obj)
+        has_perm, _ = self._check_perm(perm, obj)
         return has_perm
     
     def clear_perm_cache(self):
@@ -406,7 +415,8 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         """
         
         if _is_user_required() and not _user:
-            raise TypeError('create() requires the first positional argument to be a user model instance.')
+            msg = 'create() requires the first positional argument to be a user model instance.'
+            raise TypeError(msg)
         
         #
         # The below is copied from QuerySet.create() (as at Django 3.2.6) and
@@ -462,7 +472,8 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         """
         
         if _is_user_required() and not _user:
-            raise TypeError('update() requires the first positional argument to be a user model instance.')
+            msg = 'update() requires the first positional argument to be a user model instance.'
+            raise TypeError(msg)
         
         kwargs.setdefault('date_modified', timezone.now())
         
@@ -482,7 +493,8 @@ class AuditableQuerySet(MixableQuerySet, models.QuerySet):
         """
         
         if _is_user_required() and not _user:
-            raise TypeError('create() requires the first positional argument to be a user model instance.')
+            msg = 'create() requires the first positional argument to be a user model instance.'
+            raise TypeError(msg)
         
         # Add `_user` to `kwargs` rather than `defaults` as `_user` is its own
         # keyword argument to get_or_create() (which is called by super())
@@ -574,7 +586,8 @@ class Auditable(models.Model):
         """
         
         if _is_user_required() and not user:
-            raise TypeError("save() requires the 'user' argument")
+            msg = "save() requires the 'user' argument."
+            raise TypeError(msg)
         
         now = timezone.now()
         update_fields = []

@@ -1,3 +1,4 @@
+import operator
 import shutil
 import textwrap
 
@@ -113,7 +114,8 @@ class Table:
             
             col_data['heading'] = heading
         else:
-            raise TypeError('Invalid arguments provided.')
+            msg = 'Invalid arguments provided.'
+            raise TypeError(msg)
         
         if width > col_data.get('raw_width', 0):
             col_data['raw_width'] = width
@@ -165,7 +167,7 @@ class Table:
             if remainder:
                 # Sort the list of columns by descending position, so the
                 # remainder comes off later columns before earlier ones
-                sorted_cols = sorted(group_cols, key=lambda c: c['pos'], reverse=True)
+                sorted_cols = sorted(group_cols, key=operator.itemgetter('pos'), reverse=True)
                 for col in sorted_cols[:remainder]:
                     col['render_width'] -= 1
             
@@ -187,7 +189,8 @@ class Table:
         if not cols:
             self._columns = [self._update_col_metadata({}, heading=h) for h in headings]
         elif len(cols) != len(headings):
-            raise Exception('Number of headings does not match previously given number of columns.')
+            msg = 'Number of headings does not match previously given number of columns.'
+            raise ValueError(msg)
         else:
             for i, heading in enumerate(headings):
                 self._update_col_metadata(cols[i], heading=heading)
@@ -201,7 +204,8 @@ class Table:
             return
         
         if self._columns and len(self._columns) != len(row):
-            raise Exception('Number of columns in row does not match previously given rows.')
+            msg = 'Number of columns in row does not match previously given rows.'
+            raise ValueError(msg)
         
         for i, value in enumerate(row):
             try:
@@ -230,8 +234,7 @@ class Table:
         rows = [self.HR]
         
         if self._headings:
-            rows.append(self._headings)
-            rows.append(self.HR)
+            rows.extend((self._headings, self.HR))
         
         rows.extend(self._rows)
         rows.append(self.HR)
@@ -243,7 +246,7 @@ class Table:
         outer_max_width = self._raw_max_width
         
         if outer_max_width is self.FULL_WIDTH:
-            term_columns, term_rows = shutil.get_terminal_size()
+            term_columns, _ = shutil.get_terminal_size()
             outer_max_width = int(term_columns)
         
         # The max width of actual data in the table is the outer max less the
@@ -278,10 +281,11 @@ class Table:
             except KeyError:
                 width_map[col_width] = [col]
         
-        outer_max_width, max_width = self.get_max_widths()
+        _, max_width = self.get_max_widths()
         
         if max_width < min_width:
-            raise Exception('Minimum table width exceeds maximum: table cannot be drawn.')
+            msg = 'Minimum table width exceeds maximum: table cannot be drawn.'
+            raise ValueError(msg)
         
         # Get the amount by which the total table width needs to be reduced to
         # fit within the max width
