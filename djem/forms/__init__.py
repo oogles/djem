@@ -1,2 +1,6 @@
-from djem.forms.bases import AuditableForm, CommonInfoForm, UserSavable  # NOQA
-from djem.forms.fields import TimeZoneField  # NOQA
+from djem.forms.bases import (  # noqa: F401
+    AuditableForm,
+    CommonInfoForm,
+    UserSavable,
+)
+from djem.forms.fields import TimeZoneField  # noqa: F401

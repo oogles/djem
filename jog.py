@@ -10,7 +10,7 @@ def docker_down(settings, stdout, stderr):
     answer = input('Destroy docker containers? [Y/n] ')
     
     if answer.lower() != 'y':
-        return
+        return None
     
     return 'docker compose down --remove-orphans'
 

@@ -77,8 +77,8 @@ class TimeZoneField(models.Field):
         if helper is None:
             if self.null:
                 return None
-            else:
-                return ''
+            
+            return ''
         
         return helper.name
     

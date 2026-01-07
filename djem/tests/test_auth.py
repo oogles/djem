@@ -1059,7 +1059,7 @@ class OLPTestCase(TestCase):
         for cache_key in expected_caches:
             try:
                 user._olp_cache[cache_key]
-            except (AttributeError, KeyError):  # pragma: no cover
+            except (AttributeError, KeyError):  # pragma: no cover # noqa: PERF203
                 self.fail('Cache not set: {0}'.format(cache_key))
         
         # Test unexpected caches still do not exist
@@ -1202,7 +1202,7 @@ class OLPTestCase(TestCase):
         for cache_key in expected_caches:
             try:
                 user._olp_cache[cache_key]
-            except (AttributeError, KeyError):  # pragma: no cover
+            except (AttributeError, KeyError):  # pragma: no cover # noqa: PERF203
                 self.fail('Cache not set: {0}'.format(cache_key))
         
         # Test unexpected caches still do not exist
@@ -1364,7 +1364,7 @@ class OLPTestCase(TestCase):
         for cache_key in expected_caches:
             try:
                 user._olp_cache[cache_key]
-            except (AttributeError, KeyError):  # pragma: no cover
+            except (AttributeError, KeyError):  # pragma: no cover # noqa: PERF203
                 self.fail('Cache not set: {0}'.format(cache_key))
         
         # Test unexpected caches still do not exist

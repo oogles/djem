@@ -268,14 +268,14 @@ class OLPMixin(Loggable):
                 return True, 'Active superuser: Implicit permission'
             
             return _user_has_perm(self, perm, obj), None
-        else:
-            # "Universal OLP" behaviour: active superusers implicitly have all
-            # permissions at the model level, but are subject to object-level
-            # checks
-            if not obj and self.is_active and self.is_superuser:
-                return True, 'Active superuser: Implicit permission (model-level)'
-            
-            return _user_has_perm(self, perm, obj), None
+        
+        # "Universal OLP" behaviour: active superusers implicitly have all
+        # permissions at the model level, but are subject to object-level
+        # checks
+        if not obj and self.is_active and self.is_superuser:
+            return True, 'Active superuser: Implicit permission (model-level)'
+        
+        return _user_has_perm(self, perm, obj), None
     
     def logged_has_perm(self, perm, obj=None, verbosity=1):
         
@@ -315,9 +315,9 @@ class OLPMixin(Loggable):
         
         if verbosity:
             return self.logged_has_perm(perm, obj, verbosity)
-        else:
-            has_perm, log_entry = self._check_perm(perm, obj)
-            return has_perm
+        
+        has_perm, log_entry = self._check_perm(perm, obj)
+        return has_perm
     
     def clear_perm_cache(self):
         """

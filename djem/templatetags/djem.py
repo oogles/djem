@@ -29,8 +29,8 @@ class IfPermNode(Node):
         
         if self.negate:
             return "<IfNotPermNode>"
-        else:
-            return "<IfPermNode>"
+        
+        return "<IfPermNode>"
     
     def render(self, context):
         
@@ -120,11 +120,9 @@ def paginate(page):
     Page object.
     """
     
-    context = {
+    return {
         'page': page
     }
-    
-    return context
 
 
 def _transform_kwargs(kwargs):
@@ -157,14 +155,12 @@ def form_field(field, extra_classes=None, **kwargs):
     # names
     kwargs = _transform_kwargs(kwargs)
     
-    context = {
+    return {
         'wrapper_tag': getattr(settings, 'DJEM_FORM_FIELD_TAG', DEFAULT_FORM_FIELD_TAG),
         'field': field,
         'extra_classes': extra_classes,
         'kwargs': kwargs
     }
-    
-    return context
 
 
 class CheckboxNode(Node):

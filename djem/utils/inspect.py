@@ -25,9 +25,7 @@ def get_defined_by(obj, attr):
         if hasattr(parent, attr):
             return parent
     
-    defined_by = cls
-    
-    return defined_by
+    return cls
 
 
 def inspectf(func):
@@ -223,7 +221,8 @@ class ObjectTable(InspectTable):
             
             if is_magic and ignore_magic:
                 continue
-            elif attr.startswith('_') and not is_magic and ignore_private:
+            
+            if attr.startswith('_') and not is_magic and ignore_private:
                 continue
             
             defined_by = get_defined_by(obj, attr).__name__
@@ -356,7 +355,7 @@ class ModelTable(InspectTable):
         for cls in reversed(self.model.mro()):
             try:
                 meta = cls._meta
-            except AttributeError:
+            except AttributeError:  # noqa: PERF203
                 # This parent class is not a Model
                 pass
             else:

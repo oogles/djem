@@ -1,2 +1,2 @@
-from djem.models.fields import *  # noqa
-from djem.models.models import *  # noqa
+from djem.models.fields import *  # noqa: F403
+from djem.models.models import *  # noqa: F403
