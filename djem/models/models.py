@@ -623,14 +623,14 @@ class Auditable(models.Model):
 # TODO: Remove in 1.0
 class CommonInfoMixin(Auditable):
     
+    class Meta:
+        abstract = True
+    
     def __init__(self, *args, **kwargs):
         
         warnings.warn('Use of CommonInfoMixin is deprecated, use Auditable instead.', DeprecationWarning)
         
         super().__init__(*args, **kwargs)
-    
-    class Meta:
-        abstract = True
 
 
 class ArchivableQuerySet(MixableQuerySet, models.QuerySet):
@@ -727,14 +727,14 @@ class Archivable(models.Model):
 # TODO: Remove in 1.0
 class ArchivableMixin(Archivable):
     
+    class Meta:
+        abstract = True
+    
     def __init__(self, *args, **kwargs):
         
         warnings.warn('Use of ArchivableMixin is deprecated, use Archivable instead.', DeprecationWarning)
         
         super().__init__(*args, **kwargs)
-    
-    class Meta:
-        abstract = True
 
 
 class VersionableQuerySet(MixableQuerySet, models.QuerySet):
@@ -827,14 +827,14 @@ class Versionable(models.Model):
 # TODO: Remove in 1.0
 class VersioningMixin(Versionable):
     
+    class Meta:
+        abstract = True
+    
     def __init__(self, *args, **kwargs):
         
         warnings.warn('Use of VersioningMixin is deprecated, use Versionable instead.', DeprecationWarning)
         
         super().__init__(*args, **kwargs)
-    
-    class Meta:
-        abstract = True
 
 
 class StaticAbstractQuerySet(AuditableQuerySet, ArchivableQuerySet, VersionableQuerySet):

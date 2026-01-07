@@ -55,7 +55,7 @@ class TimeZoneHelperTestCase(SimpleTestCase):
         with self.assertRaises(ZoneInfoNotFoundError):
             TimeZoneHelper('fail')
     
-    def test_init__UTC(self):
+    def test_init__utc(self):
         """
         Test constructing a TimeZoneHelper object with the UTC singleton.
         """

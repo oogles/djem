@@ -2399,7 +2399,7 @@ class TimeZoneFieldTestCase(TestCase):
         with self.assertRaisesRegex(ValidationError, 'Invalid timezone "invalid"'):
             o.save()
     
-    def test_set__UTC(self):
+    def test_set__utc(self):
         
         o = TimeZoneTest()
         
@@ -2454,7 +2454,7 @@ class TimeZoneFieldTestCase(TestCase):
         self.assertIsInstance(o.timezone, TimeZoneHelper)
         self.assertEqual(o.timezone.name, 'Australia/Sydney')
     
-    def test_set__None__null_true(self):
+    def test_set__none__null_true(self):
         
         o = TimeZoneTest()
         
@@ -2479,7 +2479,7 @@ class TimeZoneFieldTestCase(TestCase):
         self.assertEqual(TimeZoneTest.objects.count(), 1)
         self.assertEqual(TimeZoneTest.objects.filter(timezone3__isnull=True).count(), 1)
     
-    def test_set__None__null_false(self):
+    def test_set__none__null_false(self):
         
         o = TimeZoneTest()
         

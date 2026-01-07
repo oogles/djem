@@ -25,7 +25,7 @@ class UserSavableTestForm(UserSavable, forms.ModelForm):
     
     class Meta:
         model = StaticTest
-        fields = '__all__'
+        fields = '__all__'  # noqa: DJ007
 
 
 class AuditableFormTestForm(AuditableForm):

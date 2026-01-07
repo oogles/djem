@@ -343,10 +343,10 @@ class ModelTable(InspectTable):
         
         self._discover_fields()
         
-        self.total_discovered_fields = sum([c['num_discovered_fields'] for c in hierarchy])
+        self.total_discovered_fields = sum(c['num_discovered_fields'] for c in hierarchy)
         self.total_discovered_fields += 1  # add the pk
         
-        self.total_matching_fields = sum([len(c['matching_fields']) for c in hierarchy])
+        self.total_matching_fields = sum(len(c['matching_fields']) for c in hierarchy)
     
     def _get_hierarchies(self):
         

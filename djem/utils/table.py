@@ -3,8 +3,30 @@ import textwrap
 
 from django.utils.encoding import force_str
 
+from djem.utils.misc import UNDEFINED
 
-class NOT_PROVIDED:
+
+class FullWidth:
+    """
+    Max width constant indicating the full width of the terminal.
+    """
+    
+    pass
+
+
+class BlankRow:
+    """
+    Row constant representing a blank row.
+    """
+    
+    pass
+
+
+class HorizontalRule:
+    """
+    Row constant representing a horizontal rule.
+    """
+    
     pass
 
 
@@ -54,26 +76,9 @@ class RowWrapper:
 
 class Table:
     
-    class FULL_WIDTH:
-        """
-        Max width constant indicating the full width of the terminal.
-        """
-        
-        pass
-    
-    class BR:
-        """
-        Row constant representing a blank row.
-        """
-        
-        pass
-    
-    class HR:
-        """
-        Row constant representing a horizontal rule.
-        """
-        
-        pass
+    FULL_WIDTH = FullWidth()
+    BR = BlankRow()
+    HR = HorizontalRule()
     
     MIN_COLUMN_WIDTH = 4  # allows for a single character and "..." to indicate truncation
     
@@ -99,11 +104,11 @@ class Table:
         
         self._raw_max_width = max_width
     
-    def _update_col_metadata(self, col_data, value=NOT_PROVIDED, heading=NOT_PROVIDED):
+    def _update_col_metadata(self, col_data, value=UNDEFINED, heading=UNDEFINED):
         
-        if value is not NOT_PROVIDED:
+        if value is not UNDEFINED:
             width = len(force_str(value))
-        elif heading is not NOT_PROVIDED:
+        elif heading is not UNDEFINED:
             heading = force_str(heading)
             width = 0
             
