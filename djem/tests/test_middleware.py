@@ -17,7 +17,7 @@ def add_message_view(request):
     else:
         prefix = 'STANDARD'
     
-    return HttpResponse('{0}: no messages'.format(prefix))
+    return HttpResponse(f'{prefix}: no messages')
 
 
 def add_read_message_view(request):
@@ -32,7 +32,7 @@ def add_read_message_view(request):
     else:
         prefix = 'STANDARD'
     
-    return HttpResponse('{0}: {1}'.format(prefix, content))
+    return HttpResponse(f'{prefix}: {content}')
 
 
 urlpatterns = [

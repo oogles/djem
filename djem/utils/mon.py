@@ -23,10 +23,10 @@ def _get_stat_table_data(monitor, stat):
         msg = f'Unknown statistic "{stat}".'
         raise TypeError(msg)
     
-    total_key = 'total_{0}'.format(stat)
-    min_key = 'min_{0}'.format(stat)
-    max_key = 'max_{0}'.format(stat)
-    avg_key = 'avg_{0}'.format(stat)
+    total_key = f'total_{stat}'
+    min_key = f'min_{stat}'
+    max_key = f'max_{stat}'
+    avg_key = f'avg_{stat}'
     
     # Each statistic should be formatted slightly differently
     stat_format_map = {
@@ -41,6 +41,7 @@ def _get_stat_table_data(monitor, stat):
     
     def build_data(parent, _indent=0):
         
+        indent_str = ' ' * _indent
         parent_total = parent.stats[total_key]
         
         # Sort the monitors by their total historical runtimes
@@ -55,13 +56,13 @@ def _get_stat_table_data(monitor, stat):
                 pc = 0
             
             data.append((
-                '{0}{1}'.format(' ' * _indent, child.name),
+                f'{indent_str}{child.name}',
                 stat_format.format(child.stats[min_key]),
                 stat_format.format(child.stats[max_key]),
                 stat_format.format(child.stats[avg_key]),
                 stat_format.format(total),
                 child.stats['count'],
-                '{0}{1:.2f}%'.format(' ' * _indent, pc),
+                f'{indent_str}{pc:.2f}%',
             ))
             
             if child.children:
@@ -83,7 +84,7 @@ def _get_stat_table(monitor, title, stats):
         'mem': 'Memory'
     }
     
-    footer = 'Totals: {0}'.format(monitor.get_total_string(include_name=False))
+    footer = f'Totals: {monitor.get_total_string(include_name=False)}'
     
     t = Table(
         title=title,
@@ -267,24 +268,21 @@ class M:
     
     def get_total_string(self, include_name=True):
         
-        totals = '{0:.4f} seconds, {1} queries, {2:.3f}MB of RAM'.format(
-            self.get_seconds(),
-            self.get_query_count(),
-            self.get_mem_usage()
-        )
+        seconds = self.get_seconds()
+        queries = self.get_query_count()
+        mem_usage = self.get_mem_usage()
+        
+        totals = f'{seconds:.4f} seconds, {queries} queries, {mem_usage:.3f}MB of RAM'
         
         if include_name:
-            totals = '{0}: {1}'.format(self.name, totals)
+            totals = f'{self.name}: {totals}'
         
         return totals
     
     def print_mem_stats(self):
         
         if not self.children:
-            print('{0}: {1:.3f}MB of RAM'.format(
-                self.name,
-                self.get_mem_usage()
-            ))
+            print(f'{self.name}: {self.get_mem_usage():.3f}MB of RAM')
             return
         
         print(_get_stat_table(self, 'Memory Usage Results', ('mem',)))
@@ -292,10 +290,7 @@ class M:
     def print_query_stats(self):
         
         if not self.children:
-            print('{0}: {1} queries'.format(
-                self.name,
-                self.get_query_count()
-            ))
+            print(f'{self.name}: {self.get_query_count()} queries')
             return
         
         print(_get_stat_table(self, 'Query Results', ('queries',)))
@@ -303,10 +298,7 @@ class M:
     def print_time_stats(self):
         
         if not self.children:
-            print('{0}: {1:.4f} seconds'.format(
-                self.name,
-                self.get_seconds()
-            ))
+            print(f'{self.name}: {self.get_seconds():.4f} seconds')
             return
         
         print(_get_stat_table(self, 'Timing Results', ('time',)))
@@ -322,7 +314,7 @@ class M:
     def __str__(self):
         
         if not self.end_time:
-            return '{0}: Running'.format(self.name)
+            return f'{self.name}: Running'
         
         return self.get_total_string()
 
@@ -337,7 +329,7 @@ class Mon:
     def start(cls, name):
         
         if name in cls.monitors:
-            print('Warning: Starting a monitor which has not been ended ({0})'.format(name))
+            print(f'Warning: Starting a monitor which has not been ended ({name})')
         
         # Re-use an existing monitor with the same name on the same parent, if
         # there is one (this allows the same monitor object to build up stats).

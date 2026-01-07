@@ -135,7 +135,7 @@ class UserLogTest(models.Model):
     
     def __str__(self):
         
-        return 'Log Test #{}'.format(self.pk)
+        return f'Log Test #{self.pk}'
     
     def _user_can_olp_log(self, user):
         

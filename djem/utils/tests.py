@@ -48,7 +48,7 @@ def setup_test_app(package, label=None):
         # used. Without this check, earlier entries are returned by
         # get_containing_app_config() and suffixed repeatedly.
         if not containing_app_config.label.endswith('_tests'):
-            label = '{}_tests'.format(containing_app_config.label)
+            label = f'{containing_app_config.label}_tests'
     
     if label in apps.app_configs:
         # An app with this label already exists, skip adding it. This is

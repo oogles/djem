@@ -57,13 +57,11 @@ class ObjectPermissionsBackend(BaseBackend):
             # object
             perm_cache = user_obj._olp_cache = {}
         
-        perm_cache_name = '{0}-{1}-{2}'.format(from_name, perm, obj.pk)
+        perm_cache_name = f'{from_name}-{perm}-{obj.pk}'
         
         if perm_cache_name not in perm_cache:
-            access_fn_name = '_{0}_can_{1}'.format(
-                from_name,
-                perm.split('.')[-1]
-            )
+            perm_codename = perm.split('.')[-1]
+            access_fn_name = f'_{from_name}_can_{perm_codename}'
             access_fn = getattr(obj, access_fn_name, None)
             
             if not access_fn:
@@ -116,7 +114,7 @@ class ObjectPermissionsBackend(BaseBackend):
             # have been created, so this acts as a replacement.
             log_verbosity = _get_user_log_verbosity()
             if log_verbosity:
-                user_obj.start_log('temp-{0}'.format(obj.pk))
+                user_obj.start_log(f'temp-{obj.pk}')
             
             perms = set()
             for perm in perms_for_model:

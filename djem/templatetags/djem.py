@@ -108,7 +108,7 @@ def csrfify_ajax(context, lib='jquery'):
     Only usable in templates rendered using RequestContext.
     """
     
-    t = loader.get_template('djem/csrfify_ajax/{0}.html'.format(lib))
+    t = loader.get_template(f'djem/csrfify_ajax/{lib}.html')
     return t.render({
         'csrf_token': context['csrf_token']
     })

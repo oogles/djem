@@ -308,8 +308,8 @@ class Table:
         total_raw_width = self.calculate_render_widths()
         table_width = total_raw_width + formatting_buffer
         
-        br = '|{0}|'.format(' ' * (table_width - 2))
-        hr = '+{0}+'.format('-' * (table_width - 2))
+        br = f'|{" " * (table_width - 2)}|'
+        hr = f'+{"-" * (table_width - 2)}+'
         
         output = []
         
@@ -331,11 +331,11 @@ class Table:
                     width = col['render_width']
                     
                     if len(value) > width:
-                        value = '{0}...'.format(value[:width - 3])
+                        value = f'{value[:width - 3]}...'
                     
                     row_str.append(value.ljust(width))
                 
-                output.append('| {0} |'.format(' | '.join(row_str)))
+                output.append(f'| {" | ".join(row_str)} |')
         
         if self.footer:
             output.extend(self.footer.get_rows(table_width))

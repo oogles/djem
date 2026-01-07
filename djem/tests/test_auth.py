@@ -645,7 +645,7 @@ class OLPTestCase(TestCase):
         permissions = Permission.objects.filter(
             content_type__app_label='djemtest',
             content_type__model=self.model_name
-        ).exclude(codename='closed_{0}'.format(self.model_name))
+        ).exclude(codename=f'closed_{self.model_name}')
         
         user1.user_permissions.set(permissions)
         user2.user_permissions.set(permissions)
@@ -660,16 +660,11 @@ class OLPTestCase(TestCase):
     
     def perm(self, perm_name):
         
-        return 'djemtest.{0}_{1}'.format(perm_name, self.model_name)
+        return f'djemtest.{perm_name}_{self.model_name}'
     
     def cache(self, cache_type, perm_name, obj):
         
-        return '{0}-djemtest.{1}_{2}-{3}'.format(
-            cache_type,
-            perm_name,
-            self.model_name,
-            obj.pk
-        )
+        return f'{cache_type}-djemtest.{perm_name}_{self.model_name}-{obj.pk}'
     
     def cache_empty_test(self, user):
         
@@ -715,7 +710,7 @@ class OLPTestCase(TestCase):
         self.assertFalse(perm1)
         
         user2 = self.UserModel.objects.create_user('useful')
-        user2.user_permissions.add(Permission.objects.get(codename='open_{0}'.format(self.model_name)))
+        user2.user_permissions.add(Permission.objects.get(codename=f'open_{self.model_name}'))
         perm2 = user2.has_perm(self.perm('open'), obj)
         self.assertTrue(perm2)
     
@@ -731,7 +726,7 @@ class OLPTestCase(TestCase):
         
         # Grant the user the "open" permission to ensure it is their
         # inactive-ness that denies them permission
-        user.user_permissions.add(Permission.objects.get(codename='open_{0}'.format(self.model_name)))
+        user.user_permissions.add(Permission.objects.get(codename=f'open_{self.model_name}'))
         
         obj = self.TestModel.objects.create()
         
@@ -772,7 +767,7 @@ class OLPTestCase(TestCase):
         
         # Grant the user the "open" permission to ensure it is their
         # inactive-ness that denies them permission
-        user.user_permissions.add(Permission.objects.get(codename='open_{0}'.format(self.model_name)))
+        user.user_permissions.add(Permission.objects.get(codename=f'open_{self.model_name}'))
         
         obj = self.TestModel.objects.create()
         
@@ -1060,7 +1055,7 @@ class OLPTestCase(TestCase):
             try:
                 user._olp_cache[cache_key]
             except (AttributeError, KeyError):  # pragma: no cover # noqa: PERF203
-                self.fail('Cache not set: {0}'.format(cache_key))
+                self.fail(f'Cache not set: {cache_key}')
         
         # Test unexpected caches still do not exist
         for cache_key in unexpected_caches:
@@ -1203,7 +1198,7 @@ class OLPTestCase(TestCase):
             try:
                 user._olp_cache[cache_key]
             except (AttributeError, KeyError):  # pragma: no cover # noqa: PERF203
-                self.fail('Cache not set: {0}'.format(cache_key))
+                self.fail(f'Cache not set: {cache_key}')
         
         # Test unexpected caches still do not exist
         for cache_key in unexpected_caches:
@@ -1365,7 +1360,7 @@ class OLPTestCase(TestCase):
             try:
                 user._olp_cache[cache_key]
             except (AttributeError, KeyError):  # pragma: no cover # noqa: PERF203
-                self.fail('Cache not set: {0}'.format(cache_key))
+                self.fail(f'Cache not set: {cache_key}')
         
         # Test unexpected caches still do not exist
         for cache_key in unexpected_caches:
@@ -1553,7 +1548,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_string_arg__access(self):
         """
@@ -1593,7 +1588,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_string_arg__no_access__redirect__custom__relative(self):
         """
@@ -1681,7 +1676,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_tuple_arg__access(self):
         """
@@ -1721,7 +1716,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_tuple_arg__no_access__redirect__custom(self):
         """
@@ -1782,7 +1777,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_tuple_arg__invalid_object(self):
         """
@@ -1843,7 +1838,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_multiple_args__no_access__object(self):
         """
@@ -1865,7 +1860,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_without_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_multiple_args__no_access__custom_redirect(self):
         """
@@ -1930,7 +1925,7 @@ class PermissionRequiredDecoratorTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_multiple_args__invalid_object(self):
         """
@@ -2014,7 +2009,7 @@ class PermissionRequiredMixinTestCase(TestCase):
         response = view(request, obj=self.olptest_with_access.pk)
         
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '{0}?next=/test/'.format(self.resolved_login_url))
+        self.assertEqual(response.url, f'{self.resolved_login_url}?next=/test/')
     
     def test_unauthenticated__redirect__custom(self):
         """

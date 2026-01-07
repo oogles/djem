@@ -50,18 +50,14 @@ def inspectf(func):
     
     for arg_string in args:
         if offset >= 0:
-            arg_string = '{0}={1}'.format(arg_string, defaults[offset])
+            arg_string = f'{arg_string}={defaults[offset]}'
         
         arguments.append(arg_string)
         offset += 1
     
-    signature = '{0}({1})'.format(func.__name__, ', '.join(arguments))
+    signature = f'{func.__name__}({", ".join(arguments)})'
     
-    defined = 'Defined on line {line} of {module} ({path})'.format(
-        line=func.__code__.co_firstlineno,
-        module=func.__module__,
-        path=func.__code__.co_filename
-    )
+    defined = f'Defined on line {func.__code__.co_firstlineno} of {func.__module__} ({func.__code__.co_filename})'
     
     return '\n\n'.join((signature, func.__doc__ or '[no doc string]', defined))
 
@@ -188,14 +184,11 @@ class ObjectTable(InspectTable):
             try:
                 model_field = cls._meta.get_field(attr)
             except FieldDoesNotExist:
-                v = 'Manager on {0} model'.format(cls.__name__)
+                v = f'Manager on {cls.__name__} model'
             else:
-                v = 'Referencing {0} {1} records'.format(
-                    v.count(),
-                    model_field.related_model.__name__
-                )
+                v = f'Referencing {v.count()} {model_field.related_model.__name__} records'
         elif isinstance(v, types.MethodType):
-            v = 'pp({0}.{1})'.format(cls.__name__, attr)
+            v = f'pp({cls.__name__}.{attr})'
         else:
             v = force_str(v)
         
@@ -231,7 +224,7 @@ class ObjectTable(InspectTable):
             try:
                 v = getattr(obj, attr)
             except Exception as e:
-                v = 'Error accessing attribute: {0}'.format(e)
+                v = f'Error accessing attribute: {e}'
                 t = 'unknown'
             else:
                 t = type(v).__name__
@@ -240,7 +233,7 @@ class ObjectTable(InspectTable):
                 if ignore_methods:
                     continue
                 
-                title = '{0}()'.format(attr)
+                title = f'{attr}()'
                 append_to = methods
             else:
                 title = force_str(attr)
@@ -264,7 +257,7 @@ class ObjectTable(InspectTable):
     
     def get_title(self):
         
-        return 'Inspecting {0} instance'.format(self.obj.__class__.__name__)
+        return f'Inspecting {self.obj.__class__.__name__} instance'
     
     def get_description(self):
         
@@ -280,7 +273,7 @@ class ObjectTable(InspectTable):
         
         description = []
         if ignoring:
-            description.append('Ignoring: {0}'.format(', '.join(ignoring)))
+            description.append(f'Ignoring: {", ".join(ignoring)}')
         else:
             description.append('Ignoring: Nothing')
         
@@ -290,18 +283,16 @@ class ObjectTable(InspectTable):
             # An instance - get the mro of the class
             mro = self.obj.__class__.mro()
         
-        description.append('MRO: {0}'.format(', '.join([c.__name__ for c in mro])))
+        description.append(f'MRO: {", ".join([c.__name__ for c in mro])}')
         
         return '\n'.join(description)
     
     def get_footer(self):
         
         num_inspected = self.num_inspected
+        plural = 's' if num_inspected != 1 else ''
         
-        return '{0} attribute{1} inspected'.format(
-            num_inspected,
-            's' if num_inspected != 1 else ''
-        )
+        return f'{num_inspected} attribute{plural} inspected'
     
     def populate_data(self, table):
         
@@ -420,7 +411,7 @@ class ModelTable(InspectTable):
             else:
                 rel = rel.__name__
             
-            field_type = '{0} ({1})'.format(field_type, rel)
+            field_type = f'{field_type} ({rel})'
         
         if not field.concrete:
             # Stop here for non-concrete fields
@@ -433,12 +424,12 @@ class ModelTable(InspectTable):
             size = field.max_length
         else:
             try:
-                size = '{0}/{1}'.format(size, field.decimal_places)
+                size = f'{size}/{field.decimal_places}'
             except AttributeError:
                 pass
         
         if size:
-            field_type = '{0} ({1})'.format(field_type, size)
+            field_type = f'{field_type} ({size})'
         
         return field_type
     
@@ -449,7 +440,7 @@ class ModelTable(InspectTable):
         if default_value is NOT_PROVIDED:
             default_value = ''
         elif callable(default_value):
-            default_value = '{0}()'.format(default_value.__name__)
+            default_value = f'{default_value.__name__}()'
         
         return default_value
     
@@ -465,7 +456,7 @@ class ModelTable(InspectTable):
         elif field.is_relation:
             prefix = 1
         
-        return '{0}{1}'.format(prefix, field.name)
+        return f'{prefix}{field.name}'
     
     def _discover_fields(self):
         
@@ -534,9 +525,9 @@ class ModelTable(InspectTable):
         num_matching_fields = len(config['matching_fields'])
         
         if num_matching_fields == num_discovered_fields:
-            attrs.append('\tDiscovered Fields: {0}'.format(num_discovered_fields))
+            attrs.append(f'\tDiscovered Fields: {num_discovered_fields}')
         else:
-            attrs.append('\tMatching Fields: {0}/{1}'.format(num_matching_fields, num_discovered_fields))
+            attrs.append(f'\tMatching Fields: {num_matching_fields}/{num_discovered_fields}')
         
         return ' '.join(attrs)
     
@@ -548,46 +539,45 @@ class ModelTable(InspectTable):
         
         filters = self.field_filters
         if filters:
-            return 'Given filters matched no results: {0}'.format(filters)
+            return f'Given filters matched no results: {filters}'
         
         return 'No fields to display'
     
     def get_preamble(self):
         
         m = self.model
-        hierarchy = self.hierarchy
-        pk_hierarchy = self.pk_hierarchy
-        
-        display_hierarchy = '\n - '.join([c['display_name'] for c in hierarchy[:-1]])
         unique_together = m._meta.unique_together or 'None'
         ordering = m._meta.ordering or 'None'
         
+        hierarchy = self.hierarchy
+        hierarchy_str = '\n - '.join([c['display_name'] for c in hierarchy[:-1]])
+        
+        pk_hierarchy = self.pk_hierarchy
+        pk_hierarchy_str = ''
+        if len(pk_hierarchy) > 1:
+            pk_hierarchy_str = f' ({" -> ".join(pk_hierarchy)})'
+        
         lines = [
-            'Model: {0}'.format(m.__name__),
-            f'\nInherits From:\n - {display_hierarchy}',
+            f'Model: {m.__name__}',
+            f'\nInherits From:\n - {hierarchy_str}',
             f'\nUnique Together: {unique_together}',
             f'Default Ordering: {ordering}',
-            '\n\nPK: {0} {1}'.format(
-                m._meta.pk.name,
-                ' ({0})'.format(' -> '.join(pk_hierarchy)) if len(pk_hierarchy) > 1 else ''
-            )
+            f'\nPK: {m._meta.pk.name}{pk_hierarchy_str}'
         ]
         
         return '\n'.join(lines)
     
     def get_title(self):
         
-        title = 'Fields on {0}'.format(self.model.__name__)
+        title = f'Fields on {self.model.__name__}'
         
         filters = self.field_filters
         if filters:
-            title = '{0} (matching {1})'.format(
-                title,
-                ' || '.join([repr(s) for s in filters])
-            )
+            filter_str = ' || '.join([repr(s) for s in filters])
+            title = f'{title} (matching {filter_str})'
         
         if self.concrete_only:
-            title = '{0} [Concrete Only]'.format(title)
+            title = f'{title} [Concrete Only]'
         
         return title
     
@@ -598,9 +588,9 @@ class ModelTable(InspectTable):
     def get_footer(self):
         
         if self.field_filters:
-            return 'Fields: {0} / {1}'.format(self.total_matching_fields, self.total_discovered_fields)
+            return f'Fields: {self.total_matching_fields} / {self.total_discovered_fields}'
         
-        return 'Fields: {0}'.format(self.total_discovered_fields)
+        return f'Fields: {self.total_discovered_fields}'
     
     def populate_data(self, table):
         
