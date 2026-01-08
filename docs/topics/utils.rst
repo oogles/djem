@@ -53,3 +53,53 @@ This example could be rewritten using :const:`UNDEFINED` in place of ``None`` as
         print('falsey')
 
     # output: 'falsey'
+
+
+.. module:: djem.utils.dev
+
+``Developer``
+=============
+
+:class:`Developer` is a class designed for use within the Django shell to aid developers in performing regular operations used for testing and debugging, primarily regarding accessing the developer's user record and altering aspects of that record.
+
+Individual projects can define their own :class:`Developer` subclasses to suit their needs, and create instances representing individual developers. The :setting:`DJEM_DEV_USER` setting can also be used to avoid hardcoding numerous :class:`Developer` instances. Using environment-specific settings, a single instance can be used by any developer.
+
+The following is an example of a basic extension of :class:`Developer`, and the definition of a couple of useful instances:
+
+.. code-block:: python
+    
+    from django.conf import settings
+    from djem.utils.dev import Developer
+    
+    class CustomDeveloper(Developer):
+        
+        awesome = {
+            'is_superuser': True,
+            'is_developer': True
+        }
+        boring = {
+            'is_superuser': False,
+            'is_developer': False
+        }
+    
+    Me = CustomDeveloper()  # use DJEM_DEV_USER
+    System = CustomDeveloper(username='system.user')
+
+As of Django 5.2, the ``shell`` management command can be configured with `extra automatic imports <https://docs.djangoproject.com/en/6.0/howto/custom-shell/#customize-automatic-imports>`_. A project's :class:`Developer` instances are an excellent candidate for this feature, so they are automatically available in shell sessions for easy access. This is an example custom ``shell`` management command that includes the above example :class:`Developer` instances, assuming they are defined in ``myproject.utils.dev``:
+
+.. code-block:: python
+    
+    from django.core.management.commands import shell
+    
+    class Command(shell.Command):
+        
+        def get_auto_imports(self):
+            
+            imports = super().get_auto_imports()
+            
+            imports.extend((
+                'myproject.utils.dev.Me',
+                'myproject.utils.dev.System'
+            ))
+            
+            return imports

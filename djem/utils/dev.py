@@ -7,7 +7,7 @@ class Developer:
     """
     Designed for use within the Django shell to aid developers in performing
     regular operations used for testing and debugging, primarily regarding
-    altering aspects of the developer's own user record.
+    accessing the developer's user record and altering aspects of that record
     """
     
     awesome = {
@@ -43,7 +43,8 @@ class Developer:
     
     def be_awesome(self):
         """
-        Assign :attr:`user` the attributes defined in :attr:`awesome`.
+        Assign :attr:`user` the attributes defined in :attr:`awesome`. Designed
+        to allow developers to adopt/restore relevant elevated privileges.
         """
         
         user = self.user
@@ -55,7 +56,8 @@ class Developer:
     
     def be_boring(self):
         """
-        Assign :attr:`user` the attributes defined in :attr:`boring`.
+        Assign :attr:`user` the attributes defined in :attr:`boring`. Designed
+        to allow developers to adopt relevant reduced privileges for testing.
         """
         
         user = self.user
