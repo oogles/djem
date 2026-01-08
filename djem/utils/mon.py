@@ -1,6 +1,6 @@
-import datetime
 import logging
 import resource
+import time
 
 from django.db import connection
 
@@ -134,10 +134,10 @@ class M:
         
         if not self.end_time:
             msg = 'Monitor not started or still running.'
-            raise Exception(msg)
+            raise RuntimeError(msg)
         
         stats = self.stats
-        runtime = self.get_seconds()
+        runtime = self.get_runtime()
         mem_usage = self.get_mem_usage()
         query_count = self.get_query_count()
         
@@ -186,14 +186,14 @@ class M:
         if self.parent:
             self.parent.active_children += 1
         
-        self.start_time = datetime.datetime.now()
+        self.start_time = time.time()
         self.start_queries = _get_query_count()
         self.start_mem = _get_mem_mb()
     
     def stop(self):
         
+        self.end_time = time.time()
         self.end_mem = _get_mem_mb()
-        self.end_time = datetime.datetime.now()
         self.end_queries = _get_query_count()
         self._update_stats()
         
@@ -202,47 +202,30 @@ class M:
         
         if self.active_children > 0:
             msg = 'Cannot end a monitor with running children.'
-            raise Exception(msg)
+            raise RuntimeError(msg)
+    
+    def _get_stat(self, start_value, end_value, current_value_fn):
+        
+        if start_value is None:
+            msg = 'Monitor not started.'
+            raise RuntimeError(msg)
+        
+        if end_value is None:
+            end_value = current_value_fn()
+        
+        return end_value - start_value
     
     def get_mem_usage(self):
         
-        if self.start_mem is None:
-            msg = 'Monitor not started.'
-            raise Exception(msg)
-        
-        end_mem = self.end_mem
-        if not end_mem:
-            end_mem = _get_mem_mb()
-        
-        return end_mem - self.start_mem
+        return self._get_stat(self.start_mem, self.end_mem, _get_mem_mb)
     
     def get_query_count(self):
         
-        if self.start_queries is None:
-            msg = 'Monitor not started.'
-            raise Exception(msg)
-        
-        end_queries = self.end_queries
-        if not end_queries:
-            end_queries = _get_query_count()
-        
-        return end_queries - self.start_queries
+        return self._get_stat(self.start_queries, self.end_queries, _get_query_count)
     
     def get_runtime(self):
         
-        if self.start_time is None:
-            msg = 'Monitor not started.'
-            raise Exception(msg)
-        
-        end_time = self.end_time
-        if not end_time:
-            end_time = datetime.datetime.now()
-        
-        return end_time - self.start_time
-    
-    def get_seconds(self):
-        
-        return self.get_runtime().total_seconds()
+        return self._get_stat(self.start_time, self.end_time, time.time)
     
     def reset(self):
         """
@@ -250,14 +233,16 @@ class M:
         Do not clear statistics.
         """
         
-        self.start_mem = None
-        self.end_mem = None
         self.start_time = None
         self.end_time = None
+        self.start_queries = None
+        self.end_queries = None
+        self.start_mem = None
+        self.end_mem = None
     
     def get_total_string(self, include_name=True):
         
-        seconds = self.get_seconds()
+        seconds = self.get_runtime()
         queries = self.get_query_count()
         mem_usage = self.get_mem_usage()
         
@@ -268,37 +253,20 @@ class M:
         
         return totals
     
-    def print_mem_stats(self):
+    def get_results(self, time=True, queries=False, mem=False):
         
         if not self.children:
-            print(f'{self.name}: {self.get_mem_usage():.3f}MB of RAM')
-            return
+            return self.get_total_string()
         
-        print(_get_stat_table(self, 'Memory Usage Results', ('mem',)))
-    
-    def print_query_stats(self):
+        stats = []
+        if time:
+            stats.append('time')
+        if queries:
+            stats.append('queries')
+        if mem:
+            stats.append('mem')
         
-        if not self.children:
-            print(f'{self.name}: {self.get_query_count()} queries')
-            return
-        
-        print(_get_stat_table(self, 'Query Results', ('queries',)))
-    
-    def print_time_stats(self):
-        
-        if not self.children:
-            print(f'{self.name}: {self.get_seconds():.4f} seconds')
-            return
-        
-        print(_get_stat_table(self, 'Timing Results', ('time',)))
-    
-    def print_stats(self):
-        
-        if not self.children:
-            print(self.get_total_string())
-            return
-        
-        print(_get_stat_table(self, 'Monitor Results', ('time', 'queries', 'mem')))
+        return _get_stat_table(self, 'Monitor Results', stats)
     
     def __str__(self):
         
@@ -318,7 +286,8 @@ class Mon:
     def start(cls, name):
         
         if name in cls.monitors:
-            print(f'Warning: Starting a monitor which has not been ended ({name})')
+            msg = f'Cannot start a monitor which has not been ended ({name}).'
+            raise RuntimeError(msg)
         
         # Re-use an existing monitor with the same name on the same parent, if
         # there is one (this allows the same monitor object to build up stats).
@@ -344,7 +313,7 @@ class Mon:
             m = cls.monitors[name]
         except KeyError as e:
             msg = 'Attempted to end a monitor that was never started.'
-            raise Exception(msg) from e
+            raise RuntimeError(msg) from e
         
         m.stop()
         
@@ -394,14 +363,25 @@ def mon(name, allow_recursion=False):
                     n = '_'.join((n, str(i)))
                     i += 1
             
-            Mon.start(n)
+            try:
+                Mon.start(n)
+            except RuntimeError as e:
+                # Monitor is already running, likely due to recursion. Update
+                # the exception to note use of the `allow_recursion` flag.
+                msg = (
+                    f'Cannot start a monitor which has not been ended ({n}).'
+                    ' If this is due to recursion, use the `allow_recursion`'
+                    ' flag of the decorator.'
+                )
+                raise RuntimeError(msg) from e
+            
             result = fn(*args, **kwargs)
             m = Mon.stop(n)
             
             # Only print stats if there is not a parent monitor - this monitor's
             # stats will be reported in its output if there is
             if not m.parent:
-                m.print_stats()
+                print(m.get_results(time=True, queries=True, mem=True))
             
             return result
         
