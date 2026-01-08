@@ -103,3 +103,23 @@ In conjunction with a custom user model including :class:`OLPMixin`, this settin
 * ``2``: Logs are automatically created for each permission check, with more informative automatic entries
 
 In addition to the automatic entries, a value of ``1`` or ``2`` allow manual log entries to be added from within object-level access methods with no need to manually start/finish any logs.
+
+
+.. setting:: DJEM_DEV_USER
+    
+``DJEM_DEV_USER``
+=================
+
+.. versionadded:: 0.9
+
+.. currentmodule:: djem.utils.dev
+
+Default: ``None``
+
+Default user credentials to use for a :class:`Developer` instance when no explicit lookup arguments are provided to the constructor.
+
+Provide as a mapping of user model field names to values, e.g.::
+    
+    DJEM_DEV_USER = {
+        'username': 'devuser',
+    }

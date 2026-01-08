@@ -13,11 +13,13 @@ This release contains the following **backwards incompatible** changes:
 
 In addition, it also contains:
 
-* Added compatibility with Django versions 4.2 and 5.0
+* Added compatibility with Django versions 4.2 through 6.0
 * Improved customisability of pagination template
 * Updated ``UNDEFINED`` to ensure it cannot be deep copied (it will always be the same instance)
 * Updated the ``Archivable.archive()`` method to raise ``ProtectedError`` and ``RestrictedError`` as ``delete()`` would, when inbound foreign keys using ``on_delete=models.PROTECT`` or ``on_delete=models.RESTRICT`` are detected against unarchived records
 * Updated ``Loggable`` to support tagging individual log entries and subsequently filtering retrieved log entries
+* Updated ``Developer`` helper class to support looking up the associated user via the ``DJEM_DEV_USER`` setting.
+* Updated ``Developer`` helper class with ``add_permissions()`` and ``remove_permissions()`` methods.
 
 0.8.0 (2022-12-12)
 ==================
