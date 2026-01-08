@@ -49,7 +49,7 @@ class IfPermNode(Node):
 def do_ifperm(parser, token, negate):
     
     bits = list(token.split_contents())
-    if len(bits) != 4:
+    if len(bits) != 4:  # noqa: PLR2004 - allow the magic number
         msg = f'{bits[0]!r} takes three arguments'
         raise TemplateSyntaxError(msg)
     
@@ -224,7 +224,7 @@ def checkbox(parser, token):
     """
     
     bits = list(token.split_contents())
-    if len(bits) < 2:
+    if len(bits) < 2:  # noqa: PLR2004 - allow the magic number
         msg = f'{bits[0]!r} takes at least one argument'
         raise TemplateSyntaxError(msg)
     

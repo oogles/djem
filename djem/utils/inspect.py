@@ -50,7 +50,7 @@ def inspectf(func):
     
     for arg_string in args:
         if offset >= 0:
-            arg_string = f'{arg_string}={defaults[offset]}'
+            arg_string = f'{arg_string}={defaults[offset]}'  # noqa: PLW2901
         
         arguments.append(arg_string)
         offset += 1

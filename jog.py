@@ -1,5 +1,5 @@
 from jogger.tasks import DocsTask, LintTask, TestTask
-from jogger.tasks._release import ReleaseTask
+from jogger.tasks._release import ReleaseTask  # noqa: PLC2701
 
 
 def docker_down(settings, stdout, stderr):

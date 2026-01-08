@@ -19,7 +19,7 @@ def _get_query_count():
 
 def _get_stat_table_data(monitor, stat):
     
-    if stat not in ('time', 'queries', 'mem'):
+    if stat not in {'time', 'queries', 'mem'}:
         msg = f'Unknown statistic "{stat}".'
         raise TypeError(msg)
     
@@ -173,23 +173,13 @@ class M:
         stats['avg_mem'] = stats['total_mem'] / stats['count']
         stats['avg_queries'] = stats['total_queries'] / stats['count']
         
-        if runtime < stats['min_time']:
-            stats['min_time'] = runtime
+        stats['min_time'] = min(stats['min_time'], runtime)
+        stats['min_mem'] = min(stats['min_mem'], mem_usage)
+        stats['min_queries'] = min(stats['min_queries'], query_count)
         
-        if mem_usage < stats['min_mem']:
-            stats['min_mem'] = mem_usage
-        
-        if query_count < stats['min_queries']:
-            stats['min_queries'] = query_count
-        
-        if runtime > stats['max_time']:
-            stats['max_time'] = runtime
-        
-        if mem_usage > stats['max_mem']:
-            stats['max_mem'] = mem_usage
-        
-        if query_count > stats['max_queries']:
-            stats['max_queries'] = query_count
+        stats['max_time'] = max(stats['max_time'], runtime)
+        stats['max_mem'] = max(stats['max_mem'], mem_usage)
+        stats['max_queries'] = max(stats['max_queries'], query_count)
     
     def start(self):
         

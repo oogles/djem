@@ -493,7 +493,7 @@ def get_tz_helper(value):
     Raise ValidationError if the value cannot be converted into a ZoneInfo instance.
     """
     
-    if value in (None, ''):
+    if value in {None, ''}:
         return None
     
     if isinstance(value, TimeZoneHelper):

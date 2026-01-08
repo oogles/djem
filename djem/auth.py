@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import (
     PermissionRequiredMixin as DjangoPermissionRequiredMixin,
 )
 from django.contrib.auth.models import Permission
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, resolve_url
 
@@ -182,14 +183,15 @@ def _check_perms(perms, user, view_kwargs):
     
     for perm in perms:
         if isinstance(perm, str):
+            perm_name = perm
             obj = None
         else:
-            perm, obj_arg = perm  # expand two-tuple
+            perm_name, obj_arg = perm  # expand two-tuple
             obj_pk = view_kwargs[obj_arg]
             
             # Get the model this permission belongs to
             try:
-                perm_app, perm_code = perm.split('.')
+                perm_app, perm_code = perm_name.split('.')
                 perm_obj = Permission.objects.get(
                     content_type__app_label=perm_app,
                     codename=perm_code
@@ -209,7 +211,7 @@ def _check_perms(perms, user, view_kwargs):
             # kwargs, so the view doesn't have to query for it again
             view_kwargs[obj_arg] = obj
         
-        if not user.has_perm(perm, obj):
+        if not user.has_perm(perm_name, obj):
             raise PermissionDenied
 
 
@@ -261,8 +263,6 @@ def permission_required(*perms, **kwargs):
             if ((not login_scheme or login_scheme == current_scheme)
                     and (not login_netloc or login_netloc == current_netloc)):
                 path = request.get_full_path()
-            
-            from django.contrib.auth.views import redirect_to_login
             
             return redirect_to_login(path, resolved_login_url)
         

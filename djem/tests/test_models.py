@@ -112,7 +112,7 @@ class CommonInfoMixinTestCase(TestCase):
     
     def test_mixin_deprecation_warning(self):
         
-        from djem.models import CommonInfoMixin
+        from djem.models import CommonInfoMixin  # noqa: PLC0415
         
         class CommonInfoMixinTestModel(CommonInfoMixin):
             pass
@@ -132,7 +132,7 @@ class CommonInfoMixinTestCase(TestCase):
     
     def test_queryset_deprecation_warning(self):
         
-        from djem.models import CommonInfoQuerySet
+        from djem.models import CommonInfoQuerySet  # noqa: PLC0415
         
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered
@@ -152,7 +152,7 @@ class ArchivableMixinTestCase(TestCase):
     
     def test_deprecation_warning(self):
         
-        from djem.models import ArchivableMixin
+        from djem.models import ArchivableMixin  # noqa: PLC0415
         
         class ArchivableMixinTestModel(ArchivableMixin):
             pass
@@ -175,7 +175,7 @@ class VersioningMixinTestCase(TestCase):
     
     def test_mixin_deprecation_warning(self):
         
-        from djem.models import VersioningMixin
+        from djem.models import VersioningMixin  # noqa: PLC0415
         
         class VersioningMixinTestModel(VersioningMixin):
             pass
@@ -195,7 +195,7 @@ class VersioningMixinTestCase(TestCase):
     
     def test_queryset_deprecation_warning(self):
         
-        from djem.models import VersioningQuerySet
+        from djem.models import VersioningQuerySet  # noqa: PLC0415
         
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered

@@ -68,8 +68,8 @@ class RowWrapper:
         # within that width.
         for line in self.raw_value.split('\n'):
             for sub_line in textwrap.wrap(line, table_width):
-                sub_line = getattr(sub_line, self._align)(table_width)
-                rows.append(f'| {sub_line} |')
+                aligned = getattr(sub_line, self._align)(table_width)
+                rows.append(f'| {aligned} |')
         
         return rows
 

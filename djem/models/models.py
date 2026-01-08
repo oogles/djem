@@ -3,7 +3,7 @@ import warnings
 from collections import OrderedDict
 
 from django.conf import settings
-from django.contrib.auth.models import _user_has_perm
+from django.contrib.auth.models import _user_has_perm  # noqa: PLC2701
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, router, transaction
 from django.db.models.deletion import Collector
