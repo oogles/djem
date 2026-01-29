@@ -109,6 +109,15 @@ def _get_stat_table(monitor, title, stats):
 
 
 class M:
+    """
+    An individual monitor instance, typically created and managed by :class:`Mon`.
+    
+    Tracks runtime, memory usage, and database query counts occurring between
+    calls to :meth:`start` and :meth:`stop`.
+    
+    :param name: The name of the monitor.
+    :param parent: An optional parent :class:`M` instance.
+    """
     
     def __init__(self, name, parent=None):
         
@@ -182,6 +191,9 @@ class M:
         stats['max_queries'] = max(stats['max_queries'], query_count)
     
     def start(self):
+        """
+        Start the monitor.
+        """
         
         if self.parent:
             self.parent.active_children += 1
@@ -191,6 +203,9 @@ class M:
         self.start_mem = _get_mem_mb()
     
     def stop(self):
+        """
+        Stop the monitor.
+        """
         
         self.end_time = time.time()
         self.end_mem = _get_mem_mb()
@@ -216,21 +231,41 @@ class M:
         return end_value - start_value
     
     def get_mem_usage(self):
+        """
+        Return the memory usage (in MB) between the start and end of the monitor.
+        
+        :return: Memory usage in MB.
+        :raises RuntimeError: If the monitor has not been stopped.
+        """
         
         return self._get_stat(self.start_mem, self.end_mem, _get_mem_mb)
     
     def get_query_count(self):
+        """
+        Return the number of database queries executed between the start and
+        end of the monitor.
+        
+        :return: Number of database queries.
+        :raises RuntimeError: If the monitor has not been stopped.
+        """
         
         return self._get_stat(self.start_queries, self.end_queries, _get_query_count)
     
     def get_runtime(self):
+        """
+        Return the elapsed time in seconds between the start and end of the
+        monitor.
+        
+        :return: Elapsed time in seconds.
+        :raises RuntimeError: If the monitor has not been stopped.
+        """
         
         return self._get_stat(self.start_time, self.end_time, time.time)
     
     def reset(self):
         """
-        Reset the start and end times to allow reuse.
-        Do not clear statistics.
+        Reset the start and end values of tracked metrics to allow reuse of the
+        monitor instance. Gathered statistics are preserved.
         """
         
         self.start_time = None
@@ -241,6 +276,13 @@ class M:
         self.end_mem = None
     
     def get_total_string(self, include_name=True):
+        """
+        Return a summary string of the total runtime, query count, and memory
+        usage of the monitor.
+        
+        :param include_name: Whether to include the monitor's name in the output.
+        :return: The summary string.
+        """
         
         seconds = self.get_runtime()
         queries = self.get_query_count()
@@ -254,6 +296,22 @@ class M:
         return totals
     
     def get_results(self, time=True, queries=False, mem=False):
+        """
+        Return formatted results for this monitor and its children.
+        
+        If the monitor has no children, output is equivalent to :meth:`get_total_string`.
+        
+        If the monitor has children, output is a formatted table showing
+        statistics for each child, for each of the requested metrics. Children
+        under each metric are sorted by the percentage of the parent's total
+        that is represented by that child. By default, only timing statistics
+        are included in the table.
+        
+        :param time: Whether to include timing statistics in the table.
+        :param queries: Whether to include database query statistics in the table.
+        :param mem: Whether to include memory usage statistics in the table.
+        :return: The formatted results string.
+        """
         
         if not self.children:
             return self.get_total_string()
@@ -277,6 +335,39 @@ class M:
 
 
 class Mon:
+    """
+    A management class for individual monitors (:class:`M` instances).
+    
+    Allows simple start/stop operations by name, and supports nesting monitors
+    to provide more in-depth profiling of code sections. Any number of nested
+    monitors are supported, they can be included in loops, etc. Parent monitors
+    will accumulate statistics from their child monitors, including number of
+    times called and min/max/avg values for time, queries, and memory usage.
+    
+    The :meth:`stop` method returns the stopped :class:`M` instance for the
+    named monitor, allowing access to its statistics and results.
+    
+    Basic usage::
+        
+        from djem import Mon
+        
+        Mon.start('my_monitor')
+        # ... code to monitor ...
+        print(Mon.stop('my_monitor'))
+    
+    Nested usage::
+        
+        from djem import Mon
+        
+        Mon.start('outer_monitor')
+        # ... code to monitor ...
+        
+        Mon.start('inner_monitor')
+        # ... code to monitor ...
+        Mon.stop('inner_monitor')
+        
+        print(Mon.stop('outer_monitor').get_results())
+    """
     
     monitors = {}
     
@@ -284,6 +375,17 @@ class Mon:
     
     @classmethod
     def start(cls, name):
+        """
+        Start a new monitor with the given ``name``. Another monitor with the
+        same name cannot be active at the same time.
+        
+        If another monitor is already active, it will become the parent of the
+        new monitor being started. The new monitor will become the parent of
+        any subsequently started monitors, until it is stopped.
+        
+        :param name: The name of the monitor to start.
+        :raises RuntimeError: If a monitor with the given name is already active.
+        """
         
         if name in cls.monitors:
             msg = f'Cannot start a monitor which has not been ended ({name}).'
@@ -308,6 +410,17 @@ class Mon:
     
     @classmethod
     def stop(cls, name):
+        """
+        Stop the monitor with the given ``name`` and return the :class:`M`
+        instance.
+        
+        The stopped monitor's parent, if any, becomes the current parent for
+        subsequently started monitors.
+        
+        :param name: The name of the monitor to stop.
+        :return: The stopped :class:`M` instance.
+        :raises RuntimeError: If no monitor with the given name is active.
+        """
         
         try:
             m = cls.monitors[name]
@@ -324,6 +437,11 @@ class Mon:
     
     @classmethod
     def start_qlog(cls):
+        """
+        Start logging database queries to the console.
+        
+        Configure the ``django.db.backends`` logger to output at DEBUG level.
+        """
         
         logger = logging.getLogger('django.db.backends')
         handler = logging.StreamHandler()
@@ -336,6 +454,11 @@ class Mon:
     
     @classmethod
     def stop_qlog(cls):
+        """
+        Stop logging database queries to the console.
+        
+        Revert the ``django.db.backends`` logger to its original level.
+        """
         
         logger = logging.getLogger('django.db.backends')
         
@@ -344,12 +467,45 @@ class Mon:
     
     @classmethod
     def reset(cls):
+        """
+        Discard all active monitors.
+        """
         
         cls.monitors.clear()
         cls.last_m = None
 
 
 def mon(name, allow_recursion=False):
+    """
+    A decorator to monitor the execution of a function using :class:`Mon`.
+    
+    When the function is called, a monitor with the given ``name`` is started.
+    The monitor is stopped after the function completes, and the results are
+    printed to the console.
+    
+    If a monitor with the given ``name`` is already running (for example, due
+    to recursion), a ``RuntimeError`` is raised, unless ``allow_recursion`` is
+    set to ``True``. In that case, a unique name is generated for each
+    recursive invocation by appending an incrementing integer suffix to the
+    base ``name``.
+    
+    Usage::
+        
+        from djem import mon
+        
+        @mon('my_monitor')
+        def my_function():
+            # ... code to monitor ...
+    
+    Any usage of :class:`Mon` within the context of the decorated function will
+    be nested within the monitor created by the decorator.
+    
+    :param name: The name of the monitor.
+    :param allow_recursion: Whether to allow recursive invocations by
+        generating unique monitor names.
+    :raises RuntimeError: If a monitor with the given name is already running and
+        ``allow_recursion`` is ``False``.
+    """
     
     def decorator(fn):
         

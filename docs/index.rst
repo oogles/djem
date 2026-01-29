@@ -28,6 +28,7 @@ Features
     topics/pagination
     topics/ajax
     topics/testing
+    topics/monitors
     topics/utils
     ref/index
     changelog

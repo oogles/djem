@@ -20,6 +20,7 @@ In addition, it also contains:
 * Updated ``Loggable`` to support tagging individual log entries and subsequently filtering retrieved log entries
 * Updated ``Developer`` helper class to support looking up the associated user via the ``DJEM_DEV_USER`` setting.
 * Updated ``Developer`` helper class with ``add_permissions()`` and ``remove_permissions()`` methods.
+* Updated and documented ``M``, ``Mon``, and ``mon()`` performance monitoring utilities.
 
 0.8.0 (2022-12-12)
 ==================
