@@ -200,10 +200,10 @@ This allows the use of ``Auditable`` and all related functionality without the s
 
 .. note::
 
-    As the accuracy of the ``user_modified`` field is often irrelevant in tests, setting :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` to ``False`` using `override_settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.override_settings>`_ can help make updating model instances in tests a bit easier. However, be aware that this may mask bugs in the code being tested, if the ``user`` argument is typically required outside a test environment, but has been missed. Therefore, it is recommended to use `SimpleTestCase.settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.SimpleTestCase.settings>`_ to disable the requirement only when creating/updating test records.
-
-    E.g.
-
+    If using tools to automate the creation of records in tests - such as `Django Dynamic Fixture <https://django-dynamic-fixture.readthedocs.io/en/latest/>`_, `Model Bakery <https://model-bakery.readthedocs.io/en/latest/>`_, etc - the :setting:`DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE` setting can be overridden to allow these tools to dynamically generate records without needing to provide a ``user`` argument. However, be careful to selectively override the setting only during creation of these records, not for entire tests, as this may mask bugs in the code being tested. If the ``user`` argument is typically required outside a test environment, but has been missed, tests may pass incorrectly.
+    
+    Prefer using `SimpleTestCase.settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.SimpleTestCase.settings>`_ rather than `override_settings() <https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.override_settings>`_ to disable the ``user`` argument requirement:
+    
     .. code-block:: python
         
         from django.test import TestCase
@@ -214,8 +214,7 @@ This allows the use of ``Auditable`` and all related functionality without the s
                 
                 # Create test records without requiring `user` argument
                 with self.settings(DJEM_AUDITABLE_REQUIRE_USER_ON_SAVE=False):
-                    obj = ExampleModel(name='Test Example')
-                    obj.save()  # No user argument needed
+                    obj = ... # dynamic record creation
                 
                 # Test code without masking missing `user` arguments
                 do_something(obj)
